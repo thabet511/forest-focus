@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>غرسة · وقتك يصير مزرعة</title>
+<meta name="description" content="عدّاد تركيز بلا حد. نبتة تكبر مع كل دقيقة، وتتحول شجرة، وتكبر للأبد.">
+<meta name="theme-color" content="#E3E9DC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   غرسة — لوحة الألوان
+   نهار: دفيئة زجاجية، ورق أكياس البذور، حبر نباتي
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --field:#E3E9DC;      --field-edge:#D3DCC8;
+  --paper:#F8F6EF;      --paper-2:#F1EDE0;   --paper-3:#E9E5D6;
+  --line:#C8D1BE;       --line-soft:#DEE4D5;
+  --ink:#1E2A23;        --ink-2:#56645A;     --ink-3:#83907F;
+  --viridian:#2F6B4F;   --viridian-deep:#22503C; --viridian-soft:#DCE8DB;
+  --ochre:#B8761E;      --ochre-soft:#F4E6C9;
+  --brick:#A8412E;      --brick-soft:#F4DFD9;
+  --husk:#8A6A4F;
+  --soil:#5E4834;       --soil-2:#7C6149;    --soil-3:#93785A;
+  --dome-a:#F2F6EC;     --dome-b:#DCE7D6;    --dome-c:#C9D8C4;
+  --glass:rgba(255,255,255,.55);
+  --shadow-1:0 1px 0 rgba(30,42,35,.05), 0 2px 6px -2px rgba(30,42,35,.14);
+  --shadow-2:0 1px 0 rgba(30,42,35,.06), 0 14px 32px -16px rgba(30,42,35,.34);
+  --r-s:10px; --r-m:16px; --r-l:22px;
+  --sans:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --kufi:"Reem Kufi","IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif;
+  color-scheme:light;
+}
+:root[data-theme="night"]{
+  --field:#121A17;      --field-edge:#0C1310;
+  --paper:#1A2320;      --paper-2:#212C28;   --paper-3:#273430;
+  --line:#2F3C36;       --line-soft:#26322E;
+  --ink:#E7EEE4;        --ink-2:#9BAAA1;     --ink-3:#77867C;
+  --viridian:#58A97C;   --viridian-deep:#3E8A61; --viridian-soft:#1D2E26;
+  --ochre:#E0A64A;      --ochre-soft:#2E2718;
+  --brick:#D2695A;      --brick-soft:#2E1C18;
+  --husk:#A88463;
+  --soil:#33261B;       --soil-2:#463525;    --soil-3:#584431;
+  --dome-a:#1B2622;     --dome-b:#141D1A;    --dome-c:#101715;
+  --glass:rgba(255,255,255,.06);
+  --shadow-1:0 1px 0 rgba(0,0,0,.2), 0 2px 8px -2px rgba(0,0,0,.5);
+  --shadow-2:0 1px 0 rgba(0,0,0,.25), 0 16px 36px -18px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans); font-weight:400; color:var(--ink);
+  background:radial-gradient(120% 80% at 50% 0%, var(--field) 0%, var(--field-edge) 100%) fixed;
+  min-height:100vh; min-height:100dvh; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2.5px solid var(--viridian);outline-offset:2px;border-radius:6px}
+::selection{background:var(--viridian);color:#fff}
+
+.app{
+  max-width:540px; margin:0 auto; min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column;
+  padding:0 16px calc(84px + env(safe-area-inset-bottom));
+}
+@media (min-width:700px){
+  .app{
+    max-width:560px; margin:22px auto; min-height:calc(100dvh - 44px);
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:28px; box-shadow:var(--shadow-2); overflow:hidden;
+    padding:0 20px 92px;
+  }
+}
+
+/* ── الشريط العلوي ────────────────────────────────────── */
+.topbar{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 0 10px}
+.brand{font-family:var(--kufi);font-size:19px;font-weight:600;margin:0}
+.brand span{color:var(--viridian)}
+.spacer{flex:1}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--ochre-soft); color:var(--ochre);
+  border:1px solid var(--line); border:1px solid var(--ochre);
+  padding:5px 11px; border-radius:999px;
+  font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums;
+}
+.pill svg{width:14px;height:14px;flex:none}
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--line); background:var(--paper); color:var(--ink-2);
+  transition:color .18s,border-color .18s;
+}
+.icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
+.icon-btn svg{width:18px;height:18px}
+
+/* ── قوس الدفيئة ─────────────────────────────────────── */
+.stage{
+  position:relative; margin-top:4px;
+  border:1px solid var(--line);
+  border-radius:clamp(120px,46vw,210px) clamp(120px,46vw,210px) var(--r-l) var(--r-l);
+  background:linear-gradient(180deg,var(--dome-a) 0%,var(--dome-b) 62%,var(--dome-c) 100%);
+  box-shadow:var(--shadow-1), inset 0 1px 0 var(--glass);
+  overflow:hidden; isolation:isolate;
+}
+.stage::before{
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 calc(100%/7 - 1px),
+      color-mix(in srgb, var(--ink) 9%, transparent) calc(100%/7 - 1px) calc(100%/7)),
+    repeating-linear-gradient(180deg, transparent 0 62px,
+      color-mix(in srgb, var(--ink) 6%, transparent) 62px 63px);
+  mask-image:linear-gradient(180deg,#000 0%,#000 46%,transparent 78%);
+  opacity:.55;
+}
+.stage::after{
+  content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:inherit;
+  box-shadow:inset 0 0 0 1px var(--glass), inset 0 26px 40px -30px rgba(255,255,255,.9);
+}
+#plantCanvas{display:block;width:100%;height:auto;position:relative;z-index:1}
+
+/* ── العدّاد ─────────────────────────────────────────── */
+.readout{text-align:center;padding:14px 0 2px}
+.clock{
+  font-size:clamp(38px,12.5vw,56px); font-weight:300; letter-spacing:-.02em;
+  line-height:1; font-variant-numeric:tabular-nums; direction:ltr; display:inline-block;
+}
+.clock.long{font-size:clamp(32px,10vw,46px)}
+.tierline{
+  margin:10px 0 0; display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+  font-size:14px;color:var(--ink-2);
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--viridian);flex:none}
+.tierbadge{
+  font-family:var(--kufi); font-size:14px; font-weight:600; color:var(--viridian);
+  background:var(--viridian-soft); border:1px solid var(--viridian);
+  padding:2px 10px; border-radius:999px;
+}
+.growth-track{width:min(300px,78%);height:3px;margin:12px auto 0;background:var(--line-soft);border-radius:99px;overflow:hidden}
+.growth-fill{height:100%;width:0;background:var(--viridian);border-radius:99px;transition:width .6s linear}
+.next{margin:8px 0 0;font-size:12.5px;color:var(--ink-3)}
+
+/* ── لوحات ───────────────────────────────────────────── */
+.panel{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--r-m);
+  padding:15px; margin-top:14px; box-shadow:var(--shadow-1);
+}
+@media (min-width:700px){ .panel{box-shadow:none;background:var(--paper-2)} }
+.panel > h3{font-family:var(--kufi);font-size:15px;font-weight:600;margin:0 0 11px;display:flex;align-items:center;gap:8px}
+.panel > h3 .hint{font-family:var(--sans);font-size:12.5px;font-weight:400;color:var(--ink-3);margin-right:auto}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  padding:7px 13px;border-radius:999px;font-size:14px;font-weight:500;
+  border:1px solid var(--line);background:transparent;color:var(--ink-2);
+  transition:color .16s,border-color .16s,background .16s;
+}
+.chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--viridian);border-color:var(--viridian);color:#fff}
+.chip.tag[aria-pressed="true"]{background:var(--tagc);border-color:var(--tagc);color:#fff}
+.chip.tag::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--tagc);margin-left:7px;vertical-align:middle}
+.chip.tag[aria-pressed="true"]::before{background:rgba(255,255,255,.85)}
+.chip.ghost{border-style:dashed;color:var(--ink-3)}
+
+.switch-row{display:flex;align-items:center;gap:12px;padding:13px 15px;margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m)}
+.switch-row .txt{flex:1;min-width:0}
+.switch-row strong{display:block;font-size:14.5px;font-weight:600}
+.switch-row small{display:block;font-size:12.5px;color:var(--ink-3);line-height:1.45}
+.switch{flex:none;width:48px;height:28px;border-radius:99px;position:relative;background:var(--line);transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.28);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--viridian)}
+.switch[aria-checked="true"]::after{transform:translateX(-20px)}
+
+.actions{display:flex;gap:10px;margin-top:16px}
+.btn{
+  flex:1;padding:15px 18px;border-radius:14px;font-size:16px;font-weight:600;
+  font-family:var(--kufi);display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .12s,background .18s;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--viridian);color:#fff;box-shadow:var(--shadow-1)}
+.btn-primary:hover{background:var(--viridian-deep)}
+.btn-quiet{background:var(--paper-2);color:var(--ink-2);border:1px solid var(--line)}
+.btn-quiet:hover{color:var(--ink)}
+.btn-danger{background:var(--brick-soft);color:var(--brick);border:1px solid var(--brick)}
+.btn svg{width:18px;height:18px}
+
+/* ── المزرعة: تراب واحد متصل ─────────────────────────── */
+.farmwrap{margin-top:14px;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;background:var(--paper);box-shadow:var(--shadow-1)}
+.terrace{position:relative;display:flex;align-items:flex-end;padding:10px 6px 0;overflow:hidden}
+.terrace::after{
+  content:"";position:absolute;inset:auto 0 0 0;height:15px;z-index:0;
+  background:linear-gradient(180deg,var(--soil-3) 0%,var(--soil) 100%);
+  border-top:1px solid rgba(0,0,0,.14);
+}
+.terrace + .terrace::after{border-top:1px solid rgba(0,0,0,.2)}
+.slot{position:relative;z-index:1;border:0;padding:0;margin:0 0 4px;line-height:0;border-radius:8px 8px 0 0;transition:transform .16s}
+.slot:hover,.slot:focus-visible{transform:translateY(-5px)}
+.slot canvas{display:block}
+.empty-note{text-align:center;padding:34px 20px;color:var(--ink-2);border:1px dashed var(--line);border-radius:var(--r-m);margin-top:14px;background:var(--paper)}
+.empty-note b{display:block;font-family:var(--kufi);font-size:16px;color:var(--ink);margin-bottom:5px}
+
+/* ── الأرقام ─────────────────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:13px 14px;box-shadow:var(--shadow-1)}
+.stat .v{font-size:26px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat .k{font-size:12.5px;color:var(--ink-3);margin-top:1px}
+.stat.accent .v{color:var(--viridian)}
+.stat.ochre .v{color:var(--ochre)}
+.stat.brick .v{color:var(--brick)}
+.barlist{display:flex;flex-direction:column;gap:10px}
+.barlist .top{display:flex;gap:8px;margin-bottom:5px;font-size:13.5px}
+.barlist .top .n{color:var(--ink-2)}
+.barlist .top .t{margin-right:auto;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.bar{height:7px;border-radius:99px;background:var(--line-soft);overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:99px;background:var(--viridian)}
+.week{display:flex;align-items:flex-end;gap:6px;height:104px;margin-top:4px}
+.week .d{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.week .col{width:100%;border-radius:6px 6px 3px 3px;background:var(--viridian);position:relative;min-height:3px}
+.week .lbl{font-size:11px;color:var(--ink-3)}
+.week .d.today .lbl{color:var(--viridian);font-weight:600}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}
+.badge{text-align:center;padding:12px 8px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--paper-2)}
+.badge .ic{font-size:22px;line-height:1.2;filter:grayscale(1);opacity:.32}
+.badge .nm{font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.35}
+.badge.on{background:var(--viridian-soft);border-color:var(--viridian)}
+.badge.on .ic{filter:none;opacity:1}
+.badge.on .nm{color:var(--ink-2);font-weight:500}
+
+/* ── معرض البذور ─────────────────────────────────────── */
+.seedgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:11px;margin-top:14px}
+.card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);
+  padding:9px;text-align:center;box-shadow:var(--shadow-1);
+  display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:border-color .16s,transform .16s;
+}
+.card:hover{transform:translateY(-3px)}
+.card canvas{display:block;margin:0 auto;border-radius:var(--r-s);background:linear-gradient(180deg,var(--dome-a),var(--dome-b))}
+.card .nm{font-family:var(--kufi);font-size:14px;font-weight:600}
+.card .sub{font-size:11px;color:var(--ink-3);margin-top:-4px;line-height:1.4}
+.card.active{border-color:var(--viridian);box-shadow:0 0 0 2px var(--viridian-soft),var(--shadow-1)}
+.card.active .nm{color:var(--viridian)}
+.famtitle{font-family:var(--kufi);font-size:15px;font-weight:600;margin:20px 0 -2px;display:flex;align-items:center;gap:9px}
+.famtitle::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ── التنقّل ─────────────────────────────────────────── */
+.nav{
+  position:fixed;z-index:40;inset:auto 0 0 0;
+  padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+  background:var(--field);
+  background:color-mix(in srgb,var(--field) 80%,transparent);
+  backdrop-filter:blur(14px) saturate(1.2);border-top:1px solid var(--line);
+}
+.nav-inner{
+  max-width:508px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+  background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:var(--shadow-1);
+}
+.nav-btn{padding:8px 4px 7px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--ink-3);transition:color .16s,background .16s}
+.nav-btn svg{width:20px;height:20px}
+.nav-btn[aria-current="page"]{background:var(--viridian-soft);color:var(--viridian);font-weight:600}
+
+.view{display:none}
+.view.on{display:block;animation:rise .32s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.view-head{padding:8px 2px 0}
+.view-head h2{font-family:var(--kufi);font-size:24px;font-weight:600;margin:0}
+.view-head p{margin:5px 0 0;font-size:13.5px;color:var(--ink-2);max-width:46ch}
+
+.toast{
+  position:fixed;z-index:60;right:16px;left:16px;bottom:calc(92px + env(safe-area-inset-bottom));
+  max-width:508px;margin:0 auto;background:var(--ink);color:var(--field);
+  border-radius:13px;padding:13px 15px;font-size:14px;font-weight:500;box-shadow:var(--shadow-2);
+  display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(12px);
+  pointer-events:none;transition:opacity .24s,transform .24s;
+}
+.toast.on{opacity:1;transform:none}
+.toast .ic{font-size:17px;line-height:1}
+
+.sheet-bg{position:fixed;inset:0;z-index:70;background:rgba(15,22,18,.5);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .24s}
+.sheet-bg.on{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;z-index:71;inset:auto 0 0 0;max-width:540px;margin:0 auto;
+  background:var(--paper);border-radius:22px 22px 0 0;border:1px solid var(--line);border-bottom:0;
+  padding:8px 20px calc(24px + env(safe-area-inset-bottom));
+  transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.25,1);
+  box-shadow:0 -18px 44px -20px rgba(15,22,18,.5);max-height:88dvh;overflow-y:auto;
+}
+.sheet.on{transform:none}
+.grab{width:42px;height:4px;border-radius:99px;background:var(--line);margin:4px auto 14px}
+.sheet h3{font-family:var(--kufi);font-size:19px;margin:0 0 3px}
+.sheet .meta{font-size:13.5px;color:var(--ink-2);margin:0}
+.kv{display:flex;flex-direction:column;margin-top:16px}
+.kv div{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:14px}
+.kv div:last-child{border-bottom:0}
+.kv span{color:var(--ink-3)}
+.kv b{margin-right:auto;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ── بوابة الحساب ─────────────────────────────────────── */
+body.gated{overflow:hidden}
+.gate{
+  position:fixed;inset:0;z-index:90;display:none;overflow-y:auto;
+  background:radial-gradient(120% 80% at 50% 0%, var(--field) 0%, var(--field-edge) 100%);
+  padding:calc(20px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
+}
+.gate.on{display:block}
+.gatecard{
+  max-width:400px;margin:auto;background:var(--paper);border:1px solid var(--line);
+  border-radius:24px;padding:6px 20px 20px;box-shadow:var(--shadow-2);
+  min-height:min(100%,560px);display:flex;flex-direction:column;
+}
+.gatecard > canvas{display:block;margin:0 auto -6px}
+.gatecard h2{font-family:var(--kufi);font-size:26px;margin:0;text-align:center}
+.gatecard h2 span{color:var(--viridian)}
+.gsub{margin:5px 0 16px;text-align:center;font-size:13.5px;color:var(--ink-2)}
+.gtabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--paper-2);
+  border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
+.gtab{padding:9px;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink-3);font-family:var(--kufi)}
+.gtab[aria-selected="true"]{background:var(--viridian);color:#fff}
+.fld{display:block;margin-bottom:12px}
+.fld span{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
+.fld input{
+  width:100%;padding:12px 13px;border-radius:11px;font:inherit;font-size:15px;
+  background:var(--paper-2);border:1px solid var(--line);color:var(--ink);
+}
+.fld input:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
+.accrow{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:right;
+  padding:11px 12px;border:1px solid var(--line);border-radius:13px;
+  background:var(--paper-2);margin-bottom:8px;transition:border-color .16s,transform .12s;
+}
+.accrow:hover{border-color:var(--viridian);transform:translateX(-2px)}
+.accrow .who{flex:1;min-width:0}
+.accrow b{display:block;font-size:15px;font-weight:600;font-family:var(--kufi)}
+.accrow small{display:block;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.accrow .lock{font-size:13px;color:var(--ink-3)}
+.avatar{
+  flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:var(--viridian-soft);color:var(--viridian);border:1px solid var(--viridian);
+  font-family:var(--kufi);font-size:16px;font-weight:600;
+}
+.avatar.big{width:54px;height:54px;font-size:22px}
+.pinbox{display:flex;gap:8px;margin:2px 0 12px}
+.pinbox input{flex:1;padding:11px 12px;border-radius:11px;font:inherit;background:var(--paper-2);
+  border:1px solid var(--line);color:var(--ink);letter-spacing:.2em;text-align:center}
+.pinbox button{padding:0 18px;border-radius:11px;background:var(--viridian);color:#fff;font-weight:600}
+.chkrow{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2);margin:4px 0 0}
+.chkrow input{width:18px;height:18px;accent-color:var(--viridian)}
+.gnote{font-size:12.5px;color:var(--ochre);background:var(--ochre-soft);border:1px solid var(--ochre);
+  border-radius:10px;padding:9px 11px;margin:0 0 12px}
+.gerr{font-size:13px;color:var(--brick);margin:0 0 10px;min-height:0}
+.gok{font-size:13.5px;color:var(--viridian);background:var(--viridian-soft);border:1px solid var(--viridian);
+  border-radius:11px;padding:11px 12px;margin:0 0 12px;text-align:center;font-weight:600}
+.fld span i{color:var(--brick);font-style:normal}
+.gswap{margin:14px 0 0;text-align:center;font-size:13px;color:var(--ink-3)}
+.gswap button{color:var(--viridian);font-weight:600;font-size:13px;text-decoration:underline}
+.gfoot{margin:auto 0 0;padding-top:16px;font-size:11.5px;color:var(--ink-3);text-align:center;line-height:1.6}
+.gtabs.three{grid-template-columns:repeat(3,1fr)}
+.gtabs.three .gtab{font-size:13px;padding:9px 2px}
+.orline{display:flex;align-items:center;gap:10px;margin:14px 0 12px;color:var(--ink-3);font-size:12px}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
+.cloudrow{display:flex;gap:8px}
+.cloudrow .btn{padding:13px 10px;font-size:14.5px}
+.setup{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:12px}
+.setup summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--viridian);font-family:var(--kufi)}
+.setup ol{margin:10px 0 0;padding-right:18px;font-size:12.5px;color:var(--ink-2);line-height:1.9}
+.setup code{background:var(--paper-3);border:1px solid var(--line);border-radius:5px;padding:1px 5px;
+  font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;display:inline-block}
+.setup pre{background:var(--paper-3);border:1px solid var(--line);border-radius:8px;padding:9px;
+  font-size:10.5px;overflow-x:auto;direction:ltr;text-align:left;margin:8px 0 0;line-height:1.5}
+.syncdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ink-3);margin-left:6px}
+.syncdot.ok{background:var(--viridian)} .syncdot.off{background:var(--ochre)} .syncdot.err{background:var(--brick)}
+.sheet .row-actions{display:grid;gap:8px;margin-top:18px}
+.sheet .row-actions .btn{font-size:15px;padding:13px}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .view.on{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <h1 class="brand">غرسة<span>.</span></h1>
+    <div class="spacer"></div>
+    <div class="pill" id="hoursPill" title="مجموع ساعات تركيزك">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3.2 2"/></svg>
+      <span id="hoursVal">0</span>
+    </div>
+    <button class="icon-btn avatar" id="userBtn" aria-label="حسابي"><span id="userInitial">·</span></button>
+    <button class="icon-btn" id="themeBtn" aria-label="تبديل النهار والليل">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></svg>
+    </button>
+  </header>
+
+  <!-- ══ ١) النبتة ══ -->
+  <main class="view on" id="view-plant">
+    <section class="stage" aria-label="النبتة">
+      <canvas id="plantCanvas" width="520" height="440" role="img" aria-label="نبتة تكبر مع وقت تركيزك"></canvas>
+    </section>
+
+    <div class="readout">
+      <div class="clock" id="clock">00:00</div>
+      <p class="tierline">
+        <span class="dot" id="tierDot"></span>
+        <span id="tierText">بذرة نائمة</span>
+        <span class="tierbadge" id="tierBadge" hidden></span>
+      </p>
+      <div class="growth-track" aria-hidden="true"><i class="growth-fill" id="growthFill"></i></div>
+      <p class="next" id="nextLine">اضغط ابدأ والعدّاد يمشي معك بلا حد.</p>
+    </div>
+
+    <div id="setupBlock">
+      <section class="panel">
+        <h3>وش تزرع اليوم؟ <span class="hint" id="seedHint"></span></h3>
+        <div class="chips" id="seedChips"></div>
+      </section>
+
+      <section class="panel">
+        <h3>على وش تشتغل؟ <span class="hint">يفيدك في الإحصائيات</span></h3>
+        <div class="chips" id="tagChips"></div>
+      </section>
+
+      <div class="switch-row">
+        <div class="txt">
+          <strong>الوضع الصارم</strong>
+          <small id="strictNote">إذا طلعت من الصفحة أو انقفلت الشاشة، عندك مهلة ترجع فيها قبل ما تذبل النبتة.</small>
+        </div>
+        <button class="switch" id="strictSwitch" role="switch" aria-checked="true" aria-label="الوضع الصارم"></button>
+      </div>
+      <section class="panel" id="gracePanel">
+        <h3>المهلة قبل الذبول <span class="hint">للجلسات الطويلة خلها أوسع</span></h3>
+        <div class="chips" id="graceChips"></div>
+      </section>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="startBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c0-5 2.5-8.5 7-10-1 5-3.5 8-7 10Z"/><path d="M12 21c0-5-2.5-8.5-7-10 1 5 3.5 8 7 10Z"/><path d="M12 21V11"/></svg>
+          ازرع وابدأ العدّاد
+        </button>
+      </div>
+    </div>
+
+    <div id="runBlock" style="display:none">
+      <section class="panel">
+        <h3 id="runTitle">العدّاد شغّال</h3>
+        <p style="margin:0;font-size:13.5px;color:var(--ink-2)" id="runNote"></p>
+      </section>
+      <div class="actions">
+        <button class="btn btn-primary" id="keepBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>
+          احفظها في المزرعة
+        </button>
+        <button class="btn btn-danger" id="killBtn" style="flex:0 0 auto;padding:15px 18px" aria-label="اقتل النبتة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══ ٢) المزرعة ══ -->
+  <main class="view" id="view-garden">
+    <div class="view-head">
+      <h2>مزرعتي</h2>
+      <p id="gardenSub">كل نبتة حفظتها تقعد جنب أخواتها على نفس التراب. الكبيرة تطاول الصغيرة.</p>
+    </div>
+    <div id="gardenBody"></div>
+  </main>
+
+  <!-- ══ ٣) الأرقام ══ -->
+  <main class="view" id="view-stats">
+    <div class="view-head">
+      <h2>الأرقام</h2>
+      <p>كل شي محسوب من جلساتك المحفوظة على جهازك.</p>
+    </div>
+    <div class="grid-2" id="statCards"></div>
+    <section class="panel"><h3>آخر سبعة أيام <span class="hint" id="weekTotal"></span></h3><div class="week" id="weekChart"></div></section>
+    <section class="panel"><h3>وقتك على وش انصرف</h3><div class="barlist" id="tagBars"></div></section>
+    <section class="panel"><h3>الإنجازات <span class="hint" id="achCount"></span></h3><div class="badges" id="badges"></div></section>
+    <section class="panel">
+      <h3>بياناتك</h3>
+      <p style="margin:0 0 12px;font-size:13px;color:var(--ink-2)">محفوظة في متصفحك فقط، ما تطلع لأي مكان.</p>
+      <div class="actions" style="margin-top:0">
+        <button class="btn btn-quiet" id="exportBtn">نزّل نسخة</button>
+        <button class="btn btn-danger" id="resetBtn">صفّر كل شي</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ══ ٤) البذور ══ -->
+  <main class="view" id="view-seeds">
+    <div class="view-head">
+      <h2>كيس البذور</h2>
+      <p>كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثمان ساعات تركيز.</p>
+    </div>
+    <div id="seedGallery"></div>
+  </main>
+</div>
+
+<nav class="nav" aria-label="التنقل">
+  <div class="nav-inner">
+    <button class="nav-btn" data-go="plant" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20c0-4.6 2.3-7.9 6.5-9.3C17.6 15.5 15.3 18.3 12 20Z"/><path d="M12 20c0-4.6-2.3-7.9-6.5-9.3C6.4 15.5 8.7 18.3 12 20Z"/><path d="M12 20v-9"/></svg>
+      النبتة
+    </button>
+    <button class="nav-btn" data-go="garden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M7 20v-5M7 15c-1.7 0-3-1.3-3-2.9C5.7 12.1 7 13.4 7 15Zm0 0c1.7 0 3-1.3 3-2.9C8.3 12.1 7 13.4 7 15Z"/><path d="M13 20V9M13 12c-1.9 0-3.4-1.5-3.4-3.3C11.5 8.7 13 10.2 13 12Zm0 0c1.9 0 3.4-1.5 3.4-3.3C14.5 8.7 13 10.2 13 12Z"/><path d="M19 20v-4M19 16c-1.4 0-2.5-1.1-2.5-2.4 1.4 0 2.5 1.1 2.5 2.4Z"/></svg>
+      المزرعة
+    </button>
+    <button class="nav-btn" data-go="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><rect x="5.5" y="12" width="3.6" height="5.5" rx="1"/><rect x="10.2" y="7" width="3.6" height="10.5" rx="1"/><rect x="14.9" y="9.5" width="3.6" height="8" rx="1"/></svg>
+      الأرقام
+    </button>
+    <button class="nav-btn" data-go="seeds">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.1 11a2 2 0 0 1-2 1.8H8.1a2 2 0 0 1-2-1.8Z"/><path d="M9 8V6.4A3 3 0 0 1 15 6.4V8"/><path d="M9.5 12.5h5"/></svg>
+      البذور
+    </button>
+  </div>
+</nav>
+
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="الدخول إلى غرسة">
+  <div class="gatecard">
+    <canvas id="gateCv" width="210" height="160"></canvas>
+    <h2>غرسة<span>.</span></h2>
+    <p class="gsub">سجّل دخولك عشان مزرعتك تنحفظ باسمك.</p>
+    <div class="gtabs" role="tablist">
+      <button class="gtab" id="tabLogin" role="tab" aria-selected="true">تسجيل دخول</button>
+      <button class="gtab" id="tabSignup" role="tab" aria-selected="false">تسجيل جديد</button>
+    </div>
+    <p class="gok" id="gOk" hidden></p>
+    <p class="gerr" id="gErr"></p>
+
+    <details class="setup" id="cloudSetup" hidden>
+      <summary>الاتصال بالسيرفر مو مضبوط — اضغط للطريقة</summary>
+      <ol>
+        <li>افتح <code>supabase.com</code> وسوّ مشروعاً مجانياً.</li>
+        <li>من <code>SQL Editor</code> نفّذ جدول <code>farms</code>.</li>
+        <li>من <code>Project Settings ▸ API Keys</code> انسخ الرابط والمفتاح.</li>
+        <li>حطهم في <code>const CLOUD</code> فوق في هذا الملف.</li>
+      </ol>
+    </details>
+
+    <div id="paneLogin">
+      <label class="fld"><span>الإيميل</span>
+        <input id="cEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
+      <label class="fld"><span>كلمة السر</span>
+        <input id="cPass" type="password" autocomplete="current-password" placeholder="كلمة السر" dir="ltr"></label>
+      <button class="btn btn-primary" id="cInBtn" style="width:100%">دخول</button>
+      <label class="chkrow" style="margin-top:12px"><input type="checkbox" id="stayCloud" checked> خلّني داخل على هذا الجهاز</label>
+      <p class="gswap">ما عندك حساب؟ <button type="button" id="goSignup">سجّل جديد</button></p>
+    </div>
+
+    <div id="paneSignup" hidden>
+      <label class="fld"><span>الاسم <i>*</i></span>
+        <input id="sName" maxlength="20" autocomplete="name" placeholder="مثلاً: عبدالله"></label>
+      <label class="fld"><span>الإيميل <i>*</i></span>
+        <input id="sEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
+      <label class="fld"><span>كلمة السر <i>*</i></span>
+        <input id="sPass" type="password" autocomplete="new-password" placeholder="٦ خانات فأكثر" dir="ltr"></label>
+      <button class="btn btn-primary" id="cUpBtn" style="width:100%">إنشاء الحساب</button>
+      <p class="gswap">عندك حساب؟ <button type="button" id="goLogin">سجّل دخول</button></p>
+    </div>
+
+    <p class="gfoot">مزرعتك تنحفظ باسمك، وتفتحها من أي جهاز.<br>تشتغل حتى بدون نت، وتتزامن أول ما يرجع.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="ic" id="toastIc">🌱</span><span id="toastTxt"></span></div>
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="تفاصيل النبتة">
+  <div class="grab"></div>
+  <div id="sheetBody"></div>
+</div>
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════
+   غرسة — محرّك النمو والرسم
+   نموّ بلا سقف: ٣ ساعات = نبتة مكتملة، وبعدها شجرة تكبر للأبد.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ─── ١. أدوات ───────────────────────────────────────────────── */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const lerp  = (a,b,t) => a+(b-a)*t;
+const easeOut = t => 1-Math.pow(1-t,2.4);
+const smooth  = t => t*t*(3-2*t);
+const TAU = Math.PI*2;
+
+function mulberry(seed){
+  let a = seed>>>0;
+  return function(){
+    a += 0x6D2B79F5; let t=a;
+    t = Math.imul(t ^ t>>>15, t|1);
+    t ^= t + Math.imul(t ^ t>>>7, t|61);
+    return ((t ^ t>>>14)>>>0)/4294967296;
+  };
+}
+function hashStr(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; }
+function hex2rgb(h){ h=String(h).replace("#",""); if(h.length===3) h=h.split("").map(c=>c+c).join(""); const n=parseInt(h,16); return [n>>16&255,n>>8&255,n&255]; }
+function rgb2hex(r){ return "#"+r.map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,"0")).join(""); }
+function mix(a,b,t){ const A=hex2rgb(a),B=hex2rgb(b); return rgb2hex([lerp(A[0],B[0],t),lerp(A[1],B[1],t),lerp(A[2],B[2],t)]); }
+function shade(c,t){ return mix(c, t<0?"#000000":"#ffffff", Math.abs(t)); }
+
+/* ─── ٢. نموذج النموّ ────────────────────────────────────────── */
+const PHASE1 = 180;                 /* ١٨٠ دقيقة = نبتة مكتملة، ثم تبدأ الشجرة */
+function grow(mins){
+  const m = Math.max(0, +mins || 0);
+  if(m < PHASE1) return { g: Math.pow(m/PHASE1, 0.62), M: 1 };
+  return { g: 1, M: 1 + Math.log2(m/PHASE1)*0.55 };      /* بلا سقف */
+}
+const TIERS = [
+  { n:"بذرة",           at:0 },
+  { n:"برعم",           at:1.4 },
+  { n:"شتلة",           at:26 },
+  { n:"نبتة",           at:83 },
+  { n:"شجيرة",          at:180 },
+  { n:"شجرة صغيرة",     at:383 },
+  { n:"شجرة كبيرة",     at:926 },
+  { n:"شجرة عظيمة",     at:2538 },
+  { n:"شجرة أسطورية",   at:7900 }
+];
+function tierOf(mins){
+  let i = 0;
+  for(let k=0;k<TIERS.length;k++) if(mins >= TIERS[k].at) i = k;
+  return i;
+}
+function tierName(mins){
+  const i = tierOf(mins);
+  if(i < TIERS.length-1) return TIERS[i].n;
+  let a = TIERS[TIERS.length-1].at, rank = 0;
+  while(mins >= a*2){ a *= 2; rank++; }
+  return rank ? "أسطورية +" + rank : TIERS[i].n;
+}
+function milestone(mins){
+  for(let i=0;i<TIERS.length;i++)
+    if(mins < TIERS[i].at) return { next:TIERS[i].at, name:TIERS[i].n, prev:(i?TIERS[i-1].at:0) };
+  let a = TIERS[TIERS.length-1].at;
+  while(mins >= a*2) a *= 2;
+  return { next:a*2, name:"الرتبة اللي بعدها", prev:a };
+}
+
+/* ─── ٣. الأنواع: ٣٦ نوعاً، كلها مفتوحة ───────────────────────
+   kind = شكل الطور الأول · mat = شكل ما بعد الشجرة
+   ──────────────────────────────────────────────────────────── */
+const FAMS = [
+  { id:"herbflower", n:"أعشاب وزهور" },
+  { id:"desert",     n:"صبّار وصحراء" },
+  { id:"palms",      n:"نخيل" },
+  { id:"fruit",      n:"أشجار مثمرة" },
+  { id:"big",        n:"أشجار كبيرة" }
+];
+const SPECIES = {
+  /* ─ أعشاب وزهور ─ */
+  basil:{ n:"ريحان", fam:"herbflower", kind:"herb", mat:"clump", note:"ورق عريض وريحة تقعد في البال.",
+    leaf:"#3E7A4B", leaf2:"#52965C", stem:"#5C8A4C", flower:"#EDEFDC", core:"#CFD6B4", pairs:5, lw:.66, ll:1.22, th:1.15 },
+  mint:{ n:"نعنع", fam:"herbflower", kind:"herb", mat:"clump", note:"كثيف وسريع، يليق بالجلسات القصيرة.",
+    leaf:"#3F9E72", leaf2:"#5CBB8A", stem:"#4FA478", flower:"#E2EFE6", core:"#BBD6C4", pairs:8, lw:.46, ll:.88, th:.95 },
+  thyme:{ n:"زعتر", fam:"herbflower", kind:"herb", mat:"clump", note:"ورق دقيق وزهر بنفسجي باهت.",
+    leaf:"#6E8A5E", leaf2:"#84A072", stem:"#7A8F68", flower:"#C9B8D8", core:"#AC9AC4", pairs:9, lw:.32, ll:.72, th:.8 },
+  rosemary:{ n:"إكليل الجبل", fam:"herbflower", kind:"herb", mat:"clump", note:"إبَر خضراء داكنة وزهر أزرق.",
+    leaf:"#4C7A66", leaf2:"#5F9079", stem:"#6B8474", flower:"#9BB6D8", core:"#7C9BC4", pairs:11, lw:.20, ll:.98, th:.9 },
+  sage:{ n:"مريمية", fam:"herbflower", kind:"herb", mat:"clump", note:"ورق فضّي مخملي.",
+    leaf:"#8AA08C", leaf2:"#9EB29F", stem:"#8FA592", flower:"#C3B2D2", core:"#A995BC", pairs:6, lw:.56, ll:.95, th:1.05 },
+  jasmine:{ n:"ياسمين", fam:"herbflower", kind:"herb", mat:"clump", note:"زهر أبيض صغير بريحة قوية.",
+    leaf:"#2F7148", leaf2:"#41875A", stem:"#4C8055", flower:"#FBFAF2", core:"#E8E4C8", pairs:7, lw:.44, ll:.95, th:.9, fl:2.2 },
+  rose:{ n:"ورد طائفي", fam:"herbflower", kind:"rose", mat:"clump", note:"يبي صبر، وزهرته تفتح متأخرة.",
+    leaf:"#2E6444", leaf2:"#3C7A53", stem:"#3F7A4F", flower:"#B8324A", core:"#E0768A", pairs:5, lw:.40, ll:.98, th:1, fl:1.55 },
+  sunflower:{ n:"عبّاد الشمس", fam:"herbflower", kind:"sun", mat:"clump", note:"يتبع الضوء ورأسه يكبر.",
+    leaf:"#4E8342", leaf2:"#5E9A4E", stem:"#5F9147", flower:"#E0A64A", core:"#6B4A2A", pairs:3, lw:.62, ll:1.55, th:1.9, fl:1.25 },
+  tulip:{ n:"تيوليب", fam:"herbflower", kind:"bell", mat:"clump", note:"كأس مقفل على ساق أملس.",
+    leaf:"#4C8A5E", leaf2:"#5E9E6E", stem:"#54936A", flower:"#C63B52", core:"#E6748A", pairs:2, lw:.34, ll:1.5, th:1.25, fl:1.5 },
+  poppy:{ n:"خشخاش", fam:"herbflower", kind:"bell", mat:"clump", note:"ورقة حمراء رقيقة تهتز مع الهوا.",
+    leaf:"#6E8A54", leaf2:"#809C64", stem:"#779060", flower:"#C4342A", core:"#2E2420", pairs:4, lw:.30, ll:1.1, th:.85, fl:1.45 },
+  narcissus:{ n:"نرجس", fam:"herbflower", kind:"bell", mat:"clump", note:"أبيض بقلب ذهبي.",
+    leaf:"#5C9068", leaf2:"#6EA478", stem:"#63977O".replace("O","0"), flower:"#F6F3E2", core:"#E0A63A", pairs:2, lw:.22, ll:1.55, th:1, fl:1.4 },
+  hibiscus:{ n:"كركديه", fam:"herbflower", kind:"bell", mat:"clump", note:"زهرة عريضة قرمزية.",
+    leaf:"#2F6B45", leaf2:"#3F8055", stem:"#44784F", flower:"#A81E38", core:"#E8C24A", pairs:5, lw:.52, ll:1.05, th:1.1, fl:1.7 },
+  lavender:{ n:"خزامى", fam:"herbflower", kind:"spike", mat:"clump", note:"عيدان نحيلة وسنابل بنفسجية.",
+    leaf:"#7E9478", leaf2:"#8FA587", stem:"#87977E", flower:"#7B6BA8", core:"#A493CC" },
+  wheat:{ n:"قمح", fam:"herbflower", kind:"spike", mat:"clump", note:"سنابل ذهبية تنحني مع الريح.",
+    leaf:"#A8A householder".replace(" householder","96A"), leaf2:"#BCB47E", stem:"#B0A874", flower:"#D8B25A", core:"#B78F3C" },
+
+  /* ─ صبّار وصحراء ─ */
+  cactus:{ n:"صبار عمودي", fam:"desert", kind:"cactus", mat:"column", note:"ما يحتاج أحد، ويطلع أذرعه بالوقت.",
+    leaf:"#4E8B5F", leaf2:"#63A173", stem:"#4E8B5F", flower:"#D96A8A", core:"#F0B8C8" },
+  opuntia:{ n:"تين شوكي", fam:"desert", kind:"pads", mat:"column", note:"كفوف مفلطحة تتراكم فوق بعض.",
+    leaf:"#5A9765", leaf2:"#6FAC78", stem:"#4F8A5C", flower:"#E0A63A", core:"#C4762A" },
+  agave:{ n:"أغاف", fam:"desert", kind:"rosette", mat:"column", note:"سيوف سميكة تتفتح من المركز.",
+    leaf:"#6E9478", leaf2:"#84A88C", stem:"#5E8468", flower:"#C8B44A", core:"#A89434" },
+  aloe:{ n:"صبار الألوة", fam:"desert", kind:"rosette", mat:"column", note:"ورق لحمي مرقّط.",
+    leaf:"#5E9472", leaf2:"#74A886", stem:"#4E8462", flower:"#D4562A", core:"#E88A3A" },
+
+  /* ─ نخيل ─ */
+  palm:{ n:"نخلة", fam:"palms", kind:"palm", mat:"palmTree", note:"أبطأ وأجمل، وتعطي رطب.",
+    leaf:"#3F7A44", leaf2:"#55924F", stem:"#7A5B3A", flower:"#B8622E", core:"#8E4420", bark:"#7A5B3A", fruit:true },
+  washingtonia:{ n:"واشنطونيا", fam:"palms", kind:"palm", mat:"palmTree", note:"جذع نحيل وتاج عريض.",
+    leaf:"#4A8450", leaf2:"#5E9C5A", stem:"#8A6A46", flower:"#C8B48A", core:"#A89060", bark:"#8A6A46", slim:true },
+  doum:{ n:"دوم", fam:"palms", kind:"palm", mat:"palmTree", note:"نخلة الصحراء، سعفها مروحي.",
+    leaf:"#5A8A50", leaf2:"#6E9E5E", stem:"#6E5236", flower:"#A8722E", core:"#845220", bark:"#6E5236", fruit:true },
+
+  /* ─ أشجار مثمرة ─ */
+  olive:{ n:"زيتون", fam:"fruit", kind:"shrub", mat:"tree", canopy:"spread", note:"ورق فضّي وجذع معجون بالسنين.",
+    leaf:"#7E9B6B", leaf2:"#9CB587", stem:"#6E7A5A", flower:"#2F3A22", core:"#7C8A55", bark:"#6B6250", fruit:true },
+  pomegranate:{ n:"رمّان", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"ثمرة حمرا تحت ورق غامق.",
+    leaf:"#35704A", leaf2:"#46865B", stem:"#4B7A50", flower:"#A8412E", core:"#C8523A", bark:"#6E5440", fruit:true, pairs:6, lw:.44, ll:1, th:1.15, fl:1.5 },
+  apple:{ n:"تفاح", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"تاج مستدير وثمر أحمر.",
+    leaf:"#3C7A4E", leaf2:"#4E8F5E", stem:"#4E7A52", flower:"#C3352E", core:"#E06A52", bark:"#6B5138", fruit:true, pairs:6, lw:.50, ll:1, th:1.2, fl:1.5 },
+  lemon:{ n:"ليمون", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"ورق لمّاع وثمر أصفر.",
+    leaf:"#2F6B40", leaf2:"#41824F", stem:"#437A4C", flower:"#E0C04A", core:"#F0D878", bark:"#6E5A42", fruit:true, pairs:7, lw:.42, ll:.95, th:1.1, fl:1.35 },
+  orange:{ n:"برتقال", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"أغصان كثيفة وثمر برتقالي.",
+    leaf:"#2E6A42", leaf2:"#3F8050", stem:"#417848", flower:"#E08A2E", core:"#F0AA5A", bark:"#6B5740", fruit:true, pairs:7, lw:.44, ll:.95, th:1.15, fl:1.4 },
+  fig:{ n:"تين", fam:"fruit", kind:"fruit", mat:"tree", canopy:"spread", note:"ورق كبير مفصّص وظل واسع.",
+    leaf:"#41784A", leaf2:"#548C58", stem:"#5A8052", flower:"#6B3A5E", core:"#8E5078", bark:"#8A7A62", fruit:true, pairs:4, lw:.78, ll:1.25, th:1.3, fl:1.5 },
+  mango:{ n:"مانجو", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"ورق طويل وتاج غامق.",
+    leaf:"#2A6440", leaf2:"#3A7A4E", stem:"#3E7248", flower:"#D89A3A", core:"#E8B85A", bark:"#5E4E3A", fruit:true, pairs:8, lw:.26, ll:1.35, th:1.2, fl:1.55 },
+  sidr:{ n:"سدر", fam:"fruit", kind:"fruit", mat:"tree", canopy:"spread", note:"شجرة الجزيرة، ظلّها بركة.",
+    leaf:"#5A8A54", leaf2:"#6E9E64", stem:"#5E8458", flower:"#C89A3A", core:"#A87C28", bark:"#7A6A50", fruit:true, pairs:9, lw:.36, ll:.85, th:1.1, fl:1.1 },
+
+  /* ─ أشجار كبيرة ─ */
+  oak:{ n:"بلوط", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"جذع ضخم وتاج عريض.",
+    leaf:"#3E7047", leaf2:"#4F8455", stem:"#5A7A4E", flower:"#8A6A3A", core:"#6E5228", bark:"#5E4C38", pairs:6, lw:.54, ll:1.1, th:1.4 },
+  pine:{ n:"صنوبر", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"طوابق من الإبَر ورائحة راتنج.",
+    leaf:"#2E5E42", leaf2:"#3E7450", stem:"#5A4A34", flower:"#6B5438", core:"#4E3C24", bark:"#5A4432" },
+  cypress:{ n:"سرو", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"عمود أخضر نحيل يشاور السماء.",
+    leaf:"#2A5238", leaf2:"#376846", stem:"#544632", flower:"#5E4C32", core:"#463820", bark:"#544632", slim:true },
+  cedar:{ n:"أرز", fam:"big", kind:"conifer", mat:"tree", canopy:"spread", note:"طوابق أفقية واسعة.",
+    leaf:"#35624A", leaf2:"#477A5C", stem:"#60503A", flower:"#7A6242", core:"#5A4830", bark:"#60503A" },
+  sakura:{ n:"كرز مزهر", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"تاجه زهر وردي كامل.",
+    leaf:"#5E8A5E", leaf2:"#72A06E", stem:"#6E5A4A", flower:"#F0AEC2", core:"#FBD8E2", bark:"#6E5A4A", blossom:true, pairs:6, lw:.40, ll:.9, th:1.1 },
+  jacaranda:{ n:"جاكرندا", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"تاجه بنفسجي ما يشبه غيره.",
+    leaf:"#4E7A52", leaf2:"#5E8E60", stem:"#5E5240", flower:"#8A7AC4", core:"#B4A8DC", bark:"#5E5240", blossom:true, pairs:9, lw:.22, ll:1.05, th:1.05 },
+  acacia:{ n:"سمر", fam:"big", kind:"leafy", mat:"tree", canopy:"spread", note:"مظلّة الصحراء المفلطحة.",
+    leaf:"#6E8A50", leaf2:"#829E60", stem:"#7A6A48", flower:"#D8C46A", core:"#B8A048", bark:"#6E6048", pairs:10, lw:.22, ll:.8, th:1.1 }
+};
+const SP_ORDER = Object.keys(SPECIES);
+const HUSK = "#8A6A4F";
+
+let PAL = {};
+function syncPalette(){
+  const cs = getComputedStyle(document.documentElement);
+  const g = n => (cs.getPropertyValue(n)||"").trim() || "#000000";
+  PAL = { soil:g("--soil"), soil2:g("--soil-2"), soil3:g("--soil-3"),
+          ink:g("--ink"), line:g("--line"), paper:g("--paper"),
+          night: document.documentElement.dataset.theme === "night" };
+}
+
+function palFor(id, withered){
+  const s = SPECIES[id] || SPECIES.basil;
+  if(!withered) return s;
+  const t = .72;
+  return Object.assign({}, s, {
+    leaf:mix(s.leaf,HUSK,t), leaf2:mix(s.leaf2,HUSK,t+.08), stem:mix(s.stem,HUSK,t),
+    flower:mix(s.flower,HUSK,.88), core:mix(s.core,HUSK,.88),
+    bark: mix(s.bark||"#6B5138", HUSK, .45)
+  });
+}
+
+/* ─── ٤. فرش أساسية ─────────────────────────────────────────── */
+function leaf(ctx,x,y,len,wid,ang,c1,c2,curl){
+  if(!(len>0.5)) return;
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+  const g = ctx.createLinearGradient(0,-wid,len,wid);
+  g.addColorStop(0,c1); g.addColorStop(1,c2);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(0,0);
+  ctx.quadraticCurveTo(len*.45,-wid,len,-len*curl*.12);
+  ctx.quadraticCurveTo(len*.45, wid,0,0);
+  ctx.fill();
+  if(len>6){
+    ctx.strokeStyle="rgba(0,0,0,.14)"; ctx.lineWidth=Math.max(.5,len*.022);
+    ctx.beginPath(); ctx.moveTo(len*.04,0);
+    ctx.quadraticCurveTo(len*.5,-wid*.12,len*.94,-len*curl*.1); ctx.stroke();
+  }
+  ctx.restore();
+}
+function makeStem(cx,gy,h,bend,sway){
+  const x0=cx,y0=gy, x1=cx+bend*h*.16+sway*h*.05, y1=gy-h*.55,
+        x2=cx+bend*h*.10+sway*h*.14, y2=gy-h;
+  return {
+    pt(t){ const u=1-t; return [u*u*x0+2*u*t*x1+t*t*x2, u*u*y0+2*u*t*y1+t*t*y2]; },
+    ang(t){ const u=1-t; return Math.atan2(2*u*(y1-y0)+2*t*(y2-y1), 2*u*(x1-x0)+2*t*(x2-x1)); },
+    draw(ctx,color,w){ ctx.strokeStyle=color; ctx.lineWidth=Math.max(.8,w); ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.quadraticCurveTo(x1,y1,x2,y2); ctx.stroke(); },
+    tipx:x2, tipy:y2
+  };
+}
+function frond(ctx,sp,x,y,L,ang,lf,wid){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+  ctx.strokeStyle=shade(sp.leaf,-.10); ctx.lineWidth=Math.max(1,L*.045);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(L*.55,-L*.18,L,L*.30); ctx.stroke();
+  for(let j=1;j<=lf;j++){
+    const t=j/(lf+1), u=1-t;
+    const px=2*u*t*(L*.55)+t*t*L, py=2*u*t*(-L*.18)+t*t*(L*.30);
+    const ll=L*wid*(1-Math.abs(t-.42)*1.1);
+    leaf(ctx,px,py,ll,ll*.16,-1.05+t*.5,sp.leaf2,sp.leaf,1);
+    leaf(ctx,px,py,ll,ll*.16, 1.05+t*.5,sp.leaf,sp.leaf2,-1);
+  }
+  ctx.restore();
+}
+function berry(ctx,x,y,R,cFrom,cTo){
+  if(!(R>0.5)) return;
+  const g=ctx.createRadialGradient(x-R*.3,y-R*.35,R*.1,x,y,R*1.15);
+  g.addColorStop(0,cFrom); g.addColorStop(1,cTo);
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,R,0,TAU); ctx.fill();
+}
+
+/* ─── ٥. الأرض والبذرة ──────────────────────────────────────── */
+function drawGround(ctx,cx,gy,w,s,rnd,pot){
+  if(pot){
+    const pw=pot.pw, ph=pot.ph, top=gy;
+    const clay = PAL.night ? "#79462A" : "#B0693C";
+    const g = ctx.createLinearGradient(cx-pw/2,top,cx+pw/2,top+ph*1.5);
+    g.addColorStop(0,shade(clay,.12)); g.addColorStop(.5,clay); g.addColorStop(1,shade(clay,-.22));
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.moveTo(cx-pw/2,top); ctx.lineTo(cx+pw/2,top);
+    ctx.lineTo(cx+pw*.34,top+ph*1.42);
+    ctx.quadraticCurveTo(cx,top+ph*1.62,cx-pw*.34,top+ph*1.42);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle=shade(clay,.20);
+    ctx.beginPath(); ctx.ellipse(cx,top,pw/2,ph*.26,0,0,TAU); ctx.fill();
+    ctx.fillStyle=PAL.soil;
+    ctx.beginPath(); ctx.ellipse(cx,top+ph*.02,pw/2-ph*.14,ph*.19,0,0,TAU); ctx.fill();
+    return;
+  }
+  const bw = Math.min(w*.72, s*.78);
+  const g = ctx.createLinearGradient(cx,gy-s*.05,cx,gy+s*.10);
+  g.addColorStop(0,PAL.soil3); g.addColorStop(1,PAL.soil);
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.ellipse(cx,gy,bw/2,s*.042,0,0,TAU); ctx.fill();
+  ctx.fillStyle=shade(PAL.soil,-.16);
+  for(let i=0;i<5;i++){ const a=rnd()*TAU, r=rnd()*bw*.32;
+    ctx.beginPath(); ctx.ellipse(cx+Math.cos(a)*r, gy+Math.sin(a)*s*.016, s*.010, s*.005,0,0,TAU); ctx.fill(); }
+}
+function drawSeed(ctx,cx,gy,s,g,sp){
+  const r = s*.0085 + s*.010*smooth(clamp(g/.05,0,1));   /* بذرة صغيرة جداً */
+  ctx.fillStyle = mix("#6B4E2E", sp.leaf, .22);
+  ctx.beginPath(); ctx.ellipse(cx,gy-r*.7,r*1.22,r,-.3,0,TAU); ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.26)";
+  ctx.beginPath(); ctx.ellipse(cx-r*.26,gy-r*1.0,r*.42,r*.22,-.35,0,TAU); ctx.fill();
+}
+
+/* ─── ٦. الطور الأول: فرد واحد ───────────────────────────────
+   drawForm(ctx, sp, cx, gy, s, q, H, o)
+   q = تقدّم الطور الأول (٠..١) · H = طول هذا الفرد
+   ──────────────────────────────────────────────────────────── */
+function drawForm(ctx, sp, cx, gy, s, q, H, o){
+  const rnd = o.rnd, sway = o.sway||0, droop = o.withered?.55:0;
+  const bloom = o.bloom==null?1:o.bloom;
+  const k = sp.kind, bend = (rnd()*2-1)*.9;
+  const unit = L => L;                                     /* اختصار قراءة */
+  const LBASE = (H*.112 + s*.020*q);
+  const st = makeStem(cx,gy,H,bend+droop*1.4,sway);
+
+  /* البرعم: فلقتان صغيرتان جداً */
+  if(q < .10 && k!=="pads" && k!=="rosette"){
+    const sc = smooth(clamp(q/.10,0,1)), L = s*.006 + s*.020*sc;
+    st.draw(ctx,sp.stem,Math.max(.9,s*.006));
+    const tp=st.pt(1), an=st.ang(1);
+    leaf(ctx,tp[0],tp[1],L,L*.54,an+.95+droop,sp.leaf2,sp.leaf,1);
+    leaf(ctx,tp[0],tp[1],L,L*.54,an-.95+droop,sp.leaf,sp.leaf2,-1);
+    return;
+  }
+
+  /* ── صبار عمودي ── */
+  if(k==="cactus"){
+    const bw=H*.19+s*.012, bh=H;
+    cactusBody(ctx,sp,cx,gy,bw,bh,o.withered,s);
+    const arms=[];
+    if(q>.50) arms.push([-1,smooth(clamp((q-.50)/.30,0,1)),.46,.44]);
+    if(q>.72) arms.push([ 1,smooth(clamp((q-.72)/.24,0,1)),.40,.34]);
+    arms.forEach(A=>{
+      const ax=cx+A[0]*bw*1.42;
+      ctx.fillStyle=shade(sp.leaf,-.14);
+      ctx.fillRect(Math.min(cx,ax)-bw*.1, gy-bh*(.30+.10*A[1]), Math.abs(ax-cx)+bw*.2, bh*.13);
+    });
+    arms.forEach(A=>{ const ax=cx+A[0]*bw*1.42;
+      cactusBody(ctx,sp,ax,gy-bh*.16,bw*A[2],bh*A[3]*A[1]+bw*A[2],o.withered,s); });
+    cactusBody(ctx,sp,cx,gy,bw,bh,o.withered,s);
+    if(q>.80 && !o.withered){ const a=smooth(clamp((q-.80)/.20,0,1))*bloom;
+      petalRing(ctx,sp,cx,gy-bh,bw*.42*a,a); }
+    return;
+  }
+  /* ── كفوف التين الشوكي ── */
+  if(k==="pads"){
+    const n = 2 + Math.round(q*4);
+    let px=cx, py=gy, pw=H*.30, ph=H*.34;
+    for(let i=0;i<n;i++){
+      const ap = clamp((q-i*.16)/.22,0,1); if(ap<=0) break;
+      const sc = smooth(ap), side = i%2?1:-1;
+      const w2 = pw*(1-i*.10)*sc, h2 = ph*(1-i*.08)*sc;
+      const cxp = px + (i? side*w2*.55:0), cyp = py - h2*.55;
+      const g=ctx.createLinearGradient(cxp-w2,cyp,cxp+w2,cyp);
+      g.addColorStop(0,shade(sp.leaf,-.14)); g.addColorStop(.45,sp.leaf2); g.addColorStop(1,shade(sp.leaf,-.18));
+      ctx.fillStyle=g; ctx.save(); ctx.translate(cxp,cyp); ctx.rotate(side*.18*(i?1:0));
+      ctx.beginPath(); ctx.ellipse(0,0,w2*.62,h2*.72,0,0,TAU); ctx.fill();
+      if(!o.withered){ ctx.strokeStyle="rgba(255,255,255,.5)"; ctx.lineWidth=Math.max(.5,s*.0035);
+        for(let d=0;d<7;d++){ const a2=rnd()*TAU, rx=Math.cos(a2)*w2*.44, ry=Math.sin(a2)*h2*.52;
+          ctx.beginPath(); ctx.moveTo(rx,ry); ctx.lineTo(rx*1.14,ry*1.14); ctx.stroke(); } }
+      ctx.restore();
+      if(i===n-1 && q>.85 && !o.withered){ const a=smooth(clamp((q-.85)/.15,0,1))*bloom;
+        berry(ctx,cxp,cyp-h2*.62,s*.014*a,shade(sp.core,.2),sp.flower); }
+      px=cxp; py=cyp-h2*.34;
+    }
+    return;
+  }
+  /* ── وريدة (أغاف/ألوة) ── */
+  if(k==="rosette"){
+    const n = 6 + Math.round(q*8);
+    for(let i=0;i<n;i++){
+      const ap=clamp((q-i*.055)/.2,0,1); if(ap<=0) continue;
+      const a = -Math.PI/2 + (i-(n-1)/2)*(2.5/Math.max(1,n-1)) + (rnd()-.5)*.12 + droop*.4;
+      const L = H*.92*smooth(ap)*(.72+.28*Math.cos((i-(n-1)/2)*.42));
+      leaf(ctx,cx,gy,L,L*.17,a,i%2?sp.leaf2:sp.leaf,i%2?sp.leaf:sp.leaf2,i%2?1:-1);
+    }
+    if(q>.88 && !o.withered){
+      const st2=makeStem(cx,gy,H*1.5,bend*.3,sway); st2.draw(ctx,sp.stem,Math.max(1,s*.007));
+      for(let i=0;i<6;i++){ const t=.5+i*.09; if(t>1)break; const p=st2.pt(t);
+        berry(ctx,p[0],p[1],s*.008*bloom,shade(sp.core,.2),sp.flower); }
+    }
+    return;
+  }
+  /* ── نخلة صغيرة ── */
+  if(k==="palm"){
+    const th=H*.055+s*.006;
+    const g=ctx.createLinearGradient(cx-th,gy,cx+th,gy);
+    g.addColorStop(0,shade(sp.stem,-.20)); g.addColorStop(.45,sp.stem); g.addColorStop(1,shade(sp.stem,-.28));
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.moveTo(cx-th,gy); ctx.lineTo(st.tipx-th*.62,st.tipy);
+    ctx.lineTo(st.tipx+th*.62,st.tipy); ctx.lineTo(cx+th,gy); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="rgba(0,0,0,.16)"; ctx.lineWidth=Math.max(.6,s*.005);
+    const segs=Math.max(2,Math.round(6*q));
+    for(let i=1;i<=segs;i++){ const t=i/(segs+1), p=st.pt(t);
+      ctx.beginPath(); ctx.moveTo(p[0]-th*(1-t*.35),p[1]); ctx.lineTo(p[0]+th*(1-t*.35),p[1]); ctx.stroke(); }
+    const n=5+Math.round(q*4);
+    for(let i=0;i<n;i++){
+      const b=clamp((q-.10-i*.075)/.2,0,1); if(b<=0) continue;
+      const spread=(i-(n-1)/2)/Math.max(1,(n-1)/2);
+      frond(ctx,sp,st.tipx,st.tipy,(H*.30+H*.22*q)*smooth(b),
+            -Math.PI/2+spread*1.35+sway*.05+droop*.5, 8, .40);
+    }
+    if(q>.80 && sp.fruit && !o.withered){ const a=smooth(clamp((q-.80)/.2,0,1))*bloom;
+      for(let i=0;i<12;i++){ const an=rnd()*TAU, r=H*.10*rnd();
+        ctx.fillStyle = i%3?sp.flower:sp.core;
+        ctx.beginPath(); ctx.ellipse(st.tipx+Math.cos(an)*r, st.tipy+H*.06+Math.abs(Math.sin(an))*r*.7,
+          s*.009*a,s*.013*a,0,0,TAU); ctx.fill(); }
+    }
+    return;
+  }
+  /* ── شجيرة متعدّدة السوق ── */
+  if(k==="shrub"){
+    const br=3+Math.round(q*2);
+    for(let b=0;b<br;b++){
+      const bb=clamp((q-b*.08)/.3,0,1); if(bb<=0) continue;
+      const bd=(b-(br-1)/2)*.55;
+      const st2=makeStem(cx,gy,H*(.62+.38*((b%2)?1:.8))*smooth(bb),bd*1.6+droop,sway);
+      st2.draw(ctx,sp.stem,Math.max(1,H*.022*(1-b*.05)));
+      const n=5+Math.round(q*4);
+      for(let i=0;i<n;i++){
+        const t=.24+(i/n)*.72, ap=clamp((q-.12-(i/n)*.5)/.2,0,1); if(ap<=0) continue;
+        const p=st2.pt(t), an=st2.ang(t), side=i%2?1:-1;
+        const L=LBASE*.78*smooth(ap);
+        leaf(ctx,p[0],p[1],L,L*.30,an+side*.85+droop*.4,sp.leaf2,sp.leaf,side);
+      }
+      if(q>.82 && b%2===0 && sp.fruit && !o.withered){
+        const a=smooth(clamp((q-.82)/.18,0,1))*bloom, p=st2.pt(.88);
+        berry(ctx,p[0],p[1],H*.030*a,shade(sp.core,.2),sp.flower);
+      }
+    }
+    return;
+  }
+  /* ── سنابل ── */
+  if(k==="spike"){
+    const stalks=3+Math.round(q*3);
+    for(let b=0;b<stalks;b++){
+      const bb=clamp((q-b*.07)/.28,0,1); if(bb<=0) continue;
+      const st2=makeStem(cx+(b-(stalks-1)/2)*H*.07,gy,H*(.72+.28*rnd())*smooth(bb),
+                         (b-(stalks-1)/2)*.5+droop,sway);
+      st2.draw(ctx,sp.stem,Math.max(.9,H*.013));
+      for(let i=0;i<4;i++){ const t=.18+i*.13, p=st2.pt(t), an=st2.ang(t), side=i%2?1:-1;
+        const L=LBASE*.55*smooth(clamp((q-.15-i*.08)/.2,0,1));
+        leaf(ctx,p[0],p[1],L,L*.16,an+side*.7,sp.leaf2,sp.leaf,side); }
+      if(q>.42){ const a=smooth(clamp((q-.42)/.4,0,1))*(q>.74?bloom:1);
+        for(let i=0;i<9;i++){ const t=.62+i*.045; if(t>1) break;
+          const p=st2.pt(Math.min(t,1)), r=H*.026*a*(1-i*.05);
+          ctx.fillStyle = i%2?sp.flower:sp.core;
+          ctx.beginPath(); ctx.ellipse(p[0],p[1],r,r*1.5,0,0,TAU); ctx.fill(); } }
+    }
+    return;
+  }
+
+  /* ── ذوات الساق: أعشاب، ورد، عبّاد، كأس، ثمر، ورقي، صنوبري ── */
+  st.draw(ctx,sp.stem,Math.max(1,H*.026*(sp.th||1)));
+  const pairs = sp.pairs || 6;
+  for(let i=0;i<pairs;i++){
+    const t=.22+(i/pairs)*.72;
+    const ap=clamp((q-(i/pairs)*.62)/.14,0,1); if(ap<=0) continue;
+    const p=st.pt(t), an=st.ang(t);
+    const scale=smooth(ap)*(sp.ll||1)*(1-i*.05);
+    const L=LBASE*scale, LW=L*(sp.lw||.46);
+    if(k==="herb"){
+      leaf(ctx,p[0],p[1],L,LW,an+.92+droop*.5,sp.leaf2,sp.leaf,1);
+      leaf(ctx,p[0],p[1],L,LW,an-.92+droop*.5,sp.leaf,sp.leaf2,-1);
+    } else if(k==="conifer"){
+      for(let d=-1;d<=1;d+=2)
+        leaf(ctx,p[0],p[1],L*1.1,L*.10,an+d*(1.05+i*.04)+droop*.4,sp.leaf2,sp.leaf,d);
+    } else {
+      const side=i%2?1:-1;
+      leaf(ctx,p[0],p[1],L,LW,an+side*.92+droop*.5,
+           side>0?sp.leaf2:sp.leaf, side>0?sp.leaf:sp.leaf2, side);
+      if(k==="rose"){ ctx.strokeStyle=shade(sp.stem,-.18); ctx.lineWidth=Math.max(.6,s*.004);
+        ctx.beginPath(); ctx.moveTo(p[0],p[1]); ctx.lineTo(p[0]-side*H*.03,p[1]+H*.02); ctx.stroke(); }
+    }
+  }
+  const tx=st.tipx, ty=st.tipy, fl=sp.fl||1;
+  if(o.withered){ return; }
+  if(k==="herb" && q>.80){
+    const a=smooth(clamp((q-.80)/.20,0,1))*bloom;
+    for(let i=0;i<6;i++){ ctx.fillStyle=i%2?sp.flower:sp.core;
+      const r=H*.018*a*fl;
+      ctx.beginPath(); ctx.ellipse(tx+(i%2?1:-1)*H*.016,ty-i*H*.022,r,r*.7,0,0,TAU); ctx.fill(); }
+  }
+  if(k==="rose"){
+    if(q>.30 && q<.76){
+      const bd=smooth(clamp((q-.30)/.30,0,1))*(1-smooth(clamp((q-.68)/.08,0,1))), R=H*.045*bd;
+      if(R>.6){ ctx.fillStyle=sp.stem;
+        ctx.beginPath(); ctx.ellipse(tx,ty-R*.4,R*.62,R,0,0,TAU); ctx.fill();
+        ctx.fillStyle=shade(sp.flower,-.10);
+        ctx.beginPath(); ctx.ellipse(tx,ty-R*1.05,R*.34,R*.30,0,0,TAU); ctx.fill(); }
+    }
+    if(q>.70) roseHead(ctx,sp,tx,ty,H*.082*smooth(clamp((q-.70)/.30,0,1))*bloom*fl/1.55);
+  }
+  if(k==="bell" && q>.55) bellFlower(ctx,sp,tx,ty,H*.10*smooth(clamp((q-.55)/.45,0,1))*bloom*fl/1.5, st.ang(1));
+  if(k==="sun" && q>.55) sunHead(ctx,sp,tx,ty,H*.105*smooth(clamp((q-.55)/.45,0,1))*bloom*fl/1.25,rnd);
+  if(k==="fruit" && q>.62){
+    const a=smooth(clamp((q-.62)/.38,0,1))*bloom;
+    [[.72,-1],[.86,1],[.58,1]].forEach((sd,i)=>{
+      const p=st.pt(sd[0]), R=H*.050*a*fl*(1-i*.16);
+      berry(ctx,p[0]+sd[1]*H*.036,p[1]+H*.026,R,shade(sp.core,.24),shade(sp.flower,-.10));
+    });
+  }
+}
+
+function cactusBody(ctx,sp,x,y,bw,bh,withered,s){
+  if(!(bh>1)) return;
+  const g=ctx.createLinearGradient(x-bw,y,x+bw,y);
+  g.addColorStop(0,shade(sp.leaf,-.14)); g.addColorStop(.42,sp.leaf2); g.addColorStop(1,shade(sp.leaf,-.20));
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.moveTo(x-bw,y); ctx.lineTo(x-bw,y-bh+bw);
+  ctx.quadraticCurveTo(x-bw,y-bh,x,y-bh); ctx.quadraticCurveTo(x+bw,y-bh,x+bw,y-bh+bw);
+  ctx.lineTo(x+bw,y); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="rgba(0,0,0,.13)"; ctx.lineWidth=Math.max(.6,bw*.055);
+  for(let i=1;i<3;i++){ const xx=x-bw+(bw*2)*(i/3);
+    ctx.beginPath(); ctx.moveTo(xx,y-bw*.2); ctx.lineTo(xx,y-bh+bw*.7); ctx.stroke(); }
+  if(!withered){
+    ctx.strokeStyle="rgba(255,255,255,.55)"; ctx.lineWidth=Math.max(.5,bw*.04);
+    for(let i=0;i<9;i++){ const yy=y-bw-(bh-bw)*(i/9), sgn=i%2?1:-1;
+      ctx.beginPath(); ctx.moveTo(x+sgn*bw,yy); ctx.lineTo(x+sgn*(bw+bw*.22),yy-bw*.1); ctx.stroke(); }
+  }
+}
+function petalRing(ctx,sp,x,y,R,a){
+  if(!(R>.6)) return;
+  ctx.fillStyle=sp.flower;
+  for(let i=0;i<7;i++){ const an=i/7*TAU;
+    ctx.beginPath(); ctx.ellipse(x+Math.cos(an)*R,y+Math.sin(an)*R*.7,R*.55,R*.24,an,0,TAU); ctx.fill(); }
+  ctx.fillStyle=sp.core; ctx.beginPath(); ctx.arc(x,y,R*.32,0,TAU); ctx.fill();
+}
+function roseHead(ctx,sp,x,y,R){
+  if(!(R>.8)) return;
+  ctx.fillStyle=shade(sp.flower,-.22); ctx.beginPath(); ctx.arc(x,y,R,0,TAU); ctx.fill();
+  for(let ring=3;ring>=1;ring--){
+    const rr=R*(ring/3), n=4+ring*2;
+    ctx.fillStyle=mix(sp.flower,sp.core,(3-ring)/3.2);
+    for(let i=0;i<n;i++){ const an=i/n*TAU+ring*.6;
+      ctx.beginPath(); ctx.ellipse(x+Math.cos(an)*rr*.52,y+Math.sin(an)*rr*.52,rr*.55,rr*.42,an,0,TAU); ctx.fill(); }
+  }
+  ctx.fillStyle=shade(sp.core,.22); ctx.beginPath(); ctx.arc(x,y,R*.16,0,TAU); ctx.fill();
+}
+function bellFlower(ctx,sp,x,y,R,an){
+  if(!(R>.8)) return;
+  ctx.save(); ctx.translate(x,y); ctx.rotate(an+Math.PI/2);
+  ctx.fillStyle=shade(sp.flower,-.16);
+  for(let i=0;i<3;i++){ const a2=-.75+i*.75;
+    ctx.beginPath(); ctx.ellipse(Math.sin(a2)*R*.34,-R*.42,R*.40,R*.72,a2*.5,0,TAU); ctx.fill(); }
+  ctx.fillStyle=sp.flower;
+  for(let i=0;i<3;i++){ const a2=-.45+i*.45;
+    ctx.beginPath(); ctx.ellipse(Math.sin(a2)*R*.24,-R*.52,R*.34,R*.66,a2*.5,0,TAU); ctx.fill(); }
+  ctx.fillStyle=shade(sp.core,.1);
+  ctx.beginPath(); ctx.ellipse(0,-R*.72,R*.20,R*.26,0,0,TAU); ctx.fill();
+  ctx.restore();
+}
+function sunHead(ctx,sp,x,y,R,rnd){
+  if(!(R>1)) return;
+  ctx.fillStyle=shade(sp.flower,-.18);
+  for(let i=0;i<16;i++){ const an=i/16*TAU;
+    ctx.beginPath(); ctx.ellipse(x+Math.cos(an)*R*1.05,y+Math.sin(an)*R*1.05,R*.62,R*.24,an,0,TAU); ctx.fill(); }
+  ctx.fillStyle=sp.flower;
+  for(let i=0;i<16;i++){ const an=i/16*TAU+.19;
+    ctx.beginPath(); ctx.ellipse(x+Math.cos(an)*R*.92,y+Math.sin(an)*R*.92,R*.56,R*.21,an,0,TAU); ctx.fill(); }
+  const cg=ctx.createRadialGradient(x,y,0,x,y,R*.72);
+  cg.addColorStop(0,shade(sp.core,.20)); cg.addColorStop(1,sp.core);
+  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(x,y,R*.70,0,TAU); ctx.fill();
+  ctx.fillStyle="rgba(0,0,0,.18)";
+  for(let i=0;i<20;i++){ const an=rnd()*TAU, rr=rnd()*R*.6;
+    ctx.beginPath(); ctx.arc(x+Math.cos(an)*rr,y+Math.sin(an)*rr,R*.045,0,TAU); ctx.fill(); }
+}
+
+/* ─── ٧. ما بعد الشجرة: أربع عمارات ─────────────────────────── */
+function fitOf(M){ return 1 - 1/(1+(M-1)*1.7); }          /* ٠ → ١ بلا وصول */
+
+/* شجرة بتفريع تكراري */
+function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
+  const fit=fitOf(M), style=sp.canopy||"round";
+  const Hd = s*(.58+.32*fit);
+  const trunkLen = style==="conic" ? Hd*.86 : style==="spread" ? Hd*.30 : Hd*.36;
+  const ratio = style==="conic" ? .45 : .56;          /* يحدّد أقصى امتداد للأغصان */
+  const reach = trunkLen*ratio/(1-ratio);
+  const girth = Hd*(.050+.055*fit);
+  const depth = small ? 4 : Math.min(8, 4+Math.round(M*.95));
+  const crownY = gy - (style==="conic" ? Hd*.55 : trunkLen + reach*.52);
+  const crownR = (style==="conic" ? Hd*.26 : reach*(style==="spread"?1.12:1.02));
+  const canopyCol = sp.blossom ? sp.flower : sp.leaf;
+  const canopyCol2 = sp.blossom ? shade(sp.flower,.14) : sp.leaf2;
+
+  /* جذور بارزة */
+  ctx.fillStyle=shade(sp.bark||"#6B5138",-.18);
+  for(let i=-1;i<=1;i+=2){
+    ctx.beginPath(); ctx.moveTo(cx+i*girth*.9,gy);
+    ctx.quadraticCurveTo(cx+i*girth*2.6,gy-girth*.1,cx+i*girth*3.4,gy+s*.008);
+    ctx.lineTo(cx+i*girth*.6,gy+s*.008); ctx.closePath(); ctx.fill();
+  }
+  /* كتلة التاج خلف الأغصان */
+  if(!withered && style!=="conic"){
+    const blobs = small?4:7;
+    for(let i=0;i<blobs;i++){
+      const an=i/blobs*TAU+rnd()*.5, rr=crownR*(.52+rnd()*.42);
+      const bx=cx+Math.cos(an)*crownR*(style==="spread"?.72:.52)+sway*s*.004;
+      const by=crownY+Math.sin(an)*crownR*(style==="spread"?.30:.44);
+      ctx.fillStyle = i%2 ? canopyCol : canopyCol2;
+      ctx.globalAlpha = .92;
+      ctx.beginPath(); ctx.ellipse(bx,by,rr,rr*(style==="spread"?.62:.82),an*.2,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+  /* التفريع */
+  const bark = sp.bark||"#6B5138";
+  if(style==="conic" && !withered){                 /* صنوبري: جذع مستدقّ فقط، والطوابق تغطّيه */
+    const top=gy-Hd*1.02;
+    const g2=ctx.createLinearGradient(cx-girth,gy,cx+girth,gy);
+    g2.addColorStop(0,shade(bark,-.20)); g2.addColorStop(.45,bark); g2.addColorStop(1,shade(bark,-.28));
+    ctx.fillStyle=g2;
+    ctx.beginPath(); ctx.moveTo(cx-girth,gy); ctx.lineTo(cx-girth*.22,top);
+    ctx.lineTo(cx+girth*.22,top); ctx.lineTo(cx+girth,gy); ctx.closePath(); ctx.fill();
+  } else
+  (function branch(x,y,len,ang,w,d){
+    if(len<1.2) return;
+    const curve=(rnd()-.5)*len*.22;
+    const mx=x+Math.cos(ang)*len*.5-Math.sin(ang)*curve;
+    const my=y+Math.sin(ang)*len*.5+Math.cos(ang)*curve;
+    const x2=x+Math.cos(ang)*len, y2=y+Math.sin(ang)*len;
+    ctx.strokeStyle = d>depth-2 ? shade(bark,-.10) : mix(bark,sp.stem,.35);
+    ctx.lineWidth=Math.max(.7,w); ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.quadraticCurveTo(mx,my,x2,y2); ctx.stroke();
+    if(d<=1){
+      if(!withered){
+        const L=Math.max(2,len*.62);
+        for(let i=0;i<3;i++)
+          leaf(ctx,x2,y2,L,L*(sp.blossom?.5:.34),ang+(i-1)*.7+sway*.03,
+               canopyCol2,canopyCol,i-1||1);
+      }
+      return;
+    }
+    const spread = style==="conic"?.42:style==="spread"?1.02:.72;
+    const n = style==="conic" ? 2 : (rnd()<.34?3:2);
+    for(let i=0;i<n;i++){
+      const a2 = ang + (i-(n-1)/2)*spread + (rnd()-.5)*.3 + sway*.02*(depth-d);
+      branch(x2,y2,len*(ratio+rnd()*.06),a2,w*.62,d-1);
+    }
+  })(cx,gy,trunkLen,-Math.PI/2,girth,depth);
+
+  /* صنوبريات: طوابق إبَر */
+  if(style==="conic" && !withered){
+    const tiers = small?5:Math.min(12,6+Math.round(M*1.5));
+    const slim = sp.slim?.55:1;
+    for(let i=0;i<tiers;i++){
+      const t=i/(tiers-1);
+      const ty=gy-Hd*(.18+.80*t), tw=Hd*(.34-.26*t)*slim;
+      ctx.fillStyle = i%2?sp.leaf:sp.leaf2;
+      ctx.beginPath(); ctx.moveTo(cx,ty-Hd*.14);
+      ctx.lineTo(cx+tw,ty+Hd*.03); ctx.lineTo(cx+tw*.3,ty+Hd*.045);
+      ctx.lineTo(cx,ty+Hd*.012); ctx.lineTo(cx-tw*.3,ty+Hd*.045);
+      ctx.lineTo(cx-tw,ty+Hd*.03); ctx.closePath(); ctx.fill();
+    }
+  }
+  /* زهر أو ثمر */
+  if(!withered){
+    if(sp.blossom){
+      const n=small?14:Math.min(120,Math.round(28*M));
+      for(let i=0;i<n;i++){ const an=rnd()*TAU, rr=Math.sqrt(rnd())*crownR;
+        const bx=cx+Math.cos(an)*rr*(style==="spread"?1.5:1.1), by=crownY+Math.sin(an)*rr*.86;
+        ctx.fillStyle = i%3 ? sp.core : shade(sp.flower,.18);
+        const r=Hd*.016*bloom;
+        ctx.beginPath(); ctx.arc(bx,by,r,0,TAU); ctx.fill(); }
+    }
+    if(sp.fruit && style!=="conic"){
+      const n=small?5:Math.min(40,Math.round(7*M));
+      for(let i=0;i<n;i++){ const an=rnd()*TAU, rr=Math.sqrt(rnd())*crownR*.92;
+        const bx=cx+Math.cos(an)*rr*(style==="spread"?1.4:1.02), by=crownY+Math.sin(an)*rr*.8+Hd*.04;
+        berry(ctx,bx,by,Hd*.026*bloom,shade(sp.core,.24),shade(sp.flower,-.08)); }
+    }
+  }
+}
+/* نخلة كبيرة */
+function drawPalmM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
+  const fit=fitOf(M), Hd=s*(.60+.32*fit), th=Hd*(sp.slim?.030:.045)*(.85+.3*fit);
+  const st=makeStem(cx,gy,Hd,(rnd()*2-1)*.35,sway);
+  const g=ctx.createLinearGradient(cx-th,gy,cx+th,gy);
+  g.addColorStop(0,shade(sp.stem,-.22)); g.addColorStop(.45,sp.stem); g.addColorStop(1,shade(sp.stem,-.30));
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.moveTo(cx-th,gy); ctx.lineTo(st.tipx-th*.58,st.tipy);
+  ctx.lineTo(st.tipx+th*.58,st.tipy); ctx.lineTo(cx+th,gy); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.lineWidth=Math.max(.6,th*.16);
+  const segs=small?7:Math.min(22,10+Math.round(M*3));
+  for(let i=1;i<=segs;i++){ const t=i/(segs+1), p=st.pt(t);
+    ctx.beginPath(); ctx.moveTo(p[0]-th*(1-t*.3),p[1]); ctx.lineTo(p[0]+th*(1-t*.3),p[1]); ctx.stroke(); }
+  const n=small?9:Math.min(20,9+Math.round(M*2.6));
+  for(let i=0;i<n;i++){
+    const spread=(i-(n-1)/2)/Math.max(1,(n-1)/2);
+    frond(ctx,sp,st.tipx,st.tipy,Hd*(.34+.10*fit),
+      -Math.PI/2+spread*1.48+sway*.05+(withered?.5:0), small?7:10, .42);
+  }
+  if(sp.fruit && !withered){
+    const n2=small?10:Math.min(60,Math.round(16*M));
+    for(let i=0;i<n2;i++){ const an=rnd()*TAU, r=Hd*.10*rnd();
+      ctx.fillStyle=i%3?sp.flower:sp.core;
+      ctx.beginPath(); ctx.ellipse(st.tipx+Math.cos(an)*r,st.tipy+Hd*.05+Math.abs(Math.sin(an))*r*.8,
+        Hd*.014*bloom,Hd*.020*bloom,0,0,TAU); ctx.fill(); }
+  }
+}
+/* صبّار عملاق / وريدة عملاقة */
+function drawColumnM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
+  const fit=fitOf(M), Hd=s*(.52+.34*fit);
+  if(sp.kind==="rosette"){
+    const n=small?12:Math.min(30,12+Math.round(M*5));
+    for(let i=0;i<n;i++){
+      const a=-Math.PI/2+(i-(n-1)/2)*(2.7/Math.max(1,n-1))+(rnd()-.5)*.1+(withered?.4:0);
+      const L=Hd*(.62+.38*Math.cos((i-(n-1)/2)*.3));
+      leaf(ctx,cx,gy,L,L*.16,a,i%2?sp.leaf2:sp.leaf,i%2?sp.leaf:sp.leaf2,i%2?1:-1);
+    }
+    if(!withered){
+      const st=makeStem(cx,gy,Hd*1.7,0,sway); st.draw(ctx,sp.stem,Math.max(1.2,Hd*.02));
+      const k=small?8:Math.min(22,8+Math.round(M*3));
+      for(let i=0;i<k;i++){ const t=.42+i*(.58/k), p=st.pt(t);
+        berry(ctx,p[0]+(i%2?1:-1)*Hd*.05,p[1],Hd*.022*bloom,shade(sp.core,.2),sp.flower); }
+    }
+    return;
+  }
+  if(sp.kind==="pads"){
+    const n=small?6:Math.min(16,5+Math.round(M*3));
+    let px=cx, py=gy;
+    for(let i=0;i<n;i++){
+      const side=i%2?1:-1, w2=Hd*.22*(1-i*.035), h2=Hd*.26*(1-i*.03);
+      const cxp=px+(i?side*w2*.62:0), cyp=py-h2*.56;
+      const g=ctx.createLinearGradient(cxp-w2,cyp,cxp+w2,cyp);
+      g.addColorStop(0,shade(sp.leaf,-.14)); g.addColorStop(.45,sp.leaf2); g.addColorStop(1,shade(sp.leaf,-.18));
+      ctx.fillStyle=g;
+      ctx.save(); ctx.translate(cxp,cyp); ctx.rotate(side*.2);
+      ctx.beginPath(); ctx.ellipse(0,0,w2*.6,h2*.72,0,0,TAU); ctx.fill(); ctx.restore();
+      if(!withered && i>n-4){ const a=bloom;
+        berry(ctx,cxp+side*w2*.3,cyp-h2*.6,Hd*.020*a,shade(sp.core,.2),sp.flower); }
+      px=cxp; py=cyp-h2*.3;
+    }
+    return;
+  }
+  const bw=Hd*(.15+.03*fit), bh=Hd;
+  const arms=small?2:Math.min(6,1+Math.round(M*1.3));
+  for(let i=0;i<arms;i++){
+    const side=i%2?1:-1, lvl=.24+(i*.13), ax=cx+side*bw*(1.5+i*.35);
+    ctx.fillStyle=shade(sp.leaf,-.14);
+    ctx.fillRect(Math.min(cx,ax)-bw*.1, gy-bh*lvl, Math.abs(ax-cx)+bw*.2, bh*.11);
+    cactusBody(ctx,sp,ax,gy-bh*(lvl-.06),bw*.52,bh*(.30+.06*i),withered,s);
+  }
+  cactusBody(ctx,sp,cx,gy,bw,bh,withered,s);
+  if(!withered) petalRing(ctx,sp,cx,gy-bh,bw*.5*bloom,bloom);
+}
+/* أجمة كثيفة: عشب وزهر يتكاثر */
+function drawClumpM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
+  const fit=fitOf(M);
+  const n = small ? 5 : Math.min(34, 4+Math.round(M*7));
+  const W = Math.min(s*(.26+.34*fit), s*.46), Hmax = s*(.50+.26*fit);
+  const items=[];
+  for(let i=0;i<n;i++){
+    const u=(i/(n-1||1))*2-1;
+    items.push({ x:cx+u*W*(.45+rnd()*.55)*.82, depth:rnd(), h:Hmax*(.52+rnd()*.48), seed:rnd()*1e6 });
+  }
+  items.sort((a,b)=>a.depth-b.depth);
+  items.forEach(it=>{
+    const back = it.depth<.45;
+    ctx.globalAlpha = back?.82:1;
+    drawForm(ctx,sp,it.x,gy-(back? s*.02:0),s,1,it.h*(back?.86:1),
+      { rnd:mulberry(it.seed|0), sway:sway*(back?.6:1), withered, bloom });
+  });
+  ctx.globalAlpha=1;
+}
+
+/* ─── ٨. المشهد الكامل ──────────────────────────────────────── */
+function drawScene(ctx,o){
+  const w=o.w, h=o.h, cx=w/2, s=o.sizeRef || Math.min(w,h);
+  const mins = Math.max(0, +o.minutes||0);
+  const { g, M } = grow(mins);
+  const base = SPECIES[o.species] ? o.species : "basil";
+  const sp = palFor(base, o.withered);
+  const rnd = mulberry(hashStr(o.seedStr||"x"));
+  const sway = o.sway||0, bloom = o.bloom==null?1:o.bloom;
+  const usePot = !!o.pot && M<=1.001;
+  const pot = usePot ? { pw:s*.34, ph:s*.12 } : null;
+  const gy = pot ? h-pot.ph*1.70 : h*(o.ground===false?.965:.93);
+
+  if(!o.noClear) ctx.clearRect(0,0,w,h);
+
+  if(o.glow){
+    const p=clamp(mins/PHASE1,0,1);
+    const sx=lerp(w*.78,w*.22,p), sy=lerp(h*.26,h*.12,Math.sin(p*Math.PI));
+    const warm = o.withered ? "rgba(120,104,84,.10)"
+               : PAL.night ? "rgba(186,212,232,.12)" : "rgba(255,229,158,.20)";
+    const rg=ctx.createRadialGradient(sx,sy,0,sx,sy,s*1.05);
+    rg.addColorStop(0,warm); rg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=rg; ctx.fillRect(0,0,w,h);
+  }
+  if(g>.05){
+    const spread = M>1 ? s*(.10+.16*fitOf(M)) : s*.05*g;
+    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.30)" : "rgba(35,50,40,.14)";
+    ctx.beginPath(); ctx.ellipse(cx+s*.02,gy+s*.010,spread+s*.02,s*.014,0,0,TAU); ctx.fill();
+  }
+  if(o.ground!==false) drawGround(ctx,cx,gy,w,s,rnd,pot);
+
+  if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); return; }
+
+  const opt = { rnd, sway, withered:o.withered, bloom };
+  if(M<=1.001){
+    const H = s*(.010+.66*Math.pow(g,1.25));      /* يبدأ مجهرياً */
+    drawForm(ctx,sp,cx,gy,s,g,H,opt);
+    return;
+  }
+  const small = s < 96;
+  const mat = SPECIES[base].mat;
+  if(mat==="tree")      drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,o.withered,bloom,small);
+  else if(mat==="palmTree") drawPalmM(ctx,sp,cx,gy,s,M,rnd,sway,o.withered,bloom,small);
+  else if(mat==="column")   drawColumnM(ctx,sp,cx,gy,s,M,rnd,sway,o.withered,bloom,small);
+  else                      drawClumpM(ctx,sp,cx,gy,s,M,rnd,sway,o.withered,bloom,small);
+}
+
+/* ─── ٩. مساعد اللوحات ──────────────────────────────────────── */
+function fitCanvas(cv,w,h){
+  const dpr=Math.min(3,window.devicePixelRatio||1);
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.width=w+"px"; cv.style.height=h+"px";
+  const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return ctx;
+}
+function paint(cv,w,h,opts){ drawScene(fitCanvas(cv,w,h), Object.assign({w,h},opts)); }
+</script>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════
+   غرسة — طبقة التطبيق: العدّاد، المزرعة، الأرقام، البذور
+   ════════════════════════════════════════════════════════════════ */
+
+/* ─── التخزين ───────────────────────────────────────────────── */
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  إعدادات الحساب السحابي — حط القيمتين هنا وبس            ║
+   ║  من Supabase ▸ Settings ▸ API                            ║
+   ╚══════════════════════════════════════════════════════════╝ */
+const CLOUD = {
+  url: "https://ykybuccyhrkgzimmiweh.supabase.co",
+  key: "sb_publishable_CP-iOMK4Yo5Y49adH_ObIg_sK6okXLy"
+};
+const cloudReady = () => !!(CLOUD.url && CLOUD.key);
+
+const CLOUD_KEY = "ghersa.cloud";
+let TOK = null;                       /* {access, refresh, exp, uid, email} */
+let pushTimer = null, syncState = "off", lastSync = 0;
+
+function readTok(){ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY)||"null"); }catch(e){ return null; } }
+function writeTok(t){ try{ t?localStorage.setItem(CLOUD_KEY,JSON.stringify(t)):localStorage.removeItem(CLOUD_KEY); }catch(e){} }
+
+async function sbFetch(path, opts, useAuth){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 15000);
+  const headers = Object.assign({ "apikey":CLOUD.key, "Content-Type":"application/json" }, opts.headers||{});
+  if(useAuth && TOK) headers["Authorization"] = "Bearer " + TOK.access;
+  try{
+    const r = await fetch(CLOUD.url.replace(/\/+$/,"") + path,
+      { method:opts.method||"GET", headers, body:opts.body?JSON.stringify(opts.body):undefined, signal:ctrl.signal });
+    const txt = await r.text();
+    let js = null; try{ js = txt?JSON.parse(txt):null; }catch(e){}
+    if(!r.ok){ const err = new Error((js&&(js.error_description||js.msg||js.message||js.error))||("HTTP "+r.status)); err.status=r.status; throw err; }
+    return js;
+  } finally { clearTimeout(timer); }
+}
+function saveSession(js){
+  if(!js || !js.access_token) return false;
+  TOK = { access:js.access_token, refresh:js.refresh_token,
+          exp: Date.now() + (js.expires_in||3600)*1000 - 60000,
+          uid: js.user ? js.user.id : (TOK&&TOK.uid), email: js.user ? js.user.email : (TOK&&TOK.email),
+          name: (js.user && js.user.user_metadata && js.user.user_metadata.name) || (TOK&&TOK.name) || null };
+  writeTok(TOK); return true;
+}
+async function ensureToken(){
+  if(!TOK) throw new Error("ما فيه جلسة");
+  if(Date.now() < TOK.exp) return;
+  const js = await sbFetch("/auth/v1/token?grant_type=refresh_token", { method:"POST", body:{ refresh_token:TOK.refresh } });
+  if(!saveSession(js)) throw new Error("انتهت الجلسة");
+}
+const cloudSignUp = (email,password,name) => sbFetch("/auth/v1/signup", { method:"POST", body:{ email, password, data:{ name } } });
+const cloudSignIn = (email,password) => sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } });
+
+async function cloudPull(){
+  await ensureToken();
+  const rows = await sbFetch("/rest/v1/farms?select=data,updated_at&user_id=eq."+TOK.uid, {}, true);
+  return (rows && rows[0]) ? rows[0].data : null;
+}
+async function cloudPush(data){
+  await ensureToken();
+  await sbFetch("/rest/v1/farms", {
+    method:"POST",
+    headers:{ "Prefer":"resolution=merge-duplicates,return=minimal" },
+    body:[{ user_id:TOK.uid, data, updated_at:new Date().toISOString() }]
+  }, true);
+  lastSync = Date.now();
+}
+/* دمج مزرعتين بلا تكرار — نفس منطق استرجاع النسخة */
+function mergeFarms(a, b){
+  const out = normalize(a), other = normalize(b);
+  const seen = {}; const plants = [];
+  out.plants.concat(other.plants).forEach(p=>{
+    if(!p||!p.id||!SPECIES[p.species]||!isFinite(p.minutes)) return;
+    if(seen[p.id]) return; seen[p.id]=1; plants.push(p);
+  });
+  out.plants = plants.sort((x,y)=>x.endedAt-y.endedAt);
+  other.ach.forEach(x=>{ if(!out.ach.includes(x)) out.ach.push(x); });
+  other.tags.forEach(t=>{ if(t&&t.id&&!out.tags.some(y=>y.id===t.id)) out.tags.push(t); });
+  if(!out.active && other.active) out.active = other.active;
+  return out;
+}
+function setSync(st){
+  syncState = st;
+  const d = $("#syncDot"); if(d) d.className = "syncdot " + st;
+}
+function schedulePush(){
+  if(!CURRENT || !CURRENT.cloud || !cloudReady()) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(()=>{ pushNow(true); }, 45000);
+}
+/* الرفع يقرأ السحابة أولاً ويدمج — عشان ما يمسح شغل جهاز ثانٍ */
+async function pushNow(quiet){
+  if(!CURRENT || !CURRENT.cloud || !cloudReady()) return false;
+  clearTimeout(pushTimer);
+  try{
+    setSync("");
+    const before = DB.plants.length;
+    try{
+      const remote = await cloudPull();
+      if(remote){
+        const merged = mergeFarms(DB, remote);
+        if(merged.plants.length !== before || merged.ach.length !== DB.ach.length){
+          const keepActive = DB.active;
+          DB = merged; DB.active = keepActive;
+          quietSave = true; writeStore(); quietSave = false;
+          if(merged.plants.length !== before) renderAll();
+        }
+      }
+    }catch(e){ /* ما قدرنا نقرأ السحابة: نرفع المحلي كما هو */ }
+    await cloudPush(DB);
+    setSync("ok");
+    if(!quiet){
+      const added = DB.plants.length - before;
+      toast(added>0 ? ("تزامنت، وجت "+added+" نبتة من جهاز ثاني.") : "تزامنت مزرعتك مع السحابة.","☁️");
+    }
+    return true;
+  }catch(e){
+    setSync("err");
+    if(!quiet) toast("ما قدرت أزامن الآن: "+cloudErr(e),"⚠️");
+    return false;
+  }
+}
+const ACC_KEY = "ghersa.accounts";
+const userKey = id => "ghersa.user." + id;
+let memFallback = null, accMem = null, CURRENT = null;
+
+function readAcc(){
+  try{ const r=localStorage.getItem(ACC_KEY); return r?JSON.parse(r):{users:[],last:null,stay:null,migrated:false}; }
+  catch(e){ return accMem || {users:[],last:null,stay:null,migrated:false}; }
+}
+function writeAcc(){
+  try{ localStorage.setItem(ACC_KEY, JSON.stringify(ACC)); }catch(e){ accMem=ACC; }
+}
+let ACC = readAcc();
+if(!Array.isArray(ACC.users)) ACC.users=[];
+
+/* تمويه الرمز — يمنع القراءة المباشرة، وما هو تشفير حقيقي */
+function pinHash(pin, salt){
+  let h = (5381 ^ hashStr(salt)) >>> 0;
+  const t = String(pin);
+  for(let i=0;i<t.length;i++) h = (Math.imul(h,33) ^ t.charCodeAt(i)) >>> 0;
+  for(let r=0;r<4000;r++) h = (Math.imul(h ^ r, 2654435761)) >>> 0;
+  return h.toString(36);
+}
+const DEFAULTS = {
+  v:2, plants:[], ach:[], theme:null, strict:true, grace:10000,
+  seed:"basil", tag:"study", active:null,
+  tags:[
+    { id:"study",  n:"دراسة",  c:"#2F6B4F" },
+    { id:"work",   n:"عمل",    c:"#3A5E87" },
+    { id:"read",   n:"قراءة",  c:"#6E5AA0" },
+    { id:"sport",  n:"رياضة",  c:"#B8761E" },
+    { id:"family", n:"عائلة",  c:"#A8412E" },
+    { id:"other",  n:"غير ذلك",c:"#5F7368" }
+  ]
+};
+function readStore(){
+  if(!CURRENT) return null;
+  try{ const raw = localStorage.getItem(userKey(CURRENT.id)); return raw?JSON.parse(raw):null; }
+  catch(e){ return memFallback; }
+}
+let quietSave = false;
+function writeStore(){
+  if(!CURRENT) return;
+  try{ localStorage.setItem(userKey(CURRENT.id), JSON.stringify(DB)); }
+  catch(e){ memFallback = JSON.parse(JSON.stringify(DB)); }
+  if(!quietSave) schedulePush();
+}
+/* بيانات النسخ القديمة قبل الحسابات — تنتقل لأول حساب يُنشأ */
+function legacyData(){
+  try{
+    const v2 = localStorage.getItem("ghersa.store.v2");
+    if(v2) return JSON.parse(v2);
+    const v1 = localStorage.getItem("ghersa.store.v1");
+    if(v1){
+      const o = JSON.parse(v1);
+      return { plants:(o.plants||[]).map(p=>({ id:p.id, species:SPECIES[p.species]?p.species:"basil",
+                 tagId:p.tagId, minutes:p.minutes, startedAt:p.startedAt, endedAt:p.endedAt, survived:p.survived })),
+               ach:o.ach||[], theme:o.theme||null, strict:o.strict!==false,
+               tags:(o.tags||[]).map(t=>({id:t.id,n:t.name||t.n,c:t.color||t.c})) };
+    }
+  }catch(e){}
+  return null;
+}
+function normalize(d){
+  const o = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS)), d||{});
+  if(!Array.isArray(o.plants)) o.plants=[];
+  if(!Array.isArray(o.ach)) o.ach=[];
+  if(!Array.isArray(o.tags)||!o.tags.length) o.tags=JSON.parse(JSON.stringify(DEFAULTS.tags));
+  if(!SPECIES[o.seed]) o.seed="basil";
+  o.plants = o.plants.filter(p=>p && p.id && SPECIES[p.species] && isFinite(p.minutes));
+  return o;
+}
+let DB = normalize(null);
+
+/* ─── أدوات ─────────────────────────────────────────────────── */
+const fmt2 = n => String(n).padStart(2,"0");
+function hhmm(min){
+  const m0 = Math.round(min), h = Math.floor(m0/60), m = m0%60;
+  if(h >= 100) return h + " ساعة";
+  if(h && m)   return h + " س " + m + " د";
+  if(h)        return h + " ساعة";
+  return m + " دقيقة";
+}
+const DAY_NAMES = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const DAY_SHORT = ["ح","ن","ث","ر","خ","ج","س"];
+const dayKey = d => { const x=new Date(d); return x.getFullYear()+"-"+fmt2(x.getMonth()+1)+"-"+fmt2(x.getDate()); };
+function prettyDate(ts){
+  const d=new Date(ts);
+  return DAY_NAMES[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1)+" · "+fmt2(d.getHours())+":"+fmt2(d.getMinutes());
+}
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const GRACES = [
+  { ms:10000,  n:"١٠ ثوانٍ" },
+  { ms:60000,  n:"دقيقة" },
+  { ms:300000, n:"٥ دقائق" },
+  { ms:Infinity, n:"بلا مهلة" }
+];
+/* أحجام المزرعة حسب الرتبة */
+/* [عرض، ارتفاع، مرجع الحجم] — الشتلة نحيلة والشجرة عريضة فتتجاور بلا فراغ */
+const SIZES = [
+  [24,46,1.40],[28,56,1.40],[34,70,1.40],[42,88,1.40],
+  [92,106,0.98],[108,124,0.98],[124,142,0.98],[140,158,0.98],[156,174,0.98]
+];
+
+let sess = null, anim = null, rafOn = false, hiddenAt = null;
+let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30;
+
+const el = {
+  cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
+  tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
+  setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"),
+  seedChips:$("#seedChips"), seedHint:$("#seedHint"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
+  hours:$("#hoursVal"), toast:$("#toast"), toastTxt:$("#toastTxt"), toastIc:$("#toastIc"),
+  sheet:$("#sheet"), sheetBg:$("#sheetBg"), sheetBody:$("#sheetBody"),
+  garden:$("#gardenBody"), gardenSub:$("#gardenSub"),
+  statCards:$("#statCards"), week:$("#weekChart"), weekTotal:$("#weekTotal"),
+  tagBars:$("#tagBars"), badges:$("#badges"), achCount:$("#achCount"), gallery:$("#seedGallery")
+};
+
+/* ─── الإنجازات ─────────────────────────────────────────────── */
+const ACH = [
+  { id:"first",  ic:"🌱", n:"أول نبتة",        t:s=>s.alive>=1 },
+  { id:"ten",    ic:"🌿", n:"عشر نبتات",       t:s=>s.alive>=10 },
+  { id:"fifty",  ic:"🌾", n:"خمسين نبتة",      t:s=>s.alive>=50 },
+  { id:"hour",   ic:"⏳", n:"ساعة تركيز",      t:s=>s.minutes>=60 },
+  { id:"tenh",   ic:"🕰️", n:"عشر ساعات",      t:s=>s.minutes>=600 },
+  { id:"cent",   ic:"🏔️", n:"مئة ساعة",       t:s=>s.minutes>=6000 },
+  { id:"tree",   ic:"🌳", n:"أول شجرة",        t:s=>s.longest>=180 },
+  { id:"big",    ic:"🌲", n:"شجرة كبيرة",      t:s=>s.longest>=926 },
+  { id:"great",  ic:"🗻", n:"شجرة عظيمة",      t:s=>s.longest>=2538 },
+  { id:"legend", ic:"✨", n:"شجرة أسطورية",    t:s=>s.longest>=7900 },
+  { id:"st3",    ic:"📅", n:"٣ أيام تتابع",    t:s=>s.bestStreak>=3 },
+  { id:"st7",    ic:"🗓️", n:"أسبوع تتابع",    t:s=>s.bestStreak>=7 },
+  { id:"clean",  ic:"🛡️", n:"١٠ بلا ذبول",    t:s=>s.cleanRun>=10 },
+  { id:"dawn",   ic:"🌄", n:"قبل الفجر",       t:s=>s.dawn },
+  { id:"owl",    ic:"🌙", n:"بعد منتصف الليل", t:s=>s.owl },
+  { id:"kinds",  ic:"🧺", n:"عشرة أنواع",      t:s=>s.kinds>=10 }
+];
+
+function computeStats(){
+  const ps = DB.plants, live = ps.filter(p=>p.survived);
+  const minutes = live.reduce((a,p)=>a+p.minutes,0);
+  const byDay={}, byTag={}, byHour=new Array(24).fill(0), kinds={};
+  live.forEach(p=>{
+    byDay[dayKey(p.endedAt)] = (byDay[dayKey(p.endedAt)]||0)+p.minutes;
+    byTag[p.tagId] = (byTag[p.tagId]||0)+p.minutes;
+    byHour[new Date(p.startedAt).getHours()] += p.minutes;
+    kinds[p.species]=1;
+  });
+  const keys=Object.keys(byDay).sort();
+  let bestStreak=0, run=0, prev=null;
+  keys.forEach(k=>{
+    if(prev){ const gap=(new Date(k)-new Date(prev))/86400000; run = gap===1?run+1:1; } else run=1;
+    prev=k; bestStreak=Math.max(bestStreak,run);
+  });
+  let streak=0;
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  const hasToday=!!byDay[dayKey(t0)], hasYest=!!byDay[dayKey(new Date(t0.getTime()-86400000))];
+  if(hasToday||hasYest) for(let i=hasToday?0:1;i<400;i++){
+    if(byDay[dayKey(new Date(t0.getTime()-i*86400000))]) streak++; else break;
+  }
+  let cleanRun=0,c=0;
+  ps.slice().sort((a,b)=>a.endedAt-b.endedAt).forEach(p=>{ c=p.survived?c+1:0; cleanRun=Math.max(cleanRun,c); });
+  const bestHour=byHour.indexOf(Math.max.apply(null,byHour));
+  return {
+    alive:live.length, dead:ps.length-live.length, total:ps.length, minutes,
+    byDay, byTag, kinds:Object.keys(kinds).length,
+    longest: live.reduce((a,p)=>Math.max(a,p.minutes),0),
+    streak, bestStreak, cleanRun,
+    rate: ps.length?Math.round(live.length/ps.length*100):0,
+    bestHour: Math.max.apply(null,byHour)>0?bestHour:null,
+    dawn: live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=4&&h<7;}),
+    owl:  live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=0&&h<4;})
+  };
+}
+
+let toastT=null;
+function toast(msg,ic){
+  el.toastTxt.textContent=msg; el.toastIc.textContent=ic||"🌱";
+  el.toast.classList.add("on"); clearTimeout(toastT);
+  toastT=setTimeout(()=>el.toast.classList.remove("on"),3800);
+}
+function notify(title,body){
+  try{
+    if("Notification" in window && Notification.permission==="granted" && document.hidden)
+      new Notification(title,{ body });
+  }catch(e){}
+}
+
+/* ─── المسرح ────────────────────────────────────────────────── */
+function elapsedMin(){ return sess ? (Date.now()-sess.startedAt)/60000 : 0; }
+function sizeHero(){
+  const box=$(".stage").clientWidth||340;
+  if(!box) return;
+  heroW=box; heroH=Math.round(Math.min(box*.90,(window.innerHeight||760)*.46));
+  lastDraw=0; drawHero();
+}
+function drawHero(){
+  if(!heroW) return;
+  const ctx=fitCanvas(el.cv,heroW,heroH);
+  const species = sess?sess.seed:DB.seed;
+  const base = { species, seedStr: sess?sess.id:"preview-"+species, pot:true, glow:true, w:heroW, h:heroH };
+  const swayNow = reduceMotion?0:Math.sin(performance.now()/1900)*.75;
+
+  if(anim && anim.kind==="wither"){
+    const t=clamp((performance.now()-anim.t0)/anim.dur,0,1);
+    drawScene(ctx,Object.assign({},base,{ species:anim.species, minutes:anim.mins*(1-.10*smooth(t)),
+      withered:true, bloom:0, seedStr:anim.seedStr, sway:0 }));
+    return;
+  }
+  if(anim && anim.kind==="bloom"){
+    const t=clamp((performance.now()-anim.t0)/anim.dur,0,1);
+    drawScene(ctx,Object.assign({},base,{ species:anim.species, minutes:anim.mins,
+      bloom:smooth(t), seedStr:anim.seedStr, sway:swayNow*.5 }));
+    return;
+  }
+  if(sess){
+    const m=elapsedMin();
+    drawScene(ctx,Object.assign({},base,{ minutes:m, sway:m<10?swayNow:0 }));
+    return;
+  }
+  ctx.globalAlpha=ghostAlpha;
+  drawScene(ctx,Object.assign({},base,{ minutes:PHASE1*.92, glow:false, sway:0 }));
+  ctx.globalAlpha=1;
+  drawScene(ctx,Object.assign({},base,{ minutes:.4, noClear:true, glow:true }));
+}
+
+function paintClock(mins){
+  const secs = sess ? Math.floor((Date.now()-sess.startedAt)/1000) : 0;
+  const h=Math.floor(secs/3600), m=Math.floor(secs%3600/60), s2=secs%60;
+  const txt = h ? h+":"+fmt2(m)+":"+fmt2(s2) : fmt2(m)+":"+fmt2(s2);
+  el.clock.textContent = txt;
+  el.clock.classList.toggle("long", h>=10);
+  const { M } = grow(mins);
+  const ms = milestone(mins);
+  const span = ms.next-ms.prev;
+  el.fill.style.width = clamp((mins-ms.prev)/(span||1),0,1)*100 + "%";
+  el.tierText.textContent = sess ? tierName(mins) : "بذرة نائمة";
+  const tag = DB.tags.find(t=>t.id===(sess?sess.tagId:DB.tag));
+  el.tierDot.style.background = tag?tag.c:"var(--viridian)";
+  if(M>1.001){ el.tierBadge.hidden=false; el.tierBadge.textContent="قوة النمو ×"+M.toFixed(2); }
+  else el.tierBadge.hidden=true;
+  if(sess){
+    const left = Math.max(0, ms.next-mins);
+    el.next.textContent = "باقي " + hhmm(left) + " لـ" + ms.name;
+    document.title = txt + " · غرسة";
+  } else {
+    el.next.textContent = "اضغط ابدأ والعدّاد يمشي معك بلا حد.";
+    document.title = "غرسة · وقتك يصير مزرعة";
+  }
+}
+
+function loop(){
+  if(!rafOn) return;
+  if(sess){
+    const m=elapsedMin();
+    paintClock(m);
+    const now=performance.now();
+    const gap = m<10?40 : m<60?500 : 2500;
+    if(now-lastDraw>gap){ lastDraw=now; drawHero(); }
+    beat(); checkTier(m);
+  } else if(anim){
+    drawHero();
+    if(performance.now()-anim.t0>anim.dur){ anim=null; rafOn=false; drawHero(); return; }
+  } else { rafOn=false; return; }
+  requestAnimationFrame(loop);
+}
+function startLoop(){ if(!rafOn){ rafOn=true; requestAnimationFrame(loop); } }
+
+/* ─── الجلسة ────────────────────────────────────────────────── */
+let wakeLock=null;
+async function holdScreen(on){
+  try{
+    if(on && "wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+    else if(wakeLock){ await wakeLock.release(); wakeLock=null; }
+  }catch(e){}
+}
+const uid = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+function beat(){
+  if(!sess) return;
+  const now=Date.now();
+  if(now-(sess.hb||0) < 15000) return;
+  sess.hb=now;
+  DB.active={ id:sess.id, startedAt:sess.startedAt, seed:sess.seed, tagId:sess.tagId, savedAt:now };
+  writeStore();
+}
+function checkTier(m){
+  const t=tierOf(m);
+  if(sess.tier==null){ sess.tier=t; return; }
+  if(t>sess.tier){
+    sess.tier=t;
+    const nm=tierName(m);
+    toast("نبتتك صارت "+nm+" · "+hhmm(m),"🌿");
+    notify("غرسة",(SPECIES[sess.seed]||SPECIES.basil).n+" صارت "+nm+".");
+    lastDraw=0;
+  }
+}
+function startSession(){
+  if(sess) return;
+  anim=null;
+  sess={ id:uid(), startedAt:Date.now(), seed:DB.seed, tagId:DB.tag, tier:0, hb:0 };
+  DB.active=sess; writeStore();
+  el.setup.style.display="none"; el.run.style.display="";
+  const sp=SPECIES[sess.seed], tg=DB.tags.find(t=>t.id===sess.tagId);
+  el.runTitle.textContent = sp.n + " · " + (tg?tg.n:"بدون تصنيف");
+  el.runNote.textContent = DB.strict
+    ? "خلّ الصفحة مفتوحة. إذا غبت أكثر من " + graceName() + " تذبل النبتة."
+    : "الوضع الصارم مقفل. اقعد براحتك، والنبتة تكبر ما دام العدّاد ماشي.";
+  if("Notification" in window && Notification.permission==="default") Notification.requestPermission().catch(()=>{});
+  holdScreen(true); startLoop(); paintClock(0);
+  toast("زُرعت. العدّاد ماشي.","🌱");
+}
+function endCommon(){
+  rafOn=false; hiddenAt=null; sess=null; DB.active=null;
+  el.setup.style.display=""; el.run.style.display="none";
+  holdScreen(false); renderAll(); paintClock(0);
+}
+function keep(){
+  if(!sess) return;
+  const mins=Math.max(.2, elapsedMin());
+  const p={ id:sess.id, species:sess.seed, tagId:sess.tagId, minutes:Math.round(mins*10)/10,
+            startedAt:sess.startedAt, endedAt:Date.now(), survived:true };
+  DB.plants.push(p);
+  anim={ kind:"bloom", t0:performance.now(), dur:1300, seedStr:p.id, species:p.species, mins:p.minutes };
+  endCommon(); writeStore(); startLoop();
+  toast(SPECIES[p.species].n+" دخلت المزرعة · "+tierName(p.minutes)+" · "+hhmm(p.minutes),"✅");
+  checkAch();
+  if(CURRENT && CURRENT.cloud) pushNow(true);
+}
+function wither(reason){
+  if(!sess) return;
+  const mins=Math.max(.2, elapsedMin());
+  const p={ id:sess.id, species:sess.seed, tagId:sess.tagId, minutes:Math.round(mins*10)/10,
+            startedAt:sess.startedAt, endedAt:Date.now(), survived:false };
+  DB.plants.push(p);
+  anim={ kind:"wither", t0:performance.now(), dur:1100, seedStr:p.id, species:p.species, mins:p.minutes };
+  endCommon(); writeStore(); startLoop();
+  toast("ذبلت "+SPECIES[p.species].n+(reason?" — "+reason:"")+". راحت "+hhmm(mins)+".","🥀");
+}
+function graceName(){ const g=GRACES.find(x=>x.ms===DB.grace); return g?g.n:"١٠ ثوانٍ"; }
+
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden){ if(sess){ hiddenAt=Date.now(); sess.hb=0; beat(); } return; }
+  if(!sess){ if(anim) startLoop(); return; }
+  const away=Date.now()-(hiddenAt||Date.now());
+  hiddenAt=null;
+  if(DB.strict && DB.grace!==Infinity && away>DB.grace){
+    wither("غبت "+hhmm(away/60000).replace("0 دقيقة",Math.round(away/1000)+" ثانية")); return;
+  }
+  if(away>1500) toast("رجعت في الوقت. سلمت النبتة.","🌿");
+  lastDraw=0; startLoop();
+});
+window.addEventListener("pagehide", ()=>{ if(sess){ sess.hb=0; beat(); } if(CURRENT&&CURRENT.cloud) pushNow(true); });
+
+function restore(){
+  const a=DB.active;
+  if(!a||!a.startedAt){ DB.active=null; return; }
+  sess=Object.assign({ tier:0, hb:0 }, a);
+  sess.tier=tierOf(elapsedMin());
+  const sp=SPECIES[sess.seed]||SPECIES.basil;
+  const gap=Date.now()-(a.savedAt||a.startedAt);
+  el.setup.style.display="none"; el.run.style.display="";
+  el.runTitle.textContent=sp.n+" · جلسة مستعادة";
+  el.runNote.textContent="رجّعنا العدّاد من مكانه.";
+  if(DB.strict && DB.grace!==Infinity && gap>DB.grace+20000){ wither("انقفلت الصفحة"); return; }
+  holdScreen(true); startLoop();
+  toast("رجّعنا جلستك: "+hhmm(elapsedMin())+" لين الآن.","⏱️");
+}
+function checkAch(){
+  const s=computeStats(); const fresh=[];
+  ACH.forEach(a=>{ if(!DB.ach.includes(a.id)&&a.t(s)){ DB.ach.push(a.id); fresh.push(a); } });
+  if(fresh.length){ writeStore(); setTimeout(()=>toast("إنجاز: "+fresh.map(f=>f.n).join(" · "),fresh[0].ic),1600); }
+}
+
+/* ─── الإعداد ───────────────────────────────────────────────── */
+function renderSetup(){
+  el.seedChips.innerHTML="";
+  SP_ORDER.forEach(k=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.textContent=SPECIES[k].n;
+    b.setAttribute("aria-pressed", DB.seed===k);
+    b.onclick=()=>{ DB.seed=k; writeStore(); renderSetup(); previewSeed(); };
+    el.seedChips.appendChild(b);
+  });
+  el.seedHint.textContent=SPECIES[DB.seed].note;
+
+  el.tagChips.innerHTML="";
+  DB.tags.forEach(t=>{
+    const b=document.createElement("button");
+    b.className="chip tag"; b.textContent=t.n;
+    b.style.setProperty("--tagc",t.c);
+    b.setAttribute("aria-pressed", DB.tag===t.id);
+    b.onclick=()=>{ DB.tag=t.id; writeStore(); renderSetup(); paintClock(0); };
+    el.tagChips.appendChild(b);
+  });
+  const add=document.createElement("button");
+  add.className="chip ghost"; add.textContent="+ تصنيف";
+  add.onclick=()=>{
+    const n=(prompt("اسم التصنيف الجديد:")||"").trim(); if(!n) return;
+    const pool=["#2F6B4F","#3A5E87","#6E5AA0","#B8761E","#A8412E","#1F7A73","#8A5A2B","#4F6D8A"];
+    const id="t"+Date.now().toString(36);
+    DB.tags.push({ id, n:n.slice(0,18), c:pool[DB.tags.length%pool.length] });
+    DB.tag=id; writeStore(); renderSetup();
+  };
+  el.tagChips.appendChild(add);
+
+  el.graceChips.innerHTML="";
+  GRACES.forEach(g=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.textContent=g.n;
+    b.setAttribute("aria-pressed", DB.grace===g.ms);
+    b.onclick=()=>{ DB.grace=g.ms; writeStore(); renderSetup(); };
+    el.graceChips.appendChild(b);
+  });
+  $("#strictSwitch").setAttribute("aria-checked", !!DB.strict);
+  $("#gracePanel").style.display = DB.strict?"":"none";
+  const s=computeStats();
+  el.hours.textContent = Math.floor(s.minutes/60) + " ساعة";
+}
+function previewSeed(){
+  if(sess) return;
+  ghostAlpha=.02; drawHero();
+  const t0=performance.now();
+  (function fade(){
+    const t=clamp((performance.now()-t0)/500,0,1);
+    ghostAlpha=lerp(.02,.30,t); drawHero();
+    if(t<1) requestAnimationFrame(fade);
+  })();
+}
+
+/* ─── المزرعة: تراب واحد متصل ───────────────────────────────── */
+function renderGarden(){
+  const ps=DB.plants.slice().sort((a,b)=>a.endedAt-b.endedAt);
+  if(!ps.length){
+    el.garden.innerHTML='<div class="empty-note"><b>الأرض فاضية</b>ارجع لصفحة النبتة وابدأ العدّاد. أول نبتة تنزل هنا.</div>';
+    el.gardenSub.textContent="كل نبتة حفظتها تقعد جنب أخواتها على نفس التراب.";
+    return;
+  }
+  const live=ps.filter(p=>p.survived);
+  const mins=live.reduce((a,p)=>a+p.minutes,0);
+  const biggest=ps.reduce((a,p)=>Math.max(a,p.minutes),0);
+  el.gardenSub.textContent = live.length+" نبتة حيّة · "+(ps.length-live.length)+" ذبلت · "+
+    hhmm(mins)+" · أكبر وحدة: "+tierName(biggest);
+
+  const shown = ps.slice(-300);
+  el.garden.innerHTML="";
+  const wrap=document.createElement("div"); wrap.className="farmwrap";
+  el.garden.appendChild(wrap);
+  const avail=Math.max(200,(wrap.clientWidth||el.garden.clientWidth||330)-14);
+
+  let row=null, rowW=0, rowH=0;
+  const newRow=()=>{ row=document.createElement("div"); row.className="terrace"; wrap.appendChild(row); rowW=0; rowH=0; };
+  newRow();
+  shown.forEach(p=>{
+    const sz=SIZES[clamp(tierOf(p.minutes),0,SIZES.length-1)];
+    if(rowW+sz[0]>avail && rowW>0){ row.style.minHeight=(rowH+14)+"px"; newRow(); }
+    const btn=document.createElement("button");
+    btn.className="slot"; btn.type="button";
+    btn.setAttribute("aria-label",SPECIES[p.species].n+" · "+hhmm(p.minutes)+(p.survived?"":" (ذبلت)"));
+    const cv=document.createElement("canvas");
+    btn.appendChild(cv); row.appendChild(btn);
+    paint(cv,sz[0],sz[1],{ species:p.species, minutes:p.minutes, withered:!p.survived,
+      seedStr:p.id, pot:false, glow:false, ground:false, sizeRef:sz[1]*sz[2] });
+    btn.onclick=()=>openPlant(p);
+    rowW+=sz[0]; rowH=Math.max(rowH,sz[1]);
+  });
+  if(row) row.style.minHeight=(rowH+14)+"px";
+  wrap.scrollIntoView && setTimeout(()=>window.scrollTo({ top:document.body.scrollHeight, behavior:reduceMotion?"auto":"smooth" }),80);
+}
+function openPlant(p){
+  const sp=SPECIES[p.species], tg=DB.tags.find(t=>t.id===p.tagId), { M }=grow(p.minutes);
+  el.sheetBody.innerHTML=
+    '<h3>'+sp.n+(p.survived?"":" (ذبلت)")+'</h3>'+
+    '<p class="meta">'+tierName(p.minutes)+(M>1.001?" · قوة النمو ×"+M.toFixed(2):"")+'</p>'+
+    '<div id="sheetCv" style="display:grid;place-items:center;margin-top:12px"></div>'+
+    '<div class="kv">'+
+      '<div><span>الوقت</span><b>'+hhmm(p.minutes)+'</b></div>'+
+      '<div><span>التصنيف</span><b>'+(tg?tg.n:"بدون")+'</b></div>'+
+      '<div><span>بدأت</span><b>'+prettyDate(p.startedAt)+'</b></div>'+
+      '<div><span>انتهت</span><b>'+prettyDate(p.endedAt)+'</b></div>'+
+      '<div><span>الحالة</span><b style="color:'+(p.survived?"var(--viridian)":"var(--brick)")+'">'+
+        (p.survived?"حيّة":"ميتة")+'</b></div>'+
+    '</div>';
+  const cv=document.createElement("canvas");
+  $("#sheetCv").appendChild(cv);
+  paint(cv,210,230,{ species:p.species, minutes:p.minutes, withered:!p.survived,
+    seedStr:p.id, pot:p.minutes<PHASE1, glow:true });
+  el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
+}
+function closeSheet(){ el.sheetBg.classList.remove("on"); el.sheet.classList.remove("on"); }
+el.sheetBg.onclick=closeSheet;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+
+/* ─── الأرقام ───────────────────────────────────────────────── */
+function renderStats(){
+  const s=computeStats();
+  const cards=[
+    ["accent", s.alive, "نبتة حيّة"],
+    ["accent", hhmm(s.minutes), "مجموع التركيز"],
+    ["", hhmm(s.longest||0), "أطول جلسة"],
+    ["ochre", s.streak, "أيام متتالية"],
+    ["brick", s.dead, "ذبلت"],
+    ["", s.rate+"%", "نسبة النجاة"],
+    ["accent", s.longest?tierName(s.longest):"—", "أكبر نبتة"],
+    ["", s.kinds, "نوع جرّبته"]
+  ];
+  if(s.bestHour!==null) cards.push(["", fmt2(s.bestHour)+":00", "أخصب ساعة عندك"]);
+  el.statCards.innerHTML=cards.map(c=>
+    '<div class="stat '+c[0]+'"><div class="v">'+c[1]+'</div><div class="k">'+c[2]+'</div></div>').join("");
+
+  const days=[];
+  for(let i=6;i>=0;i--){ const d=new Date(Date.now()-i*86400000); days.push({ d, m:s.byDay[dayKey(d)]||0 }); }
+  const mx=Math.max(60,...days.map(x=>x.m));
+  el.week.innerHTML=days.map((x,i)=>
+    '<div class="d'+(i===6?" today":"")+'"><div class="col" style="height:'+Math.max(4,x.m/mx*100)+'%"></div>'+
+    '<div class="lbl">'+DAY_SHORT[x.d.getDay()]+'</div></div>').join("");
+  el.weekTotal.textContent=hhmm(days.reduce((a,x)=>a+x.m,0));
+
+  const rows=DB.tags.map(t=>({ t, m:s.byTag[t.id]||0 })).filter(r=>r.m>0).sort((a,b)=>b.m-a.m);
+  el.tagBars.innerHTML = rows.length ? rows.map(r=>{
+    const pct=Math.round(r.m/s.minutes*100);
+    return '<div class="item"><div class="top"><span class="n">'+r.t.n+'</span>'+
+      '<span class="t">'+hhmm(r.m)+' · '+pct+'%</span></div>'+
+      '<div class="bar"><i style="width:'+Math.max(3,pct)+'%;background:'+r.t.c+'"></i></div></div>';
+  }).join("") : '<p style="margin:0;font-size:13.5px;color:var(--ink-3)">ما فيه وقت مسجّل بعد.</p>';
+
+  el.badges.innerHTML=ACH.map(a=>{
+    const on=DB.ach.includes(a.id)||a.t(s);
+    return '<div class="badge'+(on?" on":"")+'"><div class="ic">'+a.ic+'</div><div class="nm">'+a.n+'</div></div>';
+  }).join("");
+  el.achCount.textContent=ACH.filter(a=>DB.ach.includes(a.id)||a.t(s)).length+" من "+ACH.length;
+}
+
+/* ─── معرض البذور ───────────────────────────────────────────── */
+function renderGallery(){
+  el.gallery.innerHTML="";
+  FAMS.forEach(f=>{
+    const ttl=document.createElement("div"); ttl.className="famtitle"; ttl.textContent=f.n;
+    el.gallery.appendChild(ttl);
+    const grid=document.createElement("div"); grid.className="seedgrid";
+    el.gallery.appendChild(grid);
+    SP_ORDER.filter(k=>SPECIES[k].fam===f.id).forEach(k=>{
+      const sp=SPECIES[k];
+      const card=document.createElement("div");
+      card.className="card"+(DB.seed===k?" active":"");
+      card.tabIndex=0; card.setAttribute("role","button");
+      const cv=document.createElement("canvas");
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=sp.n;
+      const sub=document.createElement("div"); sub.className="sub"; sub.textContent=DB.seed===k?"المزروعة الآن":sp.note;
+      card.appendChild(cv); card.appendChild(nm); card.appendChild(sub);
+      grid.appendChild(card);
+      paint(cv,102,118,{ species:k, minutes:480, seedStr:"g-"+k, pot:false, glow:false });
+      const pick=()=>{ DB.seed=k; writeStore(); renderGallery(); renderSetup(); previewSeed();
+        toast(sp.n+" صارت هي المزروعة.","🌿"); };
+      card.onclick=pick;
+      card.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(); } };
+    });
+  });
+}
+
+/* ─── التنقّل والسمة ────────────────────────────────────────── */
+function go(name){
+  $$(".view").forEach(v=>v.classList.toggle("on", v.id==="view-"+name));
+  $$(".nav-btn").forEach(b=>{
+    if(b.dataset.go===name) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+  });
+  if(name==="garden") renderGarden();
+  if(name==="stats")  renderStats();
+  if(name==="seeds")  renderGallery();
+  if(name==="plant"){ setTimeout(sizeHero,20); window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"}); }
+}
+$$(".nav-btn").forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+function applyTheme(){
+  const night = DB.theme ? DB.theme==="night" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = night?"night":"day";
+  const mt=$('meta[name=theme-color]'); if(mt) mt.setAttribute("content", night?"#121A17":"#E3E9DC");
+  $("#themeIcon").innerHTML = night
+    ? '<path d="M20 14.5A8.2 8.2 0 0 1 9.4 3.9a8.6 8.6 0 1 0 10.6 10.6Z"/>'
+    : '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>';
+  syncPalette(); lastDraw=0; drawHero();
+  if($("#view-garden").classList.contains("on")) renderGarden();
+  if($("#view-seeds").classList.contains("on")) renderGallery();
+}
+$("#themeBtn").onclick=()=>{
+  DB.theme = document.documentElement.dataset.theme==="night" ? "day":"night";
+  writeStore(); applyTheme();
+};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(!DB.theme) applyTheme(); });
+
+/* ─── أحداث ─────────────────────────────────────────────────── */
+$("#strictSwitch").onclick=e=>{
+  DB.strict=!DB.strict; e.currentTarget.setAttribute("aria-checked",DB.strict);
+  writeStore(); renderSetup();
+  toast(DB.strict?"الوضع الصارم شغّال.":"قفلت الوضع الصارم. اقعد براحتك.",DB.strict?"🛡️":"🙂");
+};
+$("#startBtn").onclick=startSession;
+$("#keepBtn").onclick=keep;
+$("#killBtn").onclick=()=>{ if(confirm("متأكد؟ النبتة تموت وتنحفظ ذابلة في المزرعة.")) wither("قتلتها"); };
+$("#exportBtn").onclick=()=>exportBackup();
+$("#resetBtn").onclick=()=>{
+  if(!confirm("هذا يمسح المزرعة والإنجازات كلها. أكمل؟")) return;
+  DB=normalize(null); writeStore();
+  renderAll(); go("plant"); toast("رجعت الأرض بيضاء.","🧹");
+};
+let rz; window.addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{
+  sizeHero(); if($("#view-garden").classList.contains("on")) renderGarden();
+},160); });
+
+/* ─── تشغيل ─────────────────────────────────────────────────── */
+function renderAll(){
+  renderSetup();
+  if($("#view-garden").classList.contains("on")) renderGarden();
+  if($("#view-stats").classList.contains("on"))  renderStats();
+  if($("#view-seeds").classList.contains("on"))  renderGallery();
+}
+function bootApp(){
+  applyTheme(); renderSetup(); sizeHero(); paintClock(0); restore();
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ lastDraw=0; drawHero(); });
+}
+
+/* ════════════════ الحساب والبوابة ════════════════ */
+const gate=$("#gate"), gErr=$("#gErr"), gOk=$("#gOk");
+const initialOf = n => (String(n).trim()[0]||"؟");
+function msg(err,okText){
+  gErr.textContent = err||"";
+  gOk.textContent  = okText||"";
+  gOk.hidden = !okText;
+}
+function showGate(){
+  gate.classList.add("on"); document.body.classList.add("gated");
+  msg("","");
+  paint($("#gateCv"),210,160,{ species:"sakura", minutes:1500, seedStr:"gate", pot:false, glow:true });
+  switchTab("login");
+}
+function switchTab(which, keepOk){
+  $("#tabLogin").setAttribute("aria-selected", which==="login");
+  $("#tabSignup").setAttribute("aria-selected", which==="signup");
+  $("#paneLogin").hidden  = which!=="login";
+  $("#paneSignup").hidden = which!=="signup";
+  $("#cloudSetup").hidden = cloudReady();
+  if(!keepOk) msg("","");
+}
+$("#tabLogin").onclick  = ()=>{ switchTab("login");  setTimeout(()=>$("#cEmail").focus(),60); };
+$("#tabSignup").onclick = ()=>{ switchTab("signup"); setTimeout(()=>$("#sName").focus(),60); };
+$("#goSignup").onclick  = ()=>$("#tabSignup").click();
+$("#goLogin").onclick   = ()=>$("#tabLogin").click();
+
+/* ── رسائل السيرفر بالعربي ── */
+function cloudErr(e){
+  const m = String(e&&e.message||e);
+  if(/Invalid login credentials/i.test(m))  return "الإيميل أو كلمة السر غلط.";
+  if(/Email not confirmed/i.test(m))        return "الحساب يبي تفعيل إيميل. اقفل خيار Confirm email من لوحة Supabase.";
+  if(/already registered|already been registered|User already/i.test(m))
+                                            return "فيه حساب بهذا الإيميل. سجّل دخول بدل ما تنشئ.";
+  if(/Password should be at least/i.test(m))return "كلمة السر لازم ٦ خانات فأكثر.";
+  if(/Unable to validate email|invalid format|valid email/i.test(m)) return "الإيميل غير صحيح.";
+  if(/rate limit|too many|For security purposes/i.test(m)) return "محاولات كثيرة. انتظر دقيقة وجرّب.";
+  if(/abort|Failed to fetch|NetworkError|network/i.test(m)) return "ما فيه اتصال بالسيرفر. تأكد من النت.";
+  return m;
+}
+function cloudUser(){
+  const name = TOK.name || (TOK.email||"مزارع").split("@")[0];
+  return { id:"cloud-"+TOK.uid, name, cloud:true, email:TOK.email, created:Date.now(), seen:Date.now() };
+}
+async function afterCloudAuth(stay){
+  const u = cloudUser();
+  CURRENT = u;
+  let local = normalize(readStore());
+  try{
+    const remote = await cloudPull();
+    DB = remote ? mergeFarms(remote, local) : local;
+    writeStore();
+    await cloudPush(DB);
+    setSync("ok");
+  }catch(e){
+    DB = local; setSync("err");
+    toast("دخلت بلا مزامنة (ما فيه اتصال). مزرعتك تشتغل محلياً.","📴");
+  }
+  if(!stay) writeTok(null);
+  ACC.last = u.id; ACC.stay = null; writeAcc();
+  gate.classList.remove("on"); document.body.classList.remove("gated");
+  $("#userInitial").textContent = initialOf(u.name);
+  bootApp();
+  toast("أهلاً "+u.name+"، مزرعتك جاهزة.","🌿");
+}
+function busy(btn,on,label){
+  btn.disabled = on;
+  if(on){ btn.dataset.old = btn.textContent; btn.textContent = "لحظة…"; }
+  else  { btn.textContent = btn.dataset.old || label; }
+}
+
+/* ── تسجيل الدخول ── */
+async function doLogin(){
+  if(!cloudReady()){ msg("الاتصال بالسيرفر مو مضبوط."); $("#cloudSetup").open=true; return; }
+  const email=($("#cEmail").value||"").trim(), pass=$("#cPass").value||"";
+  if(!email){ msg("اكتب إيميلك."); $("#cEmail").focus(); return; }
+  if(!/.+@.+\..+/.test(email)){ msg("الإيميل غير صحيح."); $("#cEmail").focus(); return; }
+  if(!pass){ msg("اكتب كلمة السر."); $("#cPass").focus(); return; }
+  const btn=$("#cInBtn"); busy(btn,true); msg("","");
+  try{
+    const js = await cloudSignIn(email,pass);
+    if(!saveSession(js)){ msg("ما قدرنا نفتح الجلسة. جرّب مرة ثانية."); return; }
+    $("#cPass").value="";
+    await afterCloudAuth($("#stayCloud").checked);
+  }catch(e){ msg(cloudErr(e)); }
+  finally{ busy(btn,false,"دخول"); }
+}
+
+/* ── تسجيل جديد: الحقول الثلاثة إجبارية، وبعد النجاح يروح لصفحة الدخول ── */
+async function doSignup(){
+  if(!cloudReady()){ msg("الاتصال بالسيرفر مو مضبوط."); $("#cloudSetup").open=true; return; }
+  const name=($("#sName").value||"").trim();
+  const email=($("#sEmail").value||"").trim();
+  const pass=$("#sPass").value||"";
+  if(!name){ msg("اكتب اسمك."); $("#sName").focus(); return; }
+  if(!email){ msg("اكتب إيميلك."); $("#sEmail").focus(); return; }
+  if(!/.+@.+\..+/.test(email)){ msg("الإيميل غير صحيح."); $("#sEmail").focus(); return; }
+  if(!pass){ msg("اكتب كلمة السر."); $("#sPass").focus(); return; }
+  if(pass.length<6){ msg("كلمة السر ٦ خانات فأكثر."); $("#sPass").focus(); return; }
+  const btn=$("#cUpBtn"); busy(btn,true); msg("","");
+  try{
+    await cloudSignUp(email,pass,name);
+    TOK=null; writeTok(null);                 /* ما ندخله على طول — يسجّل دخوله بنفسه */
+    $("#sName").value=""; $("#sEmail").value=""; $("#sPass").value="";
+    $("#cEmail").value=email; $("#cPass").value="";
+    switchTab("login", true);
+    msg("", "تم تسجيلك بنجاح! سجّل دخولك الآن.");
+    setTimeout(()=>$("#cPass").focus(),80);
+  }catch(e){ msg(cloudErr(e)); }
+  finally{ busy(btn,false,"إنشاء الحساب"); }
+}
+$("#cInBtn").onclick = doLogin;
+$("#cUpBtn").onclick = doSignup;
+$("#cEmail").onkeydown = e=>{ if(e.key==="Enter") $("#cPass").focus(); };
+$("#cPass").onkeydown  = e=>{ if(e.key==="Enter") doLogin(); };
+$("#sName").onkeydown  = e=>{ if(e.key==="Enter") $("#sEmail").focus(); };
+$("#sEmail").onkeydown = e=>{ if(e.key==="Enter") $("#sPass").focus(); };
+$("#sPass").onkeydown  = e=>{ if(e.key==="Enter") doSignup(); };
+
+/* ورقة الحساب */
+$("#userBtn").onclick=()=>{
+  if(!CURRENT) return;
+  const s=computeStats();
+  el.sheetBody.innerHTML=
+    '<div style="display:flex;align-items:center;gap:13px;margin-bottom:2px">'+
+      '<span class="avatar big">'+initialOf(CURRENT.name)+'</span>'+
+      '<span><h3 style="margin:0">'+CURRENT.name+'</h3>'+
+      '<p class="meta">'+s.alive+' نبتة · '+hhmm(s.minutes)+' تركيز</p></span></div>'+
+    '<div class="kv">'+
+      (CURRENT.cloud
+        ? '<div><span>النوع</span><b>حساب سحابي <i class="syncdot '+syncState+'" id="syncDot"></i></b></div>'+
+          '<div><span>الإيميل</span><b style="direction:ltr">'+CURRENT.email+'</b></div>'+
+          '<div><span>آخر مزامنة</span><b>'+(lastSync?prettyDate(lastSync):"لسه")+'</b></div>'
+        : '<div><span>النوع</span><b>حساب محلي</b></div>'+
+          '<div><span>الحساب أُنشئ</span><b>'+prettyDate(CURRENT.created)+'</b></div>'+
+          '<div><span>الرمز السري</span><b>'+(CURRENT.pin?"مفعّل":"بدون")+'</b></div>')+
+    '</div>'+
+    '<div class="row-actions">'+
+      (CURRENT.cloud?'':'<button class="btn btn-quiet" id="acPin">'+(CURRENT.pin?"غيّر الرمز السري":"حط رمزاً سرياً")+'</button>')+
+      '<button class="btn btn-quiet" id="acSwitch">تبديل الحساب</button>'+
+      '<button class="btn btn-danger" id="acOut">تسجيل خروج</button>'+
+      '<button class="btn btn-danger" id="acDel">احذف هذا الحساب نهائياً</button>'+
+    '</div>';
+  if($("#acPin")) $("#acPin").onclick=changePin;
+  $("#acSwitch").onclick=()=>leaveAccount(false);
+  $("#acOut").onclick=()=>leaveAccount(true);
+  $("#acDel").onclick=deleteAccount;
+  el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
+};
+function busyGuard(){
+  if(sess){ toast("عندك جلسة شغّالة. احفظ نبتتك أو اقتلها أول.","⏱️"); return true; }
+  return false;
+}
+async function leaveAccount(clearStay){
+  if(busyGuard()) return;
+  if(CURRENT && CURRENT.cloud){
+    await pushNow(true);
+    if(clearStay){ TOK=null; writeTok(null); }
+  }
+  closeSheet();
+  setSync("off");
+  if(clearStay){ ACC.stay=null; writeAcc(); }
+  CURRENT=null; DB=normalize(null);
+  $("#userInitial").textContent="·";
+  showGate();
+}
+function changePin(){
+  const cur=prompt(CURRENT.pin?"اكتب رمزك الحالي:":"") ;
+  if(CURRENT.pin && pinHash(cur||"",CURRENT.id)!==CURRENT.pin){ toast("الرمز الحالي غلط.","🔒"); return; }
+  const np=(prompt("الرمز الجديد (٤ خانات فأكثر، أو اتركه فاضي لإلغائه)")||"").trim();
+  if(np && np.length<4){ toast("الرمز قصير.","🔒"); return; }
+  const i=ACC.users.findIndex(u=>u.id===CURRENT.id);
+  CURRENT.pin = np?pinHash(np,CURRENT.id):null;
+  ACC.users[i]=CURRENT; writeAcc(); closeSheet();
+  toast(np?"تغيّر الرمز السري.":"شلت الرمز السري.","🔑");
+}
+function deleteAccount(){
+  if(busyGuard()) return;
+  if(CURRENT.cloud){
+    if(!confirm("هذا يمسح نسخة هذا الجهاز فقط. المزرعة تبقى على السحابة وترجع لك أول ما تسجّل دخول. أكمل؟")) return;
+    try{ localStorage.removeItem(userKey(CURRENT.id)); }catch(e){}
+    TOK=null; writeTok(null); ACC.stay=null; ACC.last=null; writeAcc(); closeSheet();
+    CURRENT=null; DB=normalize(null); $("#userInitial").textContent="·"; setSync("off");
+    showGate(); return;
+  }
+  if(!confirm("هذا يمسح حساب "+CURRENT.name+" وكل مزرعته نهائياً. أكمل؟")) return;
+  if(!confirm("آخر تأكيد: ما فيه رجعة.")) return;
+  try{ localStorage.removeItem(userKey(CURRENT.id)); }catch(e){}
+  ACC.users=ACC.users.filter(u=>u.id!==CURRENT.id);
+  if(ACC.stay===CURRENT.id) ACC.stay=null;
+  if(ACC.last===CURRENT.id) ACC.last=null;
+  writeAcc(); closeSheet();
+  CURRENT=null; DB=normalize(null); $("#userInitial").textContent="·";
+  showGate();
+}
+function exportBackup(){
+  const payload={ app:"ghersa", v:2, account:CURRENT?CURRENT.name:"", at:Date.now(), data:DB };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="ghersa-"+(CURRENT?CURRENT.name.replace(/\s+/g,"-"):"backup")+"-"+dayKey(Date.now())+".json";
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast("نزّلت نسخة من مزرعتك.","💾");
+}
+/* بدء التشغيل: دخول تلقائي إذا اختار "خلّني داخل" */
+(function start(){
+  syncPalette();
+  const night = matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = night?"night":"day";
+  syncPalette();
+  TOK = readTok();
+  if(TOK && cloudReady()){                       /* حساب سحابي محفوظ */
+    const u = cloudUser();
+    CURRENT = u; DB = normalize(readStore());
+    $("#userInitial").textContent = initialOf(u.name);
+    bootApp();                                   /* نشتغل فوراً، والمزامنة تلحق */
+    setSync("");
+    (async ()=>{
+      try{
+        const remote = await cloudPull();
+        if(remote){ DB = mergeFarms(remote, DB); writeStore(); renderAll(); }
+        await cloudPush(DB); setSync("ok");
+      }catch(e){ setSync("err"); }
+    })();
+    return;
+  }
+  const u = ACC.stay ? ACC.users.find(x=>x.id===ACC.stay) : null;
+  if(u){
+    CURRENT=u; DB=normalize(readStore());
+    $("#userInitial").textContent=initialOf(u.name);
+    bootApp();
+  } else showGate();
+})();
+</script>
+
+</body>
+</html>
