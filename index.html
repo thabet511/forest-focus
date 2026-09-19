@@ -459,6 +459,9 @@ body.gated{overflow:hidden}
         <h3 id="runTitle">العدّاد شغّال</h3>
         <p style="margin:0;font-size:13.5px;color:var(--ink-2)" id="runNote"></p>
       </section>
+      <div style="text-align:center;padding:10px 0;border-top:1px solid var(--line-soft)">
+        <button class="btn btn-quiet" id="pauseBtn" style="min-width:140px">إيقاف</button>
+      </div>
       <div class="actions">
         <button class="btn btn-primary" id="keepBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>
@@ -594,6 +597,9 @@ body.gated{overflow:hidden}
 
 /* ═══════════════ اللغة: عربي / English ═══════════════ */
 const DICT = {
+ 'إيقاف':'Pause',
+ 'استئناف':'Resume',
+ 'متوقّفة':'Paused',
  "تعديل بيانات الحساب":"Edit account details",
  "كلمة سر جديدة":"New password",
  "اتركها فاضية إذا ما تبي تغيّرها":"Leave empty to keep it",
@@ -1011,7 +1017,7 @@ function mix(a,b,t){ const A=hex2rgb(a),B=hex2rgb(b); return rgb2hex([lerp(A[0],
 function shade(c,t){ return mix(c, t<0?"#000000":"#ffffff", Math.abs(t)); }
 
 /* ─── ٢. نموذج النموّ ────────────────────────────────────────── */
-const PHASE1 = 40;                  /* ٤٠ دقيقة = نبتة مكتملة، ثم تبدأ الشجرة */
+const PHASE1 = 80;                  /* ٤٠ دقيقة = نبتة مكتملة، ثم تبدأ الشجرة */
 function grow(mins){
   const m = Math.max(0, +mins || 0);
   if(m < PHASE1) return { g: Math.pow(m/PHASE1, 0.62), M: 1 };
@@ -1019,14 +1025,14 @@ function grow(mins){
 }
 const TIERS = [
   { n:"بذرة",           at:0 },
-  { n:"برعم",           at:0.4 },
-  { n:"شتلة",           at:6 },
-  { n:"نبتة",           at:18 },
-  { n:"شجيرة",          at:40 },
-  { n:"شجرة صغيرة",     at:85 },
-  { n:"شجرة كبيرة",     at:207 },
-  { n:"شجرة عظيمة",     at:567 },
-  { n:"شجرة أسطورية",   at:1767 }
+  { n:"برعم",           at:0.8 },
+  { n:"شتلة",           at:12 },
+  { n:"نبتة",           at:36 },
+  { n:"شجيرة",          at:80 },
+  { n:"شجرة صغيرة",     at:170 },
+  { n:"شجرة كبيرة",     at:414 },
+  { n:"شجرة عظيمة",     at:1134 },
+  { n:"شجرة أسطورية",   at:3534 }
 ];
 function tierOf(mins){
   let i = 0;
@@ -2002,7 +2008,7 @@ let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30;
 const el = {
   cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
-  setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"),
+  setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
   seedChips:$("#seedChips"), seedHint:$("#seedHint"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
   hours:$("#hoursVal"), toast:$("#toast"), toastTxt:$("#toastTxt"), toastIc:$("#toastIc"),
   sheet:$("#sheet"), sheetBg:$("#sheetBg"), sheetBody:$("#sheetBody"),
@@ -2082,7 +2088,21 @@ function notify(title,body){
 }
 
 /* ─── المسرح ────────────────────────────────────────────────── */
-function elapsedMin(){ return sess ? (Date.now()-sess.startedAt)/60000 : 0; }
+function sessNow(){ return sess ? (sess.paused ? sess.pausedAt : Date.now()) : 0; }
+function elapsedMin(){ return sess ? (sessNow()-sess.startedAt)/60000 : 0; }
+function pauseSession(){
+  if(!sess || sess.paused) return;
+  sess.paused=true; sess.pausedAt=Date.now();
+  sess.hb=0; beat();                 /* احفظ حالة الإيقاف فوراً */
+  renderAll(); paintClock(elapsedMin());
+}
+function resumeSession(){
+  if(!sess || !sess.paused) return;
+  sess.startedAt += Date.now()-sess.pausedAt;   /* أزح البداية بقدر الاستراحة */
+  sess.paused=false; sess.pausedAt=null;
+  sess.hb=0; beat();
+  renderAll(); paintClock(elapsedMin()); lastDraw=0; startLoop();
+}
 function sizeHero(){
   const box=$(".stage").clientWidth||340;
   if(!box) return;
@@ -2120,7 +2140,7 @@ function drawHero(){
 }
 
 function paintClock(mins){
-  const secs = sess ? Math.floor((Date.now()-sess.startedAt)/1000) : 0;
+  const secs = sess ? Math.floor((sessNow()-sess.startedAt)/1000) : 0;
   const h=Math.floor(secs/3600), m=Math.floor(secs%3600/60), s2=secs%60;
   const txt = h ? h+":"+fmt2(m)+":"+fmt2(s2) : fmt2(m)+":"+fmt2(s2);
   el.clock.textContent = txt;
@@ -2151,7 +2171,7 @@ function loop(){
     paintClock(m);
     const now=performance.now();
     const gap = m<10?40 : m<60?500 : 2500;
-    if(now-lastDraw>gap){ lastDraw=now; drawHero(); }
+    if(!sess.paused && now-lastDraw>gap){ lastDraw=now; drawHero(); }
     beat(); checkTier(m);
   } else if(anim){
     drawHero();
@@ -2176,7 +2196,8 @@ function beat(){
   const now=Date.now();
   if(now-(sess.hb||0) < 15000) return;
   sess.hb=now;
-  DB.active={ id:sess.id, startedAt:sess.startedAt, seed:sess.seed, tagId:sess.tagId, savedAt:now };
+  DB.active={ id:sess.id, startedAt:sess.startedAt, seed:sess.seed, tagId:sess.tagId, savedAt:now,
+              paused:!!sess.paused, pausedAt:sess.pausedAt||null };
   writeStore();
 }
 function checkTier(m){
@@ -2198,7 +2219,7 @@ function setRunTitle(){
 function startSession(){
   if(sess) return;
   anim=null;
-  sess={ id:uid(), startedAt:Date.now(), seed:DB.seed, tagId:DB.tag, tier:0, hb:0 };
+  sess={ id:uid(), startedAt:Date.now(), seed:DB.seed, tagId:DB.tag, tier:0, hb:0, paused:false, pausedAt:null };
   DB.active=sess; writeStore();
   el.setup.style.display="none"; el.run.style.display="";
   const sp=SPECIES[sess.seed], tg=DB.tags.find(t=>t.id===sess.tagId);
@@ -2207,6 +2228,8 @@ function startSession(){
     ? TR("خلّ الصفحة مفتوحة. إذا غبت أكثر من ") + TR(graceName()) + TR(" تذبل النبتة.")
     : TR("الوضع الصارم مقفل. اقعد براحتك، والنبتة تكبر ما دام العدّاد ماشي.");
   if("Notification" in window && Notification.permission==="default") Notification.requestPermission().catch(()=>{});
+  const pb=$("#pauseBtn");
+  if(pb) pb.onclick=()=>{ if(sess.paused) resumeSession(); else pauseSession(); };
   holdScreen(true); startLoop(); paintClock(0);
   toast(TR("زُرعت. العدّاد ماشي."),"🌱");
 }
@@ -2216,7 +2239,7 @@ function endCommon(){
   holdScreen(false); renderAll(); paintClock(0);
 }
 function keep(){
-  if(!sess) return;
+  if(!sess || sess.paused) return;
   const mins=Math.max(.2, elapsedMin());
   const p={ id:sess.id, species:sess.seed, tagId:sess.tagId, minutes:Math.round(mins*10)/10,
             startedAt:sess.startedAt, endedAt:Date.now(), survived:true };
@@ -2244,6 +2267,7 @@ document.addEventListener("visibilitychange", ()=>{
   if(!sess){ if(anim) startLoop(); return; }
   const away=Date.now()-(hiddenAt||Date.now());
   hiddenAt=null;
+  if(sess.paused){ lastDraw=0; startLoop(); return; }   /* بريك مُعلن — ما نحاسب عليه */
   if(DB.strict && DB.grace!==Infinity && away>DB.grace){
     wither(TR("غبت ")+hhmm(away/60000).replace(TR("0 دقيقة"),Math.round(away/1000)+TR(" ثانية"))); return;
   }
@@ -2255,7 +2279,7 @@ window.addEventListener("pagehide", ()=>{ if(sess){ sess.hb=0; beat(); } if(CURR
 function restore(){
   const a=DB.active;
   if(!a||!a.startedAt){ DB.active=null; return; }
-  sess=Object.assign({ tier:0, hb:0 }, a);
+  sess=Object.assign({ tier:0, hb:0, paused:false, pausedAt:null }, a);
   sess.tier=tierOf(elapsedMin());
   const sp=SPECIES[sess.seed]||SPECIES.basil;
   const gap=Date.now()-(a.savedAt||a.startedAt);
@@ -2509,6 +2533,12 @@ let rz; window.addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout((
 
 /* ─── تشغيل ─────────────────────────────────────────────────── */
 function renderAll(){
+  const pb=$("#pauseBtn");
+  if(sess && pb){
+    pb.textContent = sess.paused ? TR("استئناف") : TR("إيقاف");
+    if(sess.paused){ pb.style.color="var(--brick)"; pb.style.borderColor="var(--brick)"; }
+    else{ pb.style.color=""; pb.style.borderColor=""; }
+  }
   renderSetup();
   if($("#view-garden").classList.contains("on")) renderGarden();
   if($("#view-stats").classList.contains("on"))  renderStats();
