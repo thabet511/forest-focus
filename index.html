@@ -609,7 +609,7 @@ function mix(a,b,t){ const A=hex2rgb(a),B=hex2rgb(b); return rgb2hex([lerp(A[0],
 function shade(c,t){ return mix(c, t<0?"#000000":"#ffffff", Math.abs(t)); }
 
 /* ─── ٢. نموذج النموّ ────────────────────────────────────────── */
-const PHASE1 = 180;                 /* ١٨٠ دقيقة = نبتة مكتملة، ثم تبدأ الشجرة */
+const PHASE1 = 120;                 /* ١٢٠ دقيقة = نبتة مكتملة، ثم تبدأ الشجرة */
 function grow(mins){
   const m = Math.max(0, +mins || 0);
   if(m < PHASE1) return { g: Math.pow(m/PHASE1, 0.62), M: 1 };
@@ -617,14 +617,14 @@ function grow(mins){
 }
 const TIERS = [
   { n:"بذرة",           at:0 },
-  { n:"برعم",           at:1.4 },
-  { n:"شتلة",           at:26 },
-  { n:"نبتة",           at:83 },
-  { n:"شجيرة",          at:180 },
-  { n:"شجرة صغيرة",     at:383 },
-  { n:"شجرة كبيرة",     at:926 },
-  { n:"شجرة عظيمة",     at:2538 },
-  { n:"شجرة أسطورية",   at:7900 }
+  { n:"برعم",           at:1 },
+  { n:"شتلة",           at:17 },
+  { n:"نبتة",           at:55 },
+  { n:"شجيرة",          at:120 },
+  { n:"شجرة صغيرة",     at:255 },
+  { n:"شجرة كبيرة",     at:620 },
+  { n:"شجرة عظيمة",     at:1700 },
+  { n:"شجرة أسطورية",   at:5300 }
 ];
 function tierOf(mins){
   let i = 0;
@@ -1616,10 +1616,10 @@ const ACH = [
   { id:"hour",   ic:"⏳", n:"ساعة تركيز",      t:s=>s.minutes>=60 },
   { id:"tenh",   ic:"🕰️", n:"عشر ساعات",      t:s=>s.minutes>=600 },
   { id:"cent",   ic:"🏔️", n:"مئة ساعة",       t:s=>s.minutes>=6000 },
-  { id:"tree",   ic:"🌳", n:"أول شجرة",        t:s=>s.longest>=180 },
-  { id:"big",    ic:"🌲", n:"شجرة كبيرة",      t:s=>s.longest>=926 },
-  { id:"great",  ic:"🗻", n:"شجرة عظيمة",      t:s=>s.longest>=2538 },
-  { id:"legend", ic:"✨", n:"شجرة أسطورية",    t:s=>s.longest>=7900 },
+  { id:"tree",   ic:"🌳", n:"أول شجرة",        t:s=>s.longest>=120 },
+  { id:"big",    ic:"🌲", n:"شجرة كبيرة",      t:s=>s.longest>=620 },
+  { id:"great",  ic:"🗻", n:"شجرة عظيمة",      t:s=>s.longest>=1700 },
+  { id:"legend", ic:"✨", n:"شجرة أسطورية",    t:s=>s.longest>=5300 },
   { id:"st3",    ic:"📅", n:"٣ أيام تتابع",    t:s=>s.bestStreak>=3 },
   { id:"st7",    ic:"🗓️", n:"أسبوع تتابع",    t:s=>s.bestStreak>=7 },
   { id:"clean",  ic:"🛡️", n:"١٠ بلا ذبول",    t:s=>s.cleanRun>=10 },
