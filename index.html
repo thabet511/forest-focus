@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>غرسة · وقتك يصير مزرعة</title>
+<title>حصاد الإنتاجية · وقتك يصير مزرعة</title>
 <meta name="description" content="عدّاد تركيز بلا حد. نبتة تكبر مع كل دقيقة، وتتحول شجرة، وتكبر للأبد.">
 <meta name="theme-color" content="#E3E9DC">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
 <style>
 /* ═══════════════════════════════════════════════════════════
-   غرسة — لوحة الألوان
+   حصاد الإنتاجية — لوحة الألوان
    نهار: دفيئة زجاجية، ورق أكياس البذور، حبر نباتي
    ═══════════════════════════════════════════════════════════ */
 /* ═══ الخط السعودي (اختياري) ═══
@@ -92,6 +92,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .topbar{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 0 10px}
 .brand{font-family:var(--kufi);font-size:19px;font-weight:600;margin:0}
 .brand span{color:var(--viridian)}
+.brand em{font-style:normal;font-size:11px;font-weight:500;opacity:.55;margin-inline-start:5px;letter-spacing:.2px}
 .spacer{flex:1}
 .pill{
   display:inline-flex;align-items:center;gap:6px;
@@ -191,6 +192,9 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .stats-lock{text-align:center}
 .stats-lock .lock-ic{font-size:34px;line-height:1;margin-bottom:10px;opacity:.75}
 .stats-lock .lock-note{margin:0 0 16px;font-size:13.5px;line-height:1.75;color:var(--ink-2)}
+.rst-h{font-family:var(--kufi);font-size:16px;font-weight:600;margin:0 0 4px;text-align:center}
+.rst-p{text-align:center;margin:0 0 14px}
+#rCode{letter-spacing:.32em;text-align:center;font-size:19px;font-weight:600}
 .gguest{margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)}
 .gguest-note{margin:8px 0 0;text-align:center;font-size:12px;color:var(--ink-3)}
 .guest-banner{margin:0 0 14px;padding:10px 12px;border-radius:10px;
@@ -338,6 +342,7 @@ body.gated{overflow:hidden}
 .gatecard > canvas{display:block;margin:0 auto -6px}
 .gatecard h2{font-family:var(--kufi);font-size:26px;margin:0;text-align:center}
 .gatecard h2 span{color:var(--viridian)}
+.gatecard h2 em{font-style:normal;font-size:14px;font-weight:500;opacity:.55;margin-inline-start:7px;letter-spacing:.2px}
 .gsub{margin:5px 0 16px;text-align:center;font-size:13.5px;color:var(--ink-2)}
 .gtabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--paper-2);
   border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
@@ -410,7 +415,7 @@ body.gated{overflow:hidden}
 <div class="app">
 
   <header class="topbar">
-    <h1 class="brand">غرسة<span>.</span></h1>
+    <h1 class="brand">حصاد<em>الإنتاجية</em><span>.</span></h1>
     <div class="spacer"></div>
     <div class="pill" id="hoursPill" title="مجموع ساعات تركيزك">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3.2 2"/></svg>
@@ -459,7 +464,7 @@ body.gated{overflow:hidden}
         <button class="switch" id="strictSwitch" role="switch" aria-checked="true" aria-label="الوضع الصارم"></button>
       </div>
       <section class="panel" id="gracePanel">
-        <h3>المهلة قبل الذبول <span class="hint">للجلسات الطويلة خلها أوسع</span></h3>
+        <h3>المهلة قبل الذبول <span class="hint">للجلسات الطويلة خلّها أوسع</span></h3>
         <div class="chips" id="graceChips"></div>
       </section>
 
@@ -533,7 +538,7 @@ body.gated{overflow:hidden}
   <main class="view" id="view-seeds">
     <div class="view-head">
       <h2>كيس البذور</h2>
-      <p>كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثمان ساعات تركيز.</p>
+      <p>كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثماني ساعات تركيز.</p>
     </div>
     <div id="seedGallery"></div>
   </main>
@@ -560,12 +565,12 @@ body.gated{overflow:hidden}
   </div>
 </nav>
 
-<div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="الدخول إلى غرسة">
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="الدخول إلى حصاد الإنتاجية">
   <div class="gatecard">
     <canvas id="gateCv" width="210" height="160"></canvas>
-    <h2>غرسة<span>.</span></h2>
+    <h2>حصاد<em>الإنتاجية</em><span>.</span></h2>
     <p class="gsub">سجّل دخولك عشان مزرعتك تنحفظ باسمك.</p>
-    <div class="gtabs" role="tablist">
+    <div class="gtabs" role="tablist" id="gateTabs">
       <button class="gtab" id="tabLogin" role="tab" aria-selected="true">تسجيل دخول</button>
       <button class="gtab" id="tabSignup" role="tab" aria-selected="false">تسجيل جديد</button>
     </div>
@@ -575,10 +580,10 @@ body.gated{overflow:hidden}
     <details class="setup" id="cloudSetup" hidden>
       <summary>الاتصال بالسيرفر مو مضبوط — اضغط للطريقة</summary>
       <ol>
-        <li>افتح <code>supabase.com</code> وسوّ مشروعاً مجانياً.</li>
+        <li>افتح <code>supabase.com</code> وسوّ مشروع مجاني.</li>
         <li>من <code>SQL Editor</code> نفّذ جدول <code>farms</code>.</li>
         <li>من <code>Project Settings ▸ API Keys</code> انسخ الرابط والمفتاح.</li>
-        <li>حطهم في <code>const CLOUD</code> فوق في هذا الملف.</li>
+        <li>حطّهم في <code>const CLOUD</code> فوق في هذا الملف.</li>
       </ol>
     </details>
 
@@ -590,6 +595,27 @@ body.gated{overflow:hidden}
       <button class="btn btn-primary" id="cInBtn" style="width:100%">دخول</button>
       <label class="chkrow" style="margin-top:12px"><input type="checkbox" id="stayCloud" checked> خلّني داخل على هذا الجهاز</label>
       <p class="gswap">ما عندك حساب؟ <button type="button" id="goSignup">سجّل جديد</button></p>
+      <p class="gswap"><button type="button" id="goReset">نسيت كلمة السر؟</button></p>
+    </div>
+
+    <div id="paneReset" hidden>
+      <h3 class="rst-h">استرجاع كلمة السر</h3>
+      <div id="rstStep1">
+        <p class="gsub rst-p">اكتب إيميلك ونرسل لك كود تأكيد.</p>
+        <label class="fld"><span>الإيميل</span>
+          <input id="rEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
+        <button class="btn btn-primary" id="rSend" style="width:100%">أرسل الكود</button>
+      </div>
+      <div id="rstStep2" hidden>
+        <p class="gsub rst-p" id="rSentNote">أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.</p>
+        <label class="fld" id="rCodeWrap"><span>كود التأكيد</span>
+          <input id="rCode" type="text" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="10" placeholder="••••••"></label>
+        <label class="fld"><span>كلمة السر الجديدة</span>
+          <input id="rPass" type="password" autocomplete="new-password" dir="ltr" placeholder="٦ خانات فأكثر"></label>
+        <button class="btn btn-primary" id="rSet" style="width:100%">عيّن كلمة السر</button>
+        <p class="gswap" id="rAgainWrap"><button type="button" id="rAgain">أرسل مرة ثانية</button></p>
+      </div>
+      <p class="gswap"><button type="button" id="rBack">رجوع</button></p>
     </div>
 
     <div id="paneSignup" hidden>
@@ -622,12 +648,36 @@ body.gated{overflow:hidden}
 <script>
 "use strict";
 /* ════════════════════════════════════════════════════════════════
-   غرسة — محرّك النمو والرسم
+   حصاد الإنتاجية — محرّك النمو والرسم
    نموّ بلا سقف: ٣ ساعات = نبتة مكتملة، وبعدها شجرة تكبر للأبد.
    ════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════ اللغة: عربي / English ═══════════════ */
 const DICT = {
+ 'افتح الرابط اللي وصلك على الإيميل، وبيرجّعك هنا تحط كلمة سر جديدة.':'Open the link we emailed you — it brings you back here to set a new password.',
+ 'أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز.':'We emailed you a link. Open it on this device.',
+ 'افتحنا لك الباب. حط كلمة سر جديدة.':"You're verified. Set a new password.",
+ 'انتهت صلاحية الرابط. اطلب واحداً جديداً.':'The link has expired. Request a new one.',
+ 'نسيت كلمة السر؟':'Forgot your password?',
+ 'استرجاع كلمة السر':'Reset your password',
+ 'اكتب إيميلك ونرسل لك كود تأكيد.':"Enter your email and we'll send you a code.",
+ 'أرسل الكود':'Send code',
+ 'أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.':"We sent the code to your email. Check your inbox, and spam if it hasn't arrived.",
+ 'كود التأكيد':'Verification code',
+ 'كلمة السر الجديدة':'New password',
+ 'عيّن كلمة السر':'Set password',
+ 'اكتب الكود اللي وصلك.':'Enter the code you received.',
+ 'الكود غلط أو انتهت صلاحيته.':'The code is wrong or has expired.',
+ 'تغيّرت كلمة السر ودخلناك.':"Password changed — you're in.",
+ 'أرسل مرة ثانية':'Send again',
+ 'أرسلناه مرة ثانية.':'Sent again.',
+ 'كلمة السر الحالية':'Current password',
+ 'نسيتها؟':'Forgot it?',
+ 'اكتب كلمة السر الحالية.':'Enter your current password.',
+ 'كلمة السر الحالية غلط.':'Current password is wrong.',
+ 'جارٍ الإرسال…':'Sending…',
+ 'جارٍ التأكيد…':'Verifying…',
+ 'الكود وصل لإيميلك.':'The code is in your email.',
  'سجّل دخولك عشان تشوف تقدّمك':'Sign in to see your progress',
  'الأرقام تُحسب من جلساتك المحفوظة، ووضع الضيف ما يحفظ شي. أنشئ حساب وكل شي بيبان هنا.':"Stats are built from saved sessions, and guest mode saves nothing. Create an account and it'll all show up here.",
  'أنشئ حساب':'Create an account',
@@ -654,7 +704,7 @@ const DICT = {
  "أرسلنا رابط تأكيد للإيميل الجديد. افتحه عشان يصير إيميلك.":"We sent a confirmation link to the new email. Open it to finish the change.",
  "الاسم ما يصير فاضي.":"Name can't be empty.",
  "كلمة السر الجديدة ٦ خانات فأكثر.":"New password must be 6 characters or more.",
- "جاري الحفظ…":"Saving…",
+ "جارٍ الحفظ…":"Saving…",
  "الحساب المحلي ما فيه إيميل ولا كلمة سر.":"A local account has no email or password.",
  "غيّر اسمك، إيميلك، أو كلمة سرك.":"Change your name, email, or password.",
  "ريحان":"Basil",
@@ -670,8 +720,8 @@ const DICT = {
  "ورد طائفي":"Taif Rose",
  "ياسمين":"Jasmine",
  "كركديه":"Hibiscus",
- "صبار الألوة":"Aloe Vera",
- "صبار عمودي":"Column Cactus",
+ "صبّار الألوة":"Aloe Vera",
+ "صبّار عمودي":"Column Cactus",
  "تين شوكي":"Prickly Pear",
  "أغاف":"Agave",
  "نخلة":"Date Palm",
@@ -702,7 +752,7 @@ const DICT = {
  "يتبع الضوء ورأسه يكبر.":"It follows the light, and its head keeps growing.",
  "كأس مقفل على ساق أملس.":"A closed cup on a smooth stem.",
  "أبيض بقلب ذهبي.":"White with a golden heart.",
- "ورقة حمراء رقيقة تهتز مع الهوا.":"A thin red petal trembling in the breeze.",
+ "ورقة حمراء رقيقة تهتز مع الهواء.":"A thin red petal trembling in the breeze.",
  "تاجه زهر وردي كامل.":"A crown of full pink blossom.",
  "زهر أبيض صغير بريحة قوية.":"Small white flowers with a strong scent.",
  "زهرة عريضة قرمزية.":"One wide crimson flower.",
@@ -746,7 +796,7 @@ const DICT = {
  "أسطورية +":"Legendary +",
  "أول نبتة":"First Plant",
  "عشر نبتات":"Ten Plants",
- "خمسين نبتة":"Fifty Plants",
+ "خمسون نبتة":"Fifty Plants",
  "ساعة تركيز":"One Hour",
  "عشر ساعات":"Ten Hours",
  "مئة ساعة":"Hundred Hours",
@@ -787,9 +837,11 @@ const DICT = {
  "دقيقة":"1 minute",
  "٥ دقائق":"5 minutes",
  "بلا مهلة":"No grace",
- "غرسة":"Ghersa",
- "غرسة · وقتك يصير مزرعة":"Ghersa · your time becomes a farm",
- " · غرسة":" · Ghersa",
+ "حصاد":"Hasad",
+ "حصاد الإنتاجية":"Hasad Productivity",
+ "الإنتاجية":"Productivity",
+ "حصاد الإنتاجية · وقتك يصير مزرعة":"Hasad Productivity · your time becomes a farm",
+ " · حصاد الإنتاجية":" · Hasad Productivity",
  "عدّاد تركيز بلا حد. نبتة تكبر مع كل دقيقة، وتتحول شجرة، وتكبر للأبد.":"An endless focus timer. A plant grows with every minute, turns into a tree, and keeps growing forever.",
  "نبتة تكبر مع وقت تركيزك":"A plant that grows with your focus",
  "مجموع ساعات تركيزك":"Your total focus hours",
@@ -808,7 +860,7 @@ const DICT = {
  "الوضع الصارم":"Strict mode",
  "يفيدك في الإحصائيات":"Helps your stats",
  "المهلة قبل الذبول":"Grace before wilting",
- "للجلسات الطويلة خلها أوسع":"Widen it for long sessions",
+ "للجلسات الطويلة خلّها أوسع":"Widen it for long sessions",
  "ازرع وابدأ العدّاد":"Plant and start",
  "احفظها في المزرعة":"Keep it in the farm",
  "اقتل النبتة":"Kill the plant",
@@ -824,7 +876,7 @@ const DICT = {
  " صارت هي المزروعة.":" is now planted.",
  "المزروعة الآن":"Planted now",
  "كيس البذور":"Seed pouch",
- "كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثمان ساعات تركيز.":"Every species is free and unlocked. Tap any one to plant it — the preview shows it after eight hours of focus.",
+ "كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثماني ساعات تركيز.":"Every species is free and unlocked. Tap any one to plant it — the preview shows it after eight hours of focus.",
  "انتهت الجلسة":"Session ended",
  "ما فيه جلسة":"No session",
  " دخلت المزرعة · ":" joined the farm · ",
@@ -893,7 +945,7 @@ const DICT = {
  "هذا يمسح المزرعة والإنجازات كلها. أكمل؟":"This erases the whole farm and every achievement. Continue?",
  "رجعت الأرض بيضاء.":"The ground is bare again.",
  " تركيز</p></span></div>":" focus</p></span></div>",
- "الدخول إلى غرسة":"Sign in to Ghersa",
+ "الدخول إلى حصاد الإنتاجية":"Sign in to Hasad Productivity",
  "تسجيل دخول":"Log in",
  "تسجيل جديد":"Sign up",
  "سجّل دخول":"Log in",
@@ -941,7 +993,7 @@ const DICT = {
  "تبديل الحساب":"Switch account",
  "تسجيل خروج":"Log out",
  "احذف هذا الحساب نهائياً":"Delete this account permanently",
- "حط رمزاً سرياً":"Set a passcode",
+ "حطّ رمز سري":"Set a passcode",
  "غيّر الرمز السري":"Change passcode",
  "اكتب رمزك الحالي:":"Enter your current passcode:",
  "الرمز الجديد (٤ خانات فأكثر، أو اتركه فاضي لإلغائه)":"New passcode (4 digits or more, or leave empty to remove)",
@@ -957,8 +1009,8 @@ const DICT = {
  "؟":"?",
  "افتح":"Open",
  "انسخ الرابط والمفتاح.":"Copy the URL and the key.",
- "وسوّ مشروعاً مجانياً.":"and create a free project.",
- "حطهم في":"Put them in",
+ "وسوّ مشروع مجاني.":"and create a free project.",
+ "حطّهم في":"Put them in",
  "فوق في هذا الملف.":"at the top of this file.",
  "نفّذ جدول":"Run table",
  "من":"from",
@@ -967,7 +1019,7 @@ const DICT = {
  "إذا طلعت من الصفحة أو انقفلت الشاشة، عندك مهلة ترجع فيها قبل ما تذبل النبتة.":"If you leave the page or the screen locks, you get a grace period to come back before the plant wilts."
 };
 let LANG = "ar";
-try{ const v = localStorage.getItem("ghersa.lang"); if(v==="en"||v==="ar") LANG=v; }catch(e){}
+try{ const v = localStorage.getItem("hasad.lang"); if(v==="en"||v==="ar") LANG=v; }catch(e){}
 const AR_RE = /[\u0600-\u06FF]/;
 function TRpart(txt){
   const k = txt.trim(); if(!k) return txt;
@@ -1016,14 +1068,14 @@ function applyI18N(){
 }
 function setLang(l){
   LANG = (l==="en") ? "en" : "ar";
-  try{ localStorage.setItem("ghersa.lang", LANG); }catch(e){}
+  try{ localStorage.setItem("hasad.lang", LANG); }catch(e){}
   try{ const h = document.documentElement; h.lang = LANG; h.dir = (LANG==="ar") ? "rtl" : "ltr"; }catch(e){}
   applyI18N();
   const lb = $("#langBtn");
   if(lb) lb.textContent = (LANG==="ar") ? "EN" : "\u0639";
   const gl = $("#gateLang");
   if(gl) gl.textContent = (LANG==="ar") ? "English" : "\u0627\u0644\u0639\u0631\u0628\u064a\u0629";
-  document.title = TR("\u063a\u0631\u0633\u0629 \u00b7 \u0648\u0642\u062a\u0643 \u064a\u0635\u064a\u0631 \u0645\u0632\u0631\u0639\u0629");
+  document.title = TR("\u062d\u0635\u0627\u062f \u0627\u0644\u0625\u0646\u062a\u0627\u062c\u064a\u0629 \u00b7 \u0648\u0642\u062a\u0643 \u064a\u0635\u064a\u0631 \u0645\u0632\u0631\u0639\u0629");
   if(CURRENT && !onGateScreen()){
     renderAll();
     paintClock(sess ? elapsedMin() : 0);
@@ -1127,7 +1179,7 @@ const SPECIES = {
     leaf:"#4E8342", leaf2:"#5E9A4E", stem:"#5F9147", flower:"#E0A64A", core:"#6B4A2A", pairs:3, lw:.62, ll:1.55, th:1.9, fl:1.25 },
   tulip:{ n:"تيوليب", fam:"herbflower", kind:"bell", mat:"clump", note:"كأس مقفل على ساق أملس.",
     leaf:"#4C8A5E", leaf2:"#5E9E6E", stem:"#54936A", flower:"#C63B52", core:"#E6748A", pairs:2, lw:.34, ll:1.5, th:1.25, fl:1.5 },
-  poppy:{ n:"خشخاش", fam:"herbflower", kind:"bell", mat:"clump", note:"ورقة حمراء رقيقة تهتز مع الهوا.",
+  poppy:{ n:"خشخاش", fam:"herbflower", kind:"bell", mat:"clump", note:"ورقة حمراء رقيقة تهتز مع الهواء.",
     leaf:"#6E8A54", leaf2:"#809C64", stem:"#779060", flower:"#C4342A", core:"#2E2420", pairs:4, lw:.30, ll:1.1, th:.85, fl:1.45 },
   narcissus:{ n:"نرجس", fam:"herbflower", kind:"bell", mat:"clump", note:"أبيض بقلب ذهبي.",
     leaf:"#5C9068", leaf2:"#6EA478", stem:"#63977O".replace("O","0"), flower:"#F6F3E2", core:"#E0A63A", pairs:2, lw:.22, ll:1.55, th:1, fl:1.4 },
@@ -1139,13 +1191,13 @@ const SPECIES = {
     leaf:"#A8A householder".replace(" householder","96A"), leaf2:"#BCB47E", stem:"#B0A874", flower:"#D8B25A", core:"#B78F3C" },
 
   /* ─ صبّار وصحراء ─ */
-  cactus:{ n:"صبار عمودي", fam:"desert", kind:"cactus", mat:"column", note:"ما يحتاج أحد، ويطلع أذرعه بالوقت.",
+  cactus:{ n:"صبّار عمودي", fam:"desert", kind:"cactus", mat:"column", note:"ما يحتاج أحد، ويطلع أذرعه بالوقت.",
     leaf:"#4E8B5F", leaf2:"#63A173", stem:"#4E8B5F", flower:"#D96A8A", core:"#F0B8C8" },
   opuntia:{ n:"تين شوكي", fam:"desert", kind:"pads", mat:"column", note:"كفوف مفلطحة تتراكم فوق بعض.",
     leaf:"#5A9765", leaf2:"#6FAC78", stem:"#4F8A5C", flower:"#E0A63A", core:"#C4762A" },
   agave:{ n:"أغاف", fam:"desert", kind:"rosette", mat:"column", note:"سيوف سميكة تتفتح من المركز.",
     leaf:"#6E9478", leaf2:"#84A88C", stem:"#5E8468", flower:"#C8B44A", core:"#A89434" },
-  aloe:{ n:"صبار الألوة", fam:"desert", kind:"rosette", mat:"column", note:"ورق لحمي مرقّط.",
+  aloe:{ n:"صبّار الألوة", fam:"desert", kind:"rosette", mat:"column", note:"ورق لحمي مرقّط.",
     leaf:"#5E9472", leaf2:"#74A886", stem:"#4E8462", flower:"#D4562A", core:"#E88A3A" },
 
   /* ─ نخيل ─ */
@@ -1319,7 +1371,7 @@ function drawForm(ctx, sp, cx, gy, s, q, H, o){
     return;
   }
 
-  /* ── صبار عمودي ── */
+  /* ── صبّار عمودي ── */
   if(k==="cactus"){
     const bw=H*.19+s*.012, bh=H;
     cactusBody(ctx,sp,cx,gy,bw,bh,o.withered,s);
@@ -1820,7 +1872,7 @@ function paint(cv,w,h,opts){ drawScene(fitCanvas(cv,w,h), Object.assign({w,h},op
 <script>
 "use strict";
 /* ════════════════════════════════════════════════════════════════
-   غرسة — طبقة التطبيق: العدّاد، المزرعة، الأرقام، البذور
+   حصاد الإنتاجية — طبقة التطبيق: العدّاد، المزرعة، الأرقام، البذور
    ════════════════════════════════════════════════════════════════ */
 
 
@@ -1835,7 +1887,7 @@ const CLOUD = {
 };
 const cloudReady = () => !!(CLOUD.url && CLOUD.key);
 
-const CLOUD_KEY = "ghersa.cloud";
+const CLOUD_KEY = "hasad.cloud";
 let TOK = null;                       /* {access, refresh, exp, uid, email} */
 let pushTimer = null, syncState = "off", lastSync = 0;
 
@@ -1872,6 +1924,47 @@ async function ensureToken(){
 }
 const cloudSignUp = (email,password,name) => sbFetch("/auth/v1/signup", { method:"POST", body:{ email, password, data:{ name } } });
 const cloudSignIn = (email,password) => sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } });
+
+/* ── الرجوع من رابط الإيميل: الجلسة تجي في عنوان الصفحة ── */
+function hashParams(){
+  const h = String(location.hash||"").replace(/^#/,""); const o={};
+  if(!h) return o;
+  h.split("&").forEach(kv=>{ const i=kv.indexOf("="); if(i>0){
+    try{ o[decodeURIComponent(kv.slice(0,i))] = decodeURIComponent(kv.slice(i+1)); }catch(e){}
+  }});
+  return o;
+}
+async function recoveryFromHash(){
+  const q = hashParams();
+  if(q.type!=="recovery" || !q.access_token) return false;
+  /* نشيل الرموز من شريط العنوان فوراً */
+  try{ history.replaceState(null,"",location.pathname+location.search); }
+  catch(e){ try{ location.hash=""; }catch(e2){} }
+  TOK = { access:q.access_token, refresh:q.refresh_token||null,
+          exp: Date.now() + ((Number(q.expires_in)||3600)*1000) - 60000,
+          uid:null, email:null, name:null };
+  try{
+    const u = await sbFetch("/auth/v1/user", {}, true);
+    TOK.uid=u.id; TOK.email=u.email;
+    TOK.name=(u.user_metadata && u.user_metadata.name)||null;
+    writeTok(TOK); return true;
+  }catch(e){ TOK=null; writeTok(null); return false; }
+}
+
+/* ── استرجاع كلمة السر بكود ── */
+const siteURL = () => location.origin + location.pathname;
+const cloudSendCode = (email) =>
+  sbFetch("/auth/v1/recover?redirect_to=" + encodeURIComponent(siteURL()), { method:"POST", body:{ email } });
+async function cloudVerifyCode(email, token){
+  const js = await sbFetch("/auth/v1/verify", { method:"POST", body:{ email, token, type:"recovery" } });
+  if(!saveSession(js)) throw new Error(TR("الكود غلط أو انتهت صلاحيته."));
+  return js;
+}
+/* يتحقق من كلمة السر الحالية بلا ما يمس الجلسة القائمة */
+async function cloudCheckPass(email, password){
+  try{ await sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } }); return true; }
+  catch(e){ return false; }
+}
 
 async function cloudPull(){
   await ensureToken();
@@ -1942,8 +2035,8 @@ async function pushNow(quiet){
     return false;
   }
 }
-const ACC_KEY = "ghersa.accounts";
-const userKey = id => "ghersa.user." + id;
+const ACC_KEY = "hasad.accounts";
+const userKey = id => "hasad.user." + id;
 let memFallback = null, accMem = null, CURRENT = null, guestMem = null;
 
 function readAcc(){
@@ -1993,9 +2086,9 @@ function writeStore(){
 /* بيانات النسخ القديمة قبل الحسابات — تنتقل لأول حساب يُنشأ */
 function legacyData(){
   try{
-    const v2 = localStorage.getItem("ghersa.store.v2");
+    const v2 = localStorage.getItem("hasad.store.v2");
     if(v2) return JSON.parse(v2);
-    const v1 = localStorage.getItem("ghersa.store.v1");
+    const v1 = localStorage.getItem("hasad.store.v1"); if(!v1) v1 = localStorage.getItem("ghersa.store.v1");
     if(v1){
       const o = JSON.parse(v1);
       return { plants:(o.plants||[]).map(p=>({ id:p.id, species:SPECIES[p.species]?p.species:"basil",
@@ -2066,7 +2159,7 @@ const el = {
 const ACH = [
   { id:"first",  ic:"🌱", n:"أول نبتة",        t:s=>s.alive>=1 },
   { id:"ten",    ic:"🌿", n:"عشر نبتات",       t:s=>s.alive>=10 },
-  { id:"fifty",  ic:"🌾", n:"خمسين نبتة",      t:s=>s.alive>=50 },
+  { id:"fifty",  ic:"🌾", n:"خمسون نبتة",      t:s=>s.alive>=50 },
   { id:"hour",   ic:"⏳", n:"ساعة تركيز",      t:s=>s.minutes>=60 },
   { id:"tenh",   ic:"🕰️", n:"عشر ساعات",      t:s=>s.minutes>=600 },
   { id:"cent",   ic:"🏔️", n:"مئة ساعة",       t:s=>s.minutes>=6000 },
@@ -2202,10 +2295,10 @@ function paintClock(mins){
   if(sess){
     const left = Math.max(0, ms.next-mins);
     el.next.textContent = TR("باقي ") + hhmm(left) + TR(" لـ") + TR(ms.name);
-    document.title = txt + TR(" · غرسة");
+    document.title = txt + TR(" · حصاد الإنتاجية");
   } else {
     el.next.textContent = TR("اضغط ابدأ والعدّاد يمشي معك بلا حد.");
-    document.title = TR("غرسة · وقتك يصير مزرعة");
+    document.title = TR("حصاد الإنتاجية · وقتك يصير مزرعة");
   }
 }
 
@@ -2252,7 +2345,7 @@ function checkTier(m){
     sess.tier=t;
     const nm=TR(tierName(m));
     toast(TR("نبتتك صارت ")+nm+" · "+hhmm(m),"🌿");
-    notify(TR("غرسة"),TR((SPECIES[sess.seed]||SPECIES.basil).n)+TR(" صارت ")+nm+".");
+    notify(TR("حصاد الإنتاجية"),TR((SPECIES[sess.seed]||SPECIES.basil).n)+TR(" صارت ")+nm+".");
     lastDraw=0;
   }
 }
@@ -2627,12 +2720,80 @@ function switchTab(which, keepOk){
   $("#tabSignup").setAttribute("aria-selected", which==="signup");
   $("#paneLogin").hidden  = which!=="login";
   $("#paneSignup").hidden = which!=="signup";
+  const pr=$("#paneReset"); if(pr) pr.hidden = which!=="reset";
+  const tb=$("#gateTabs"); if(tb) tb.hidden = which==="reset";
   $("#cloudSetup").hidden = cloudReady();
   if(!keepOk) msg("","");
 }
 $("#tabLogin").onclick  = ()=>{ switchTab("login");  setTimeout(()=>$("#cEmail").focus(),60); };
 $("#tabSignup").onclick = ()=>{ switchTab("signup"); setTimeout(()=>$("#sName").focus(),60); };
 $("#goSignup").onclick  = ()=>$("#tabSignup").click();
+
+/* ── استرجاع كلمة السر من البوابة ── */
+let RST = { email:"", mode:"code" };
+function rstMode(m){
+  RST.mode = m;
+  const cw=$("#rCodeWrap"), aw=$("#rAgainWrap"), nt=$("#rSentNote");
+  if(cw) cw.hidden = m==="link";
+  if(aw) aw.hidden = m==="link";
+  if(nt) nt.textContent = m==="link"
+    ? TR("افتحنا لك الباب. حط كلمة سر جديدة.")
+    : TR("أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.");
+}
+/* المستخدم رجع من رابط الإيميل: يحط كلمة السر فقط */
+function openResetLink(){
+  switchTab("reset");
+  $("#rstStep1").hidden=true; $("#rstStep2").hidden=false;
+  rstMode("link");
+  const pw=$("#rPass"); if(pw){ pw.value=""; if(pw.focus) pw.focus(); }
+  msg("","");
+}
+function openReset(){
+  switchTab("reset");
+  $("#rstStep1").hidden=false; $("#rstStep2").hidden=true;
+  rstMode("code");
+  const e=$("#rEmail"); if(e){ e.value = ($("#cEmail").value||"").trim(); if(e.focus) e.focus(); }
+  msg("","");
+}
+function validEmail(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); }
+async function resetSend(again){
+  const b = $(again ? "#rAgain" : "#rSend"); if(b && b.disabled) return;
+  const email = again ? RST.email : (($("#rEmail").value||"").trim());
+  if(!validEmail(email)){ msg(TR("الإيميل غير صحيح."),""); return; }
+  if(!cloudReady()){ msg(TR("الاتصال بالسيرفر مو مضبوط."),""); return; }
+  if(b) b.disabled=true;
+  msg("", TR("جارٍ الإرسال…"));
+  try{
+    await cloudSendCode(email);
+    RST.email = email;
+    $("#rstStep1").hidden=true; $("#rstStep2").hidden=false;
+    msg("", again ? TR("أرسلناه مرة ثانية.") : TR("أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز."));
+    const c=$("#rCode"); if(c){ c.value=""; if(c.focus) c.focus(); }
+  }catch(e){ msg(cloudErr(e),""); }
+  finally{ if(b) b.disabled=false; }
+}
+async function resetApply(){
+  const b=$("#rSet"); if(b && b.disabled) return;
+  const link = RST.mode==="link";
+  const code = link ? "" : ($("#rCode").value||"").replace(/\D/g,"");
+  const pass = ($("#rPass").value||"");
+  if(!link && !code){ msg(TR("اكتب الكود اللي وصلك."),""); $("#rCode").focus(); return; }
+  if(pass.length<6){ msg(TR("كلمة السر الجديدة ٦ خانات فأكثر."),""); $("#rPass").focus(); return; }
+  if(b) b.disabled=true;
+  msg("", TR("جارٍ التأكيد…"));
+  try{
+    if(!link) await cloudVerifyCode(RST.email, code);
+    await cloudUpdateUser({ password: pass });
+    toast(TR("تغيّرت كلمة السر ودخلناك."),"🔑");
+    await afterCloudAuth(true);
+  }catch(e){ msg(cloudErr(e),""); }
+  finally{ if(b) b.disabled=false; }
+}
+$("#goReset").onclick = openReset;
+$("#rBack").onclick   = ()=>$("#tabLogin").click();
+$("#rSend").onclick   = ()=>resetSend(false);
+$("#rAgain").onclick  = ()=>resetSend(true);
+$("#rSet").onclick    = resetApply;
 $("#goLogin").onclick   = ()=>$("#tabLogin").click();
 
 /* ── رسائل السيرفر بالعربي ── */
@@ -2765,7 +2926,7 @@ function openAccountSheet(){
     '</div>'+
     '<div class="row-actions">'+
       TR('<button class="btn btn-quiet" id="acEdit">تعديل بيانات الحساب</button>')+
-      (CURRENT.cloud?'':'<button class="btn btn-quiet" id="acPin">'+(CURRENT.pin?TR("غيّر الرمز السري"):TR("حط رمزاً سرياً"))+'</button>')+
+      (CURRENT.cloud?'':'<button class="btn btn-quiet" id="acPin">'+(CURRENT.pin?TR("غيّر الرمز السري"):TR("حطّ رمز سري"))+'</button>')+
       TR('<button class="btn btn-quiet" id="acSwitch">تبديل الحساب</button>')+
       TR('<button class="btn btn-danger" id="acOut">تسجيل خروج</button>')+
       TR('<button class="btn btn-danger" id="acDel">احذف هذا الحساب نهائياً</button>')+
@@ -2812,7 +2973,10 @@ function openAccountEdit(){
       ? '<label class="fld"><span>'+TR("الإيميل")+'</span>'+
           '<input id="eEmail" type="email" inputmode="email" autocomplete="email" dir="ltr" value="'+escAttr(CURRENT.email||"")+'"></label>'+
         '<label class="fld"><span>'+TR("كلمة سر جديدة")+'</span>'+
-          '<input id="ePass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية إذا ما تبي تغيّرها"))+'"></label>'
+          '<input id="ePass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية إذا ما تبي تغيّرها"))+'"></label>'+
+        '<label class="fld"><span>'+TR("كلمة السر الحالية")+'</span>'+
+          '<input id="eCur" type="password" autocomplete="current-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية إذا ما تبي تغيّرها"))+'"></label>'+
+        '<p class="gswap" style="margin:-4px 0 4px"><button type="button" id="eForgot">'+TR("نسيتها؟")+'</button></p>'
       : '')+
     '<div class="row-actions">'+
       '<button class="btn btn-primary" id="eSave">'+TR("حفظ التعديلات")+'</button>'+
@@ -2820,7 +2984,57 @@ function openAccountEdit(){
     '</div>';
   $("#eBack").onclick = openAccountSheet;
   $("#eSave").onclick = saveAccountEdit;
+  const fg=$("#eForgot"); if(fg) fg.onclick = openResetInSheet;
   const nameIn=$("#eName"); if(nameIn && nameIn.focus) nameIn.focus();
+}
+/* ── استرجاع كلمة السر من داخل ورقة الحساب ── */
+function openResetInSheet(){
+  const mail = CURRENT.email||"";
+  el.sheetBody.innerHTML =
+    '<h3 style="margin:0 0 3px">'+TR("استرجاع كلمة السر")+'</h3>'+
+    '<p class="gsub" style="text-align:start;margin:0 0 14px" id="sRnote">'+
+      TR("أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.")+'</p>'+
+    '<p class="gok" id="eOk" hidden></p><p class="gerr" id="eErr"></p>'+
+    '<label class="fld"><span>'+TR("كود التأكيد")+'</span>'+
+      '<input id="sRcode" type="text" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="10" placeholder="••••••"></label>'+
+    '<label class="fld"><span>'+TR("كلمة السر الجديدة")+'</span>'+
+      '<input id="sRpass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("٦ خانات فأكثر"))+'"></label>'+
+    '<div class="row-actions">'+
+      '<button class="btn btn-primary" id="sRset">'+TR("عيّن كلمة السر")+'</button>'+
+      '<button class="btn btn-quiet" id="sRagain">'+TR("أرسل مرة ثانية")+'</button>'+
+      '<button class="btn btn-quiet" id="sRback">'+TR("رجوع")+'</button>'+
+    '</div>';
+  $("#sRback").onclick  = openAccountEdit;
+  $("#sRagain").onclick = ()=>sheetSendCode(true);
+  $("#sRset").onclick   = sheetApplyCode;
+  sheetSendCode(false);
+}
+async function sheetSendCode(again){
+  const b=$("#sRagain"); if(b) b.disabled=true;
+  emsg("", TR("جارٍ الإرسال…"));
+  try{
+    await cloudSendCode(CURRENT.email);
+    emsg("", again ? TR("أرسلناه مرة ثانية.") : TR("الكود وصل لإيميلك."));
+    const c=$("#sRcode"); if(c && c.focus) c.focus();
+  }catch(e){ emsg(cloudErr(e)); }
+  finally{ if(b) b.disabled=false; }
+}
+async function sheetApplyCode(){
+  const b=$("#sRset"); if(b && b.disabled) return;
+  const code=($("#sRcode").value||"").replace(/\D/g,"");
+  const pass=($("#sRpass").value||"");
+  if(!code){ emsg(TR("اكتب الكود اللي وصلك.")); $("#sRcode").focus(); return; }
+  if(pass.length<6){ emsg(TR("كلمة السر الجديدة ٦ خانات فأكثر.")); $("#sRpass").focus(); return; }
+  if(b) b.disabled=true;
+  emsg("", TR("جارٍ التأكيد…"));
+  try{
+    await cloudVerifyCode(CURRENT.email, code);
+    await cloudUpdateUser({ password: pass });
+    CURRENT = cloudUser();
+    closeSheet();
+    toast(TR("تغيّرت كلمة السر."),"🔑");
+  }catch(e){ emsg(cloudErr(e)); }
+  finally{ if(b) b.disabled=false; }
 }
 function escAttr(v){ return String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
 function emsg(err, okText){
@@ -2846,6 +3060,8 @@ async function saveAccountEdit(){
   const pass  = ($("#ePass").value||"");
   if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ emsg(TR("الإيميل غير صحيح.")); $("#eEmail").focus(); return; }
   if(pass && pass.length<6){ emsg(TR("كلمة السر الجديدة ٦ خانات فأكثر.")); $("#ePass").focus(); return; }
+  const cur = ($("#eCur") ? $("#eCur").value : "");
+  if(pass && !cur){ emsg(TR("اكتب كلمة السر الحالية.")); $("#eCur").focus(); return; }
 
   const body={};
   if(name !== CURRENT.name)   body.data  = { name:name };
@@ -2853,9 +3069,13 @@ async function saveAccountEdit(){
   if(pass)                    body.password = pass;
   if(!Object.keys(body).length){ emsg(TR("ما غيّرت شي.")); return; }
 
-  emsg("", TR("جاري الحفظ…"));
+  emsg("", TR("جارٍ الحفظ…"));
   if(btn){ btn.disabled=true; }
   try{
+    if(body.password){
+      const okCur = await cloudCheckPass(CURRENT.email, cur);
+      if(!okCur){ emsg(TR("كلمة السر الحالية غلط.")); $("#eCur").focus(); return; }
+    }
     const js = await cloudUpdateUser(body);
     if(body.data)  TOK.name = name;
     let pending = false;
@@ -2923,11 +3143,11 @@ function deleteAccount(){
   showGate();
 }
 function exportBackup(){
-  const payload={ app:"ghersa", v:2, account:CURRENT?CURRENT.name:"", at:Date.now(), data:DB };
+  const payload={ app:"hasad", v:2, account:CURRENT?CURRENT.name:"", at:Date.now(), data:DB };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="ghersa-"+(CURRENT?CURRENT.name.replace(/\s+/g,"-"):"backup")+"-"+dayKey(Date.now())+".json";
+  a.download="hasad-"+(CURRENT?CURRENT.name.replace(/\s+/g,"-"):"backup")+"-"+dayKey(Date.now())+".json";
   a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   toast(TR("نزّلت نسخة من مزرعتك."),"💾");
 }
@@ -2937,6 +3157,16 @@ function exportBackup(){
   const night = matchMedia("(prefers-color-scheme: dark)").matches;
   document.documentElement.dataset.theme = night?"night":"day";
   syncPalette();
+  /* رجع من رابط الإيميل؟ نوقف كل شي ونوديه لتعيين كلمة السر */
+  if(cloudReady() && String(location.hash||"").indexOf("type=recovery")>=0){
+    showGate();
+    (async()=>{
+      const ok = await recoveryFromHash();
+      if(ok) openResetLink();
+      else { switchTab("login"); msg(TR("انتهت صلاحية الرابط. اطلب واحداً جديداً."),""); }
+    })();
+    return;
+  }
   TOK = readTok();
   if(TOK && cloudReady()){                       /* حساب سحابي محفوظ */
     const u = cloudUser();
