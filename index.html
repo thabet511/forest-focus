@@ -15,6 +15,15 @@
    غرسة — لوحة الألوان
    نهار: دفيئة زجاجية، ورق أكياس البذور، حبر نباتي
    ═══════════════════════════════════════════════════════════ */
+/* ═══ الخط السعودي (اختياري) ═══
+   حطّ saudi.woff2 جنب index.html وبيشتغل تلقائياً.
+   إذا الملف مو موجود، المتصفح يتجاهل هذا ويرجع لـ Reem Kufi بلا أي خلل. */
+@font-face{
+  font-family:"Saudi";
+  src:url("saudi.woff2") format("woff2");
+  font-weight:100 900;
+  font-display:swap;
+}
 :root{
   --field:#E3E9DC;      --field-edge:#D3DCC8;
   --paper:#F8F6EF;      --paper-2:#F1EDE0;   --paper-3:#E9E5D6;
@@ -31,7 +40,7 @@
   --shadow-2:0 1px 0 rgba(30,42,35,.06), 0 14px 32px -16px rgba(30,42,35,.34);
   --r-s:10px; --r-m:16px; --r-l:22px;
   --sans:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
-  --kufi:"Reem Kufi","IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif;
+  --kufi:"Saudi","Reem Kufi","IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif;
   --sans-en:"IBM Plex Sans Arabic",system-ui,-apple-system,sans-serif;
   color-scheme:light;
 }
@@ -179,6 +188,14 @@ html[dir="ltr"] .switch[aria-checked="true"]::after{transform:translateX(20px)}
 html[lang="en"]{--kufi:"Outfit","IBM Plex Sans Arabic",system-ui,sans-serif}
 html[lang="en"] .disp{letter-spacing:-.01em}
 #langBtn{font-family:var(--kufi);font-size:12.5px;font-weight:700;letter-spacing:.02em}
+.stats-lock{text-align:center}
+.stats-lock .lock-ic{font-size:34px;line-height:1;margin-bottom:10px;opacity:.75}
+.stats-lock .lock-note{margin:0 0 16px;font-size:13.5px;line-height:1.75;color:var(--ink-2)}
+.gguest{margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)}
+.gguest-note{margin:8px 0 0;text-align:center;font-size:12px;color:var(--ink-3)}
+.guest-banner{margin:0 0 14px;padding:10px 12px;border-radius:10px;
+  background:var(--amber-soft,rgba(214,158,46,.12));border:1px solid var(--amber,#d69e2e);
+  font-size:13px;line-height:1.6;color:var(--ink-2)}
 .glang{display:block;margin:16px auto 0;font-size:12.5px;font-weight:600;color:var(--viridian);text-decoration:underline}
 
 .actions{display:flex;gap:10px;margin-top:16px}
@@ -489,6 +506,15 @@ body.gated{overflow:hidden}
       <h2>الأرقام</h2>
       <p>كل شي محسوب من جلساتك المحفوظة على جهازك.</p>
     </div>
+    <section class="panel stats-lock" id="statsLock" hidden>
+      <div class="lock-ic">🔒</div>
+      <h3 style="justify-content:center">سجّل دخولك عشان تشوف تقدّمك</h3>
+      <p class="lock-note">الأرقام تُحسب من جلساتك المحفوظة، ووضع الضيف ما يحفظ شي. أنشئ حساب وكل شي بيبان هنا.</p>
+      <div class="row-actions">
+        <button class="btn btn-primary" id="lockSignup">أنشئ حساب</button>
+        <button class="btn btn-quiet" id="lockLogin">عندي حساب — سجّل دخول</button>
+      </div>
+    </section>
     <div class="grid-2" id="statCards"></div>
     <section class="panel"><h3>آخر سبعة أيام <span class="hint" id="weekTotal"></span></h3><div class="week" id="weekChart"></div></section>
     <section class="panel"><h3>وقتك على وش انصرف</h3><div class="barlist" id="tagBars"></div></section>
@@ -577,6 +603,11 @@ body.gated{overflow:hidden}
       <p class="gswap">عندك حساب؟ <button type="button" id="goLogin">سجّل دخول</button></p>
     </div>
 
+    <div class="gguest">
+      <button type="button" class="btn btn-quiet" id="guestBtn" style="width:100%">جرّب كضيف</button>
+      <p class="gguest-note">بدون حساب — التقدّم ما ينحفظ</p>
+    </div>
+
     <button type="button" class="glang" id="gateLang">English</button>
     <p class="gfoot">مزرعتك تنحفظ باسمك، وتفتحها من أي جهاز.<br>تشتغل حتى بدون نت، وتتزامن أول ما يرجع.</p>
   </div>
@@ -597,6 +628,18 @@ body.gated{overflow:hidden}
 
 /* ═══════════════ اللغة: عربي / English ═══════════════ */
 const DICT = {
+ 'سجّل دخولك عشان تشوف تقدّمك':'Sign in to see your progress',
+ 'الأرقام تُحسب من جلساتك المحفوظة، ووضع الضيف ما يحفظ شي. أنشئ حساب وكل شي بيبان هنا.':"Stats are built from saved sessions, and guest mode saves nothing. Create an account and it'll all show up here.",
+ 'أنشئ حساب':'Create an account',
+ 'عندي حساب — سجّل دخول':'I have an account — sign in',
+ 'جرّب كضيف':'Try as guest',
+ 'بدون حساب — التقدّم ما ينحفظ':"No account — progress isn't saved",
+ 'أنت داخل كضيف':"You're browsing as a guest",
+ 'وضع تجربة. أول ما تقفل الصفحة يروح كل شي. سجّل حساب عشان تحفظ مزرعتك.':'Trial mode. Everything goes when you close the page. Sign up to keep your farm.',
+ 'أنشئ حساب واحفظ مزرعتي':'Create an account',
+ 'جرّب براحتك. مزرعتك ما تنحفظ في وضع الضيف.':'Look around. Nothing is saved in guest mode.',
+ 'ضيف':'Guest',
+ 'اخرج من وضع الضيف':'Leave guest mode',
  'إيقاف':'Pause',
  'استئناف':'Resume',
  'متوقّفة':'Paused',
@@ -1901,7 +1944,7 @@ async function pushNow(quiet){
 }
 const ACC_KEY = "ghersa.accounts";
 const userKey = id => "ghersa.user." + id;
-let memFallback = null, accMem = null, CURRENT = null;
+let memFallback = null, accMem = null, CURRENT = null, guestMem = null;
 
 function readAcc(){
   try{ const r=localStorage.getItem(ACC_KEY); return r?JSON.parse(r):{users:[],last:null,stay:null,migrated:false}; }
@@ -1935,15 +1978,17 @@ const DEFAULTS = {
 };
 function readStore(){
   if(!CURRENT) return null;
+  if(CURRENT.guest) return guestMem;
   try{ const raw = localStorage.getItem(userKey(CURRENT.id)); return raw?JSON.parse(raw):null; }
   catch(e){ return memFallback; }
 }
 let quietSave = false;
 function writeStore(){
   if(!CURRENT) return;
+  if(CURRENT.guest){ guestMem = JSON.parse(JSON.stringify(DB)); return; }  /* الضيف: ذاكرة فقط */
   try{ localStorage.setItem(userKey(CURRENT.id), JSON.stringify(DB)); }
   catch(e){ memFallback = JSON.parse(JSON.stringify(DB)); }
-  if(!quietSave) schedulePush();
+  if(!quietSave && !(CURRENT&&CURRENT.guest)) schedulePush();
 }
 /* بيانات النسخ القديمة قبل الحسابات — تنتقل لأول حساب يُنشأ */
 function legacyData(){
@@ -2417,6 +2462,20 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
 
 /* ─── الأرقام ───────────────────────────────────────────────── */
 function renderStats(){
+  const lock=$("#statsLock"), guest=!!(CURRENT&&CURRENT.guest);
+  if(lock){
+    lock.hidden=!guest;
+    $$("#view-stats > *").forEach(n=>{
+      if(n===lock || (n.classList&&n.classList.contains("view-head"))) return;
+      n.style.display = guest ? "none" : "";
+    });
+    if(guest){
+      const a=$("#lockSignup"), b=$("#lockLogin");
+      if(a) a.onclick=()=>{ leaveGuest(); const t=$("#tabSignup"); if(t) t.click(); };
+      if(b) b.onclick=()=>{ leaveGuest(); const t=$("#tabLogin"); if(t) t.click(); };
+      return;
+    }
+  }
   const s=computeStats();
   const cards=[
     ["accent", s.alive, TR("نبتة حيّة")],
@@ -2593,6 +2652,22 @@ function cloudUser(){
   const name = TOK.name || (TOK.email||TR("مزارع")).split("@")[0];
   return { id:"cloud-"+TOK.uid, name, cloud:true, email:TOK.email, created:Date.now(), seen:Date.now() };
 }
+function enterGuest(){
+  guestMem = null;
+  CURRENT = { id:"guest", name:TR("ضيف"), cloud:false, guest:true, created:Date.now(), seen:Date.now() };
+  DB = normalize(null);
+  $("#userInitial").textContent = initialOf(CURRENT.name);
+  setSync("off");
+  gate.classList.remove("on"); document.body.classList.remove("gated");
+  bootApp();
+  toast(TR("جرّب براحتك. مزرعتك ما تنحفظ في وضع الضيف."),"👋");
+}
+function leaveGuest(){
+  guestMem = null; closeSheet();
+  CURRENT = null; DB = normalize(null);
+  $("#userInitial").textContent = "·";
+  showGate();
+}
 async function afterCloudAuth(stay){
   const u = cloudUser();
   CURRENT = u;
@@ -2672,6 +2747,7 @@ $("#sPass").onkeydown  = e=>{ if(e.key==="Enter") doSignup(); };
 $("#userBtn").onclick=()=>openAccountSheet();
 function openAccountSheet(){
   if(!CURRENT) return;
+  if(CURRENT.guest) return openGuestSheet();
   const s=computeStats();
   el.sheetBody.innerHTML=
     '<div style="display:flex;align-items:center;gap:13px;margin-bottom:2px">'+
@@ -2705,6 +2781,22 @@ function openAccountSheet(){
 async function cloudUpdateUser(body){
   await ensureToken();
   return sbFetch("/auth/v1/user", { method:"PUT", body }, true);
+}
+function openGuestSheet(){
+  const st=computeStats();
+  el.sheetBody.innerHTML=
+    '<div style="display:flex;align-items:center;gap:13px;margin-bottom:12px">'+
+      '<span class="avatar big">'+initialOf(CURRENT.name)+'</span>'+
+      '<span><h3 style="margin:0">'+TR("أنت داخل كضيف")+'</h3>'+
+      '<p class="meta">'+st.alive+TR(' نبتة · ')+hhmm(st.minutes)+TR(' تركيز</p></span></div>')+
+    '<p class="guest-banner">'+TR("وضع تجربة. أول ما تقفل الصفحة يروح كل شي. سجّل حساب عشان تحفظ مزرعتك.")+'</p>'+
+    '<div class="row-actions">'+
+      '<button class="btn btn-primary" id="gSignup">'+TR("أنشئ حساب واحفظ مزرعتي")+'</button>'+
+      '<button class="btn btn-quiet" id="gLeave">'+TR("اخرج من وضع الضيف")+'</button>'+
+    '</div>';
+  $("#gSignup").onclick=()=>{ leaveGuest(); const t=$("#tabSignup"); if(t) t.click(); };
+  $("#gLeave").onclick=leaveGuest;
+  el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
 }
 function openAccountEdit(){
   const cloud = !!CURRENT.cloud;
@@ -2872,6 +2964,7 @@ function exportBackup(){
 /* ═══ تشغيل اللغة: بعد ما كل شيء صار مُعرَّفاً ═══ */
 const _lb=$("#langBtn"); if(_lb) _lb.onclick = ()=>setLang(LANG==="ar"?"en":"ar");
 const _gl=$("#gateLang"); if(_gl) _gl.onclick = ()=>setLang(LANG==="ar"?"en":"ar");
+const _gb=$("#guestBtn"); if(_gb) _gb.onclick=enterGuest;
 setLang(LANG);   /* يطبّق اللغة المحفوظة على النصوص الساكنة والاتجاه */
 </script>
 
