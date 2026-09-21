@@ -81,7 +81,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 @media (min-width:700px){
   .app{
-    max-width:560px; margin:22px auto; min-height:calc(100dvh - 44px);
+    max-width:660px; margin:22px auto; min-height:calc(100dvh - 44px);
     background:var(--paper); border:1px solid var(--line);
     border-radius:28px; box-shadow:var(--shadow-2); overflow:hidden;
     padding:0 20px 92px;
@@ -448,6 +448,7 @@ body.gated{overflow:hidden}
       <section class="panel">
         <h3>وش تزرع اليوم؟ <span class="hint" id="seedHint"></span></h3>
         <div class="chips" id="seedChips"></div>
+        <p class="guest-banner" id="seedLockNote" hidden></p>
       </section>
 
       <section class="panel">
@@ -767,6 +768,40 @@ const DICT = {
  "تاج مستدير وثمر أحمر.":"A round crown and red fruit.",
  "جذع نحيل وتاج عريض.":"A slender trunk and a wide crown.",
  "سنابل ذهبية تنحني مع الريح.":"Golden ears bowing with the wind.",
+ "شبت":"Dill",
+ "ريحة يانسون خفيفة، يزيّن أي طبق.":"A light anise scent that dresses up any dish.",
+ "بابونج":"Chamomile",
+ "زهرة بيضاء وقلب أصفر، وكوب شاي يهدّي البال.":"A white flower with a yellow heart, and a cup of tea that calms the mind.",
+ "زنبق":"Lily",
+ "بوق أبيض طويل وريحة تملأ المكان.":"A tall white trumpet and a scent that fills the room.",
+ "فراولة":"Strawberry",
+ "تفرش قريب من التراب وتثمر أحمر صغير.":"Spreads low to the ground and bears small red fruit.",
+ "عرفج":"Arfaj",
+ "نبتة البادية، وعطرها بعد المطر ما يُنسى.":"A desert plant whose scent after rain is unforgettable.",
+ "حلفا":"Esparto Grass",
+ "عشب البادية الصلب، يعيش بأقل ماء.":"Tough desert grass that lives on the least water.",
+ "برميل الذهب":"Golden Barrel Cactus",
+ "كتلة مدوّرة وشوك ذهبي يلمع بالشمس.":"A round mass with golden spines that shine in the sun.",
+ "يوكا":"Yucca",
+ "سيوف زرقاء صلبة تتحمّل الإهمال.":"Tough blue-grey blades that tolerate neglect.",
+ "نخلة ملكية":"Royal Palm",
+ "جذع أملس مستقيم وتاج مهيب.":"A smooth straight trunk and a stately crown.",
+ "نخيل الأريكا":"Areca Palm",
+ "سعف رفيع كثيف يُستخدم للزينة الداخلية.":"Thin, dense fronds used for indoor decoration.",
+ "مشمش":"Apricot",
+ "زهر أبيض ربيعي وثمر برتقالي حلو.":"White spring blossom and sweet orange fruit.",
+ "كمثرى":"Pear",
+ "ورق لمّاع وثمر أخضر مستطيل.":"Glossy leaves and elongated green fruit.",
+ "جوافة":"Guava",
+ "ورق عريض وريحة قوية بمجرد ما ينضج.":"Broad leaves and a strong scent once it ripens.",
+ "غار":"Bay Laurel",
+ "ورق داكن لمّاع وريحة تُستخدم بالطبخ.":"Dark glossy leaves with a scent used in cooking.",
+ "صفصاف":"Willow",
+ "أغصانه تنسدل فوق الماء بهدوء.":"Its branches hang quietly over the water.",
+ "سكويا":"Sequoia",
+ "من أطول الأشجار، تعيش آلاف السنين.":"One of the tallest trees, living for thousands of years.",
+ "عشان تشوف باقي النباتات، ":"To see the rest of the plants, ",
+ "أنشئ حسابك!":"create your account!",
  "يبي صبر، وزهرته تفتح متأخرة.":"It wants patience; its blossom opens late.",
  "تاجه بنفسجي ما يشبه غيره.":"A purple crown like no other.",
  "أعشاب وزهور":"Herbs & Flowers",
@@ -797,6 +832,25 @@ const DICT = {
  "قبل الفجر":"Before Dawn",
  "بعد منتصف الليل":"After Midnight",
  "عشرة أنواع":"Ten Species",
+ "مئة نبتة":"Hundred Plants",
+ "ألف نبتة":"Thousand Plants",
+ "خمسمئة ساعة":"500 Hours",
+ "ألف ساعة":"Thousand Hours",
+ "شجرة الخلود":"Tree of Eternity",
+ "أسبوعين تتابع":"2-Week Streak",
+ "شهر تتابع":"Month Streak",
+ "مئة يوم تتابع":"100-Day Streak",
+ "سنة تتابع":"Year Streak",
+ "٢٥ بلا ذبول":"25 Without Wilting",
+ "٥٠ بلا ذبول":"50 Without Wilting",
+ "على مدار الساعة":"Around the Clock",
+ "أسبوع متكامل":"Full Week",
+ "مجموعة كاملة":"Complete Collection",
+ "شهر استخدام":"Month of Use",
+ "مئة يوم استخدام":"100 Days of Use",
+ "سنة استخدام":"Year of Use",
+ "مئة محاولة":"Hundred Tries",
+ "معدّل مثالي":"Perfect Rate",
  "دراسة":"Study",
  "عمل":"Work",
  "قراءة":"Reading",
@@ -1176,13 +1230,25 @@ const SPECIES = {
   poppy:{ n:"خشخاش", fam:"herbflower", kind:"bell", mat:"clump", note:"ورقة حمراء رقيقة تهتز مع الهواء.",
     leaf:"#6E8A54", leaf2:"#809C64", stem:"#779060", flower:"#C4342A", core:"#2E2420", pairs:4, lw:.30, ll:1.1, th:.85, fl:1.45 },
   narcissus:{ n:"نرجس", fam:"herbflower", kind:"bell", mat:"clump", note:"أبيض بقلب ذهبي.",
-    leaf:"#5C9068", leaf2:"#6EA478", stem:"#63977O".replace("O","0"), flower:"#F6F3E2", core:"#E0A63A", pairs:2, lw:.22, ll:1.55, th:1, fl:1.4 },
+    leaf:"#5C9068", leaf2:"#6EA478", stem:"#639770", flower:"#F6F3E2", core:"#E0A63A", pairs:2, lw:.22, ll:1.55, th:1, fl:1.4 },
   hibiscus:{ n:"كركديه", fam:"herbflower", kind:"bell", mat:"clump", note:"زهرة عريضة قرمزية.",
     leaf:"#2F6B45", leaf2:"#3F8055", stem:"#44784F", flower:"#A81E38", core:"#E8C24A", pairs:5, lw:.52, ll:1.05, th:1.1, fl:1.7 },
   lavender:{ n:"خزامى", fam:"herbflower", kind:"spike", mat:"clump", note:"عيدان نحيلة وسنابل بنفسجية.",
     leaf:"#7E9478", leaf2:"#8FA587", stem:"#87977E", flower:"#7B6BA8", core:"#A493CC" },
   wheat:{ n:"قمح", fam:"herbflower", kind:"spike", mat:"clump", note:"سنابل ذهبية تنحني مع الريح.",
-    leaf:"#A8A householder".replace(" householder","96A"), leaf2:"#BCB47E", stem:"#B0A874", flower:"#D8B25A", core:"#B78F3C" },
+    leaf:"#A8A96A", leaf2:"#BCB47E", stem:"#B0A874", flower:"#D8B25A", core:"#B78F3C" },
+  dill:{ n:"شبت", fam:"herbflower", kind:"herb", mat:"clump", note:"ريحة يانسون خفيفة، يزيّن أي طبق.",
+    leaf:"#4A8F5A", leaf2:"#5FA870", stem:"#5A9268", flower:"#E8DC8A", core:"#C4B85E", pairs:9, lw:.24, ll:1.1, th:.7 },
+  chamomile:{ n:"بابونج", fam:"herbflower", kind:"sun", mat:"clump", note:"زهرة بيضاء وقلب أصفر، وكوب شاي يهدّي البال.",
+    leaf:"#5C9468", leaf2:"#70A87C", stem:"#68986E", flower:"#FBFAF0", core:"#E8B830", pairs:5, lw:.30, ll:.85, th:.75, fl:.7 },
+  lily:{ n:"زنبق", fam:"herbflower", kind:"bell", mat:"clump", note:"بوق أبيض طويل وريحة تملأ المكان.",
+    leaf:"#3E7A54", leaf2:"#4E8F62", stem:"#4A8558", flower:"#F4F0E4", core:"#E8C860", pairs:3, lw:.28, ll:1.6, th:1.1, fl:1.5 },
+  strawberry:{ n:"فراولة", fam:"herbflower", kind:"fruit", mat:"clump", note:"تفرش قريب من التراب وتثمر أحمر صغير.",
+    leaf:"#3E8A4C", leaf2:"#52A060", stem:"#4C8A54", flower:"#F0F0E8", core:"#C8342E", pairs:5, lw:.60, ll:.55, th:.85, fl:.9 },
+  arfaj:{ n:"عرفج", fam:"herbflower", kind:"sun", mat:"clump", note:"نبتة البادية، وعطرها بعد المطر ما يُنسى.",
+    leaf:"#7C9456", leaf2:"#8FA868", stem:"#84985E", flower:"#E0C24A", core:"#8A6A28", pairs:6, lw:.20, ll:.78, th:.7, fl:.55 },
+  esparto:{ n:"حلفا", fam:"herbflower", kind:"spike", mat:"clump", note:"عشب البادية الصلب، يعيش بأقل ماء.",
+    leaf:"#A0A468", leaf2:"#B4B87C", stem:"#A8AC70", flower:"#C8BE7A", core:"#A89858" },
 
   /* ─ صبّار وصحراء ─ */
   cactus:{ n:"صبّار عمودي", fam:"desert", kind:"cactus", mat:"column", note:"ما يحتاج أحد، ويطلع أذرعه بالوقت.",
@@ -1193,6 +1259,10 @@ const SPECIES = {
     leaf:"#6E9478", leaf2:"#84A88C", stem:"#5E8468", flower:"#C8B44A", core:"#A89434" },
   aloe:{ n:"صبّار الألوة", fam:"desert", kind:"rosette", mat:"column", note:"ورق لحمي مرقّط.",
     leaf:"#5E9472", leaf2:"#74A886", stem:"#4E8462", flower:"#D4562A", core:"#E88A3A" },
+  goldenbarrel:{ n:"برميل الذهب", fam:"desert", kind:"cactus", mat:"column", note:"كتلة مدوّرة وشوك ذهبي يلمع بالشمس.",
+    leaf:"#5C9860", leaf2:"#70AC72", stem:"#5C9860", flower:"#E8C838", core:"#F4E070" },
+  yucca:{ n:"يوكا", fam:"desert", kind:"rosette", mat:"column", note:"سيوف زرقاء صلبة تتحمّل الإهمال.",
+    leaf:"#6A8E7C", leaf2:"#7EA290", stem:"#5C7E6C", flower:"#E8E4D0", core:"#C8C4A8" },
 
   /* ─ نخيل ─ */
   palm:{ n:"نخلة", fam:"palms", kind:"palm", mat:"palmTree", note:"أبطأ وأجمل، وتعطي رطب.",
@@ -1201,6 +1271,10 @@ const SPECIES = {
     leaf:"#4A8450", leaf2:"#5E9C5A", stem:"#8A6A46", flower:"#C8B48A", core:"#A89060", bark:"#8A6A46", slim:true },
   doum:{ n:"دوم", fam:"palms", kind:"palm", mat:"palmTree", note:"نخلة الصحراء، سعفها مروحي.",
     leaf:"#5A8A50", leaf2:"#6E9E5E", stem:"#6E5236", flower:"#A8722E", core:"#845220", bark:"#6E5236", fruit:true },
+  royalpalm:{ n:"نخلة ملكية", fam:"palms", kind:"palm", mat:"palmTree", note:"جذع أملس مستقيم وتاج مهيب.",
+    leaf:"#3E7A48", leaf2:"#529060", stem:"#8A7A5E", flower:"#C8B890", core:"#A89468", bark:"#8A7A5E", slim:true },
+  areca:{ n:"نخيل الأريكا", fam:"palms", kind:"palm", mat:"palmTree", note:"سعف رفيع كثيف يُستخدم للزينة الداخلية.",
+    leaf:"#4A8A50", leaf2:"#5E9E62", stem:"#7A6A48", flower:"#C8B060", core:"#A89050", bark:"#7A6A48", slim:true, fruit:true },
 
   /* ─ أشجار مثمرة ─ */
   olive:{ n:"زيتون", fam:"fruit", kind:"shrub", mat:"tree", canopy:"spread", note:"ورق فضّي وجذع معجون بالسنين.",
@@ -1219,6 +1293,12 @@ const SPECIES = {
     leaf:"#2A6440", leaf2:"#3A7A4E", stem:"#3E7248", flower:"#D89A3A", core:"#E8B85A", bark:"#5E4E3A", fruit:true, pairs:8, lw:.26, ll:1.35, th:1.2, fl:1.55 },
   sidr:{ n:"سدر", fam:"fruit", kind:"fruit", mat:"tree", canopy:"spread", note:"شجرة الجزيرة، ظلّها بركة.",
     leaf:"#5A8A54", leaf2:"#6E9E64", stem:"#5E8458", flower:"#C89A3A", core:"#A87C28", bark:"#7A6A50", fruit:true, pairs:9, lw:.36, ll:.85, th:1.1, fl:1.1 },
+  apricot:{ n:"مشمش", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"زهر أبيض ربيعي وثمر برتقالي حلو.",
+    leaf:"#3A7248", leaf2:"#4C8858", stem:"#4A7A50", flower:"#E8A64E", core:"#F0C078", bark:"#6E5A42", fruit:true, pairs:6, lw:.46, ll:1, th:1.1, fl:1.4 },
+  pear:{ n:"كمثرى", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"ورق لمّاع وثمر أخضر مستطيل.",
+    leaf:"#3C7A46", leaf2:"#4E8E56", stem:"#4A7A4C", flower:"#D8C858", core:"#E8DC8A", bark:"#6A5C42", fruit:true, pairs:6, lw:.44, ll:.98, th:1.1, fl:1.3 },
+  guava:{ n:"جوافة", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"ورق عريض وريحة قوية بمجرد ما ينضج.",
+    leaf:"#437A48", leaf2:"#568E5A", stem:"#4E7A50", flower:"#E8E0C8", core:"#D89A5A", bark:"#7A6850", fruit:true, pairs:5, lw:.60, ll:1.05, th:1.2, fl:1.35 },
 
   /* ─ أشجار كبيرة ─ */
   oak:{ n:"بلوط", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"جذع ضخم وتاج عريض.",
@@ -1234,9 +1314,16 @@ const SPECIES = {
   jacaranda:{ n:"جاكرندا", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"تاجه بنفسجي ما يشبه غيره.",
     leaf:"#4E7A52", leaf2:"#5E8E60", stem:"#5E5240", flower:"#8A7AC4", core:"#B4A8DC", bark:"#5E5240", blossom:true, pairs:9, lw:.22, ll:1.05, th:1.05 },
   acacia:{ n:"سمر", fam:"big", kind:"leafy", mat:"tree", canopy:"spread", note:"مظلّة الصحراء المفلطحة.",
-    leaf:"#6E8A50", leaf2:"#829E60", stem:"#7A6A48", flower:"#D8C46A", core:"#B8A048", bark:"#6E6048", pairs:10, lw:.22, ll:.8, th:1.1 }
+    leaf:"#6E8A50", leaf2:"#829E60", stem:"#7A6A48", flower:"#D8C46A", core:"#B8A048", bark:"#6E6048", pairs:10, lw:.22, ll:.8, th:1.1 },
+  laurel:{ n:"غار", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"ورق داكن لمّاع وريحة تُستخدم بالطبخ.",
+    leaf:"#2E6038", leaf2:"#3E7648", stem:"#5A6A48", flower:"#8A9A5E", core:"#6E7A48", bark:"#5A4E38", pairs:7, lw:.42, ll:1, th:1.1 },
+  willow:{ n:"صفصاف", fam:"big", kind:"leafy", mat:"tree", canopy:"spread", note:"أغصانه تنسدل فوق الماء بهدوء.",
+    leaf:"#5E8A5A", leaf2:"#74A06E", stem:"#6E6248", flower:"#9AA872", core:"#7E8C58", bark:"#6E6248", pairs:9, lw:.20, ll:1.3, th:.85 },
+  sequoia:{ n:"سكويا", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"من أطول الأشجار، تعيش آلاف السنين.",
+    leaf:"#2A4E36", leaf2:"#385E44", stem:"#5A4834", flower:"#6B5438", core:"#4E3C24", bark:"#5A4834" }
 };
 const SP_ORDER = Object.keys(SPECIES);
+const GUEST_SEEDS = ["basil","cactus","palm","apple","oak"];  /* نوع واحد من كل فئة للضيف */
 const HUSK = "#8A6A4F";
 
 let PAL = {};
@@ -1309,23 +1396,7 @@ function berry(ctx,x,y,R,cFrom,cTo){
 }
 
 /* ─── ٥. الأرض والبذرة ──────────────────────────────────────── */
-function drawGround(ctx,cx,gy,w,s,rnd,pot){
-  if(pot){
-    const pw=pot.pw, ph=pot.ph, top=gy;
-    const clay = PAL.night ? "#79462A" : "#B0693C";
-    const g = ctx.createLinearGradient(cx-pw/2,top,cx+pw/2,top+ph*1.5);
-    g.addColorStop(0,shade(clay,.12)); g.addColorStop(.5,clay); g.addColorStop(1,shade(clay,-.22));
-    ctx.fillStyle=g;
-    ctx.beginPath(); ctx.moveTo(cx-pw/2,top); ctx.lineTo(cx+pw/2,top);
-    ctx.lineTo(cx+pw*.34,top+ph*1.42);
-    ctx.quadraticCurveTo(cx,top+ph*1.62,cx-pw*.34,top+ph*1.42);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle=shade(clay,.20);
-    ctx.beginPath(); ctx.ellipse(cx,top,pw/2,ph*.26,0,0,TAU); ctx.fill();
-    ctx.fillStyle=PAL.soil;
-    ctx.beginPath(); ctx.ellipse(cx,top+ph*.02,pw/2-ph*.14,ph*.19,0,0,TAU); ctx.fill();
-    return;
-  }
+function drawGround(ctx,cx,gy,w,s,rnd){
   const bw = Math.min(w*.72, s*.78);
   const g = ctx.createLinearGradient(cx,gy-s*.05,cx,gy+s*.10);
   g.addColorStop(0,PAL.soil3); g.addColorStop(1,PAL.soil);
@@ -1350,7 +1421,7 @@ function drawSeed(ctx,cx,gy,s,g,sp){
 function drawForm(ctx, sp, cx, gy, s, q, H, o){
   const rnd = o.rnd, sway = o.sway||0, droop = o.withered?.55:0;
   const bloom = o.bloom==null?1:o.bloom;
-  const k = sp.kind, bend = (rnd()*2-1)*.9;
+  const k = sp.kind, bend = 0; rnd();          /* الجذع يطلع مستقيم دايماً، بلا ميلان عشوائي */
   const unit = L => L;                                     /* اختصار قراءة */
   const LBASE = (H*.112 + s*.020*q);
   const st = makeStem(cx,gy,H,bend+droop*1.4,sway);
@@ -1657,7 +1728,7 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
   } else
   (function branch(x,y,len,ang,w,d){
     if(len<1.2) return;
-    const curve=(rnd()-.5)*len*.22;
+    const curve = d===depth ? (rnd()-.5)*len*.03 : (rnd()-.5)*len*.22;  /* الجذع الرئيسي مستقيم؛ الأغصان فوق تتفرّع طبيعي */
     const mx=x+Math.cos(ang)*len*.5-Math.sin(ang)*curve;
     const my=y+Math.sin(ang)*len*.5+Math.cos(ang)*curve;
     const x2=x+Math.cos(ang)*len, y2=y+Math.sin(ang)*len;
@@ -1716,7 +1787,7 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
 /* نخلة كبيرة */
 function drawPalmM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
   const fit=fitOf(M), Hd=s*(.60+.32*fit), th=Hd*(sp.slim?.030:.045)*(.85+.3*fit);
-  const st=makeStem(cx,gy,Hd,(rnd()*2-1)*.35,sway);
+  const st=makeStem(cx,gy,Hd,0,sway); rnd();   /* جذع النخلة مستقيم دايماً */
   const g=ctx.createLinearGradient(cx-th,gy,cx+th,gy);
   g.addColorStop(0,shade(sp.stem,-.22)); g.addColorStop(.45,sp.stem); g.addColorStop(1,shade(sp.stem,-.30));
   ctx.fillStyle=g;
@@ -1815,9 +1886,7 @@ function drawScene(ctx,o){
   const sp = palFor(base, o.withered);
   const rnd = mulberry(hashStr(o.seedStr||"x"));
   const sway = o.sway||0, bloom = o.bloom==null?1:o.bloom;
-  const usePot = !!o.pot && M<=1.001;
-  const pot = usePot ? { pw:s*.34, ph:s*.12 } : null;
-  const gy = pot ? h-pot.ph*1.70 : h*(o.ground===false?.965:.93);
+  const gy = h*(o.ground===false?.965:.93);           /* دايماً على التراب، بلا علبة */
 
   if(!o.noClear) ctx.clearRect(0,0,w,h);
 
@@ -1835,7 +1904,7 @@ function drawScene(ctx,o){
     ctx.fillStyle = PAL.night ? "rgba(0,0,0,.30)" : "rgba(35,50,40,.14)";
     ctx.beginPath(); ctx.ellipse(cx+s*.02,gy+s*.010,spread+s*.02,s*.014,0,0,TAU); ctx.fill();
   }
-  if(o.ground!==false) drawGround(ctx,cx,gy,w,s,rnd,pot);
+  if(o.ground!==false) drawGround(ctx,cx,gy,w,s,rnd);
 
   if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); return; }
 
@@ -2136,7 +2205,7 @@ const el = {
   cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
   setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
-  seedChips:$("#seedChips"), seedHint:$("#seedHint"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
+  seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
   hours:$("#hoursVal"), toast:$("#toast"), toastTxt:$("#toastTxt"), toastIc:$("#toastIc"),
   sheet:$("#sheet"), sheetBg:$("#sheetBg"), sheetBody:$("#sheetBody"),
   garden:$("#gardenBody"), gardenSub:$("#gardenSub"),
@@ -2149,19 +2218,38 @@ const ACH = [
   { id:"first",  ic:"🌱", n:"أول نبتة",        t:s=>s.alive>=1 },
   { id:"ten",    ic:"🌿", n:"عشر نبتات",       t:s=>s.alive>=10 },
   { id:"fifty",  ic:"🌾", n:"خمسون نبتة",      t:s=>s.alive>=50 },
+  { id:"hundredp", ic:"🌻", n:"مئة نبتة",      t:s=>s.alive>=100 },
+  { id:"thousandp", ic:"🌍", n:"ألف نبتة",     t:s=>s.alive>=1000 },
   { id:"hour",   ic:"⏳", n:"ساعة تركيز",      t:s=>s.minutes>=60 },
   { id:"tenh",   ic:"🕰️", n:"عشر ساعات",      t:s=>s.minutes>=600 },
   { id:"cent",   ic:"🏔️", n:"مئة ساعة",       t:s=>s.minutes>=6000 },
+  { id:"h500",   ic:"💎", n:"خمسمئة ساعة",     t:s=>s.minutes>=30000 },
+  { id:"h1000",  ic:"👑", n:"ألف ساعة",        t:s=>s.minutes>=60000 },
   { id:"tree",   ic:"🌳", n:"أول شجرة",        t:s=>s.longest>=40 },
   { id:"big",    ic:"🌲", n:"شجرة كبيرة",      t:s=>s.longest>=207 },
   { id:"great",  ic:"🗻", n:"شجرة عظيمة",      t:s=>s.longest>=567 },
   { id:"legend", ic:"✨", n:"شجرة أسطورية",    t:s=>s.longest>=1767 },
+  { id:"eternal", ic:"🌌", n:"شجرة الخلود",    t:s=>s.longest>=3600 },
   { id:"st3",    ic:"📅", n:"٣ أيام تتابع",    t:s=>s.bestStreak>=3 },
   { id:"st7",    ic:"🗓️", n:"أسبوع تتابع",    t:s=>s.bestStreak>=7 },
+  { id:"st14",   ic:"📆", n:"أسبوعين تتابع",   t:s=>s.bestStreak>=14 },
+  { id:"st30",   ic:"🌕", n:"شهر تتابع",       t:s=>s.bestStreak>=30 },
+  { id:"st100",  ic:"🏆", n:"مئة يوم تتابع",   t:s=>s.bestStreak>=100 },
+  { id:"st365",  ic:"🎖️", n:"سنة تتابع",      t:s=>s.bestStreak>=365 },
   { id:"clean",  ic:"🛡️", n:"١٠ بلا ذبول",    t:s=>s.cleanRun>=10 },
+  { id:"clean25", ic:"🧿", n:"٢٥ بلا ذبول",    t:s=>s.cleanRun>=25 },
+  { id:"clean50", ic:"⚜️", n:"٥٠ بلا ذبول",    t:s=>s.cleanRun>=50 },
   { id:"dawn",   ic:"🌄", n:"قبل الفجر",       t:s=>s.dawn },
   { id:"owl",    ic:"🌙", n:"بعد منتصف الليل", t:s=>s.owl },
-  { id:"kinds",  ic:"🧺", n:"عشرة أنواع",      t:s=>s.kinds>=10 }
+  { id:"clock",  ic:"🕛", n:"على مدار الساعة", t:s=>s.allHours },
+  { id:"weekfull", ic:"🧩", n:"أسبوع متكامل",  t:s=>s.allWeekdays },
+  { id:"kinds",  ic:"🧺", n:"عشرة أنواع",      t:s=>s.kinds>=10 },
+  { id:"allspecies", ic:"🗺️", n:"مجموعة كاملة", t:s=>s.kinds>=Object.keys(SPECIES).length },
+  { id:"days30", ic:"📔", n:"شهر استخدام",     t:s=>s.daysUsed>=30 },
+  { id:"days100", ic:"📚", n:"مئة يوم استخدام", t:s=>s.daysUsed>=100 },
+  { id:"days365", ic:"📜", n:"سنة استخدام",    t:s=>s.daysUsed>=365 },
+  { id:"persist", ic:"💪", n:"مئة محاولة",     t:s=>s.total>=100 },
+  { id:"perfect", ic:"🎯", n:"معدّل مثالي",    t:s=>s.total>=20 && s.rate===100 }
 ];
 
 function computeStats(){
@@ -2189,11 +2277,19 @@ function computeStats(){
   let cleanRun=0,c=0;
   ps.slice().sort((a,b)=>a.endedAt-b.endedAt).forEach(p=>{ c=p.survived?c+1:0; cleanRun=Math.max(cleanRun,c); });
   const bestHour=byHour.indexOf(Math.max.apply(null,byHour));
+  /* أنماط الاستخدام العامة — كل محاولة تُحسب، ناجحة كانت أو ذابلة */
+  const usedDays=new Set(), usedWeekdays=new Set(), usedHours=new Set();
+  ps.forEach(p=>{
+    usedDays.add(dayKey(p.endedAt));
+    usedWeekdays.add(new Date(p.endedAt).getDay());
+    usedHours.add(new Date(p.startedAt).getHours());
+  });
   return {
     alive:live.length, dead:ps.length-live.length, total:ps.length, minutes,
     byDay, byTag, kinds:Object.keys(kinds).length,
     longest: live.reduce((a,p)=>Math.max(a,p.minutes),0),
     streak, bestStreak, cleanRun,
+    daysUsed:usedDays.size, allWeekdays:usedWeekdays.size>=7, allHours:usedHours.size>=24,
     rate: ps.length?Math.round(live.length/ps.length*100):0,
     bestHour: Math.max.apply(null,byHour)>0?bestHour:null,
     dawn: live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=4&&h<7;}),
@@ -2240,7 +2336,7 @@ function drawHero(){
   if(!heroW) return;
   const ctx=fitCanvas(el.cv,heroW,heroH);
   const species = sess?sess.seed:DB.seed;
-  const base = { species, seedStr: sess?sess.id:"preview-"+species, pot:true, glow:true, w:heroW, h:heroH };
+  const base = { species, seedStr: sess?sess.id:"preview-"+species, glow:true, w:heroW, h:heroH };
   const swayNow = reduceMotion?0:Math.sin(performance.now()/1900)*.75;
 
   if(anim && anim.kind==="wither"){
@@ -2425,15 +2521,28 @@ function checkAch(){
 
 /* ─── الإعداد ───────────────────────────────────────────────── */
 function renderSetup(){
+  const guest = !!(CURRENT && CURRENT.guest);
+  const seedList = guest ? GUEST_SEEDS : SP_ORDER;
   el.seedChips.innerHTML="";
-  SP_ORDER.forEach(k=>{
+  seedList.forEach(k=>{
     const b=document.createElement("button");
     b.className="chip"; b.textContent=TR(SPECIES[k].n);
     b.setAttribute("aria-pressed", DB.seed===k);
     b.onclick=()=>{ DB.seed=k; writeStore(); renderSetup(); previewSeed(); };
     el.seedChips.appendChild(b);
   });
+  if(guest && !seedList.includes(DB.seed)){ DB.seed=seedList[0]; writeStore(); }
   el.seedHint.textContent=TR(SPECIES[DB.seed].note);
+  if(el.seedLockNote){
+    el.seedLockNote.hidden = !guest;
+    if(guest){
+      el.seedLockNote.innerHTML = TR("عشان تشوف باقي النباتات، ")+
+        '<button type="button" id="seedLockCta" style="color:var(--viridian);font-weight:700;text-decoration:underline">'+
+        TR("أنشئ حسابك!")+'</button>';
+      const cta=$("#seedLockCta");
+      if(cta) cta.onclick=()=>{ leaveGuest(); const t=$("#tabSignup"); if(t) t.click(); };
+    }
+  }
 
   el.tagChips.innerHTML="";
   DB.tags.forEach(t=>{
@@ -2511,7 +2620,7 @@ function renderGarden(){
     const cv=document.createElement("canvas");
     btn.appendChild(cv); row.appendChild(btn);
     paint(cv,sz[0],sz[1],{ species:p.species, minutes:p.minutes, withered:!p.survived,
-      seedStr:p.id, pot:false, glow:false, ground:false, sizeRef:sz[1]*sz[2] });
+      seedStr:p.id, glow:false, ground:false, sizeRef:sz[1]*sz[2] });
     btn.onclick=()=>openPlant(p);
     rowW+=sz[0]; rowH=Math.max(rowH,sz[1]);
   });
@@ -2535,7 +2644,7 @@ function openPlant(p){
   const cv=document.createElement("canvas");
   $("#sheetCv").appendChild(cv);
   paint(cv,210,230,{ species:p.species, minutes:p.minutes, withered:!p.survived,
-    seedStr:p.id, pot:p.minutes<PHASE1, glow:true });
+    seedStr:p.id, glow:true });
   el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
 }
 function closeSheet(){ el.sheetBg.classList.remove("on"); el.sheet.classList.remove("on"); }
@@ -2614,7 +2723,7 @@ function renderGallery(){
       const sub=document.createElement("div"); sub.className="sub"; sub.textContent=DB.seed===k?TR("المزروعة الآن"):TR(sp.note);
       card.appendChild(cv); card.appendChild(nm); card.appendChild(sub);
       grid.appendChild(card);
-      paint(cv,102,118,{ species:k, minutes:480, seedStr:"g-"+k, pot:false, glow:false });
+      paint(cv,102,118,{ species:k, minutes:480, seedStr:"g-"+k, glow:false });
       const pick=()=>{ DB.seed=k; writeStore(); renderGallery(); renderSetup(); previewSeed();
         toast(TR(sp.n)+TR(" صارت هي المزروعة."),"🌿"); };
       card.onclick=pick;
@@ -2701,7 +2810,7 @@ function msg(err,okText){
 function showGate(){
   gate.classList.add("on"); document.body.classList.add("gated");
   msg("","");
-  paint($("#gateCv"),210,160,{ species:"sakura", minutes:1500, seedStr:"gate", pot:false, glow:true });
+  paint($("#gateCv"),210,160,{ species:"sakura", minutes:1500, seedStr:"gate", glow:true });
   switchTab("login");
 }
 function switchTab(which, keepOk){
