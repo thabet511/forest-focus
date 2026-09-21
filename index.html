@@ -194,7 +194,6 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .stats-lock .lock-note{margin:0 0 16px;font-size:13.5px;line-height:1.75;color:var(--ink-2)}
 .rst-h{font-family:var(--kufi);font-size:16px;font-weight:600;margin:0 0 4px;text-align:center}
 .rst-p{text-align:center;margin:0 0 14px}
-#rCode{letter-spacing:.32em;text-align:center;font-size:19px;font-weight:600}
 .gguest{margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)}
 .gguest-note{margin:8px 0 0;text-align:center;font-size:12px;color:var(--ink-3)}
 .guest-banner{margin:0 0 14px;padding:10px 12px;border-radius:10px;
@@ -569,7 +568,7 @@ body.gated{overflow:hidden}
   <div class="gatecard">
     <canvas id="gateCv" width="210" height="160"></canvas>
     <h2>حصاد<em>الإنتاجية</em><span>.</span></h2>
-    <p class="gsub">سجّل دخولك عشان مزرعتك تنحفظ باسمك.</p>
+    <p class="gsub" id="gateSub">سجّل دخولك عشان مزرعتك تنحفظ باسمك.</p>
     <div class="gtabs" role="tablist" id="gateTabs">
       <button class="gtab" id="tabLogin" role="tab" aria-selected="true">تسجيل دخول</button>
       <button class="gtab" id="tabSignup" role="tab" aria-selected="false">تسجيل جديد</button>
@@ -599,21 +598,21 @@ body.gated{overflow:hidden}
     </div>
 
     <div id="paneReset" hidden>
-      <h3 class="rst-h">استرجاع كلمة السر</h3>
+      <h3 class="rst-h" id="rstTitle">استرجاع كلمة السر</h3>
       <div id="rstStep1">
-        <p class="gsub rst-p">اكتب إيميلك ونرسل لك كود تأكيد.</p>
+        <p class="gsub rst-p">اكتب إيميلك ونرسل لك رابط استعادة.</p>
         <label class="fld"><span>الإيميل</span>
           <input id="rEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
-        <button class="btn btn-primary" id="rSend" style="width:100%">أرسل الكود</button>
+        <button class="btn btn-primary" id="rSend" style="width:100%">أرسل رابط الاستعادة</button>
+      </div>
+      <div id="rstWait" hidden>
+        <p class="gsub rst-p" id="rWaitNote">أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز.</p>
+        <p class="gswap"><button type="button" id="rAgain">أرسل مرة ثانية</button></p>
       </div>
       <div id="rstStep2" hidden>
-        <p class="gsub rst-p" id="rSentNote">أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.</p>
-        <label class="fld" id="rCodeWrap"><span>كود التأكيد</span>
-          <input id="rCode" type="text" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="10" placeholder="••••••"></label>
         <label class="fld"><span>كلمة السر الجديدة</span>
           <input id="rPass" type="password" autocomplete="new-password" dir="ltr" placeholder="٦ خانات فأكثر"></label>
-        <button class="btn btn-primary" id="rSet" style="width:100%">عيّن كلمة السر</button>
-        <p class="gswap" id="rAgainWrap"><button type="button" id="rAgain">أرسل مرة ثانية</button></p>
+        <button class="btn btn-primary" id="rSet" style="width:100%">عيّن كلمة السر وادخل</button>
       </div>
       <p class="gswap"><button type="button" id="rBack">رجوع</button></p>
     </div>
@@ -656,18 +655,10 @@ body.gated{overflow:hidden}
 const DICT = {
  'افتح الرابط اللي وصلك على الإيميل، وبيرجّعك هنا تحط كلمة سر جديدة.':'Open the link we emailed you — it brings you back here to set a new password.',
  'أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز.':'We emailed you a link. Open it on this device.',
- 'افتحنا لك الباب. حط كلمة سر جديدة.':"You're verified. Set a new password.",
  'انتهت صلاحية الرابط. اطلب واحداً جديداً.':'The link has expired. Request a new one.',
  'نسيت كلمة السر؟':'Forgot your password?',
  'استرجاع كلمة السر':'Reset your password',
- 'اكتب إيميلك ونرسل لك كود تأكيد.':"Enter your email and we'll send you a code.",
- 'أرسل الكود':'Send code',
- 'أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.':"We sent the code to your email. Check your inbox, and spam if it hasn't arrived.",
- 'كود التأكيد':'Verification code',
  'كلمة السر الجديدة':'New password',
- 'عيّن كلمة السر':'Set password',
- 'اكتب الكود اللي وصلك.':'Enter the code you received.',
- 'الكود غلط أو انتهت صلاحيته.':'The code is wrong or has expired.',
  'تغيّرت كلمة السر ودخلناك.':"Password changed — you're in.",
  'أرسل مرة ثانية':'Send again',
  'أرسلناه مرة ثانية.':'Sent again.',
@@ -677,7 +668,6 @@ const DICT = {
  'كلمة السر الحالية غلط.':'Current password is wrong.',
  'جارٍ الإرسال…':'Sending…',
  'جارٍ التأكيد…':'Verifying…',
- 'الكود وصل لإيميلك.':'The code is in your email.',
  'سجّل دخولك عشان تشوف تقدّمك':'Sign in to see your progress',
  'الأرقام تُحسب من جلساتك المحفوظة، ووضع الضيف ما يحفظ شي. أنشئ حساب وكل شي بيبان هنا.':"Stats are built from saved sessions, and guest mode saves nothing. Create an account and it'll all show up here.",
  'أنشئ حساب':'Create an account',
@@ -842,6 +832,10 @@ const DICT = {
  "الإنتاجية":"Productivity",
  "حصاد الإنتاجية · وقتك يصير مزرعة":"Hasad Productivity · your time becomes a farm",
  " · حصاد الإنتاجية":" · Hasad Productivity",
+ "اكتب إيميلك ونرسل لك رابط استعادة.":"Enter your email and we'll send you a recovery link.",
+ "أرسل رابط الاستعادة":"Send recovery link",
+ "عيّن كلمة السر وادخل":"Set password and sign in",
+ "أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز، وبيرجّعك عشان تحط كلمة سر جديدة.":"We emailed you a link. Open it on this device — it'll bring you back here to set a new password.",
  "عدّاد تركيز بلا حد. نبتة تكبر مع كل دقيقة، وتتحول شجرة، وتكبر للأبد.":"An endless focus timer. A plant grows with every minute, turns into a tree, and keeps growing forever.",
  "نبتة تكبر مع وقت تركيزك":"A plant that grows with your focus",
  "مجموع ساعات تركيزك":"Your total focus hours",
@@ -1951,15 +1945,10 @@ async function recoveryFromHash(){
   }catch(e){ TOK=null; writeTok(null); return false; }
 }
 
-/* ── استرجاع كلمة السر بكود ── */
+/* ── استرجاع كلمة السر: نطلب من سوبابيس يرسل رابطاً على الإيميل ── */
 const siteURL = () => location.origin + location.pathname;
 const cloudSendCode = (email) =>
   sbFetch("/auth/v1/recover?redirect_to=" + encodeURIComponent(siteURL()), { method:"POST", body:{ email } });
-async function cloudVerifyCode(email, token){
-  const js = await sbFetch("/auth/v1/verify", { method:"POST", body:{ email, token, type:"recovery" } });
-  if(!saveSession(js)) throw new Error(TR("الكود غلط أو انتهت صلاحيته."));
-  return js;
-}
 /* يتحقق من كلمة السر الحالية بلا ما يمس الجلسة القائمة */
 async function cloudCheckPass(email, password){
   try{ await sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } }); return true; }
@@ -2722,6 +2711,7 @@ function switchTab(which, keepOk){
   $("#paneSignup").hidden = which!=="signup";
   const pr=$("#paneReset"); if(pr) pr.hidden = which!=="reset";
   const tb=$("#gateTabs"); if(tb) tb.hidden = which==="reset";
+  const gs=$("#gateSub"); if(gs) gs.hidden = false; /* رستShow يخفيه هو بنفسه بخطوة كلمة السر لو احتاج */
   $("#cloudSetup").hidden = cloudReady();
   if(!keepOk) msg("","");
 }
@@ -2729,29 +2719,27 @@ $("#tabLogin").onclick  = ()=>{ switchTab("login");  setTimeout(()=>$("#cEmail")
 $("#tabSignup").onclick = ()=>{ switchTab("signup"); setTimeout(()=>$("#sName").focus(),60); };
 $("#goSignup").onclick  = ()=>$("#tabSignup").click();
 
-/* ── استرجاع كلمة السر من البوابة ── */
-let RST = { email:"", mode:"code" };
-function rstMode(m){
-  RST.mode = m;
-  const cw=$("#rCodeWrap"), aw=$("#rAgainWrap"), nt=$("#rSentNote");
-  if(cw) cw.hidden = m==="link";
-  if(aw) aw.hidden = m==="link";
-  if(nt) nt.textContent = m==="link"
-    ? TR("افتحنا لك الباب. حط كلمة سر جديدة.")
-    : TR("أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.");
+/* ── استرجاع كلمة السر من البوابة: بالرابط فقط ── */
+let RST = { email:"" };
+function rstShow(step){
+  /* step: "email" | "wait" | "setpass" */
+  $("#rstStep1").hidden = step!=="email";
+  $("#rstWait").hidden  = step!=="wait";
+  $("#rstStep2").hidden = step!=="setpass";
+  /* من رابط الإيميل: كلمة سر بس — بلا عنوان "استرجاع كلمة السر" وبلا سطر "سجّل دخولك…" فوقها */
+  const t=$("#rstTitle"); if(t) t.hidden = step==="setpass";
+  const gs=$("#gateSub"); if(gs) gs.hidden = step==="setpass";
 }
-/* المستخدم رجع من رابط الإيميل: يحط كلمة السر فقط */
+/* المستخدم رجع من رابط الإيميل: يحط كلمة السر فقط، بلا كود */
 function openResetLink(){
   switchTab("reset");
-  $("#rstStep1").hidden=true; $("#rstStep2").hidden=false;
-  rstMode("link");
+  rstShow("setpass");
   const pw=$("#rPass"); if(pw){ pw.value=""; if(pw.focus) pw.focus(); }
   msg("","");
 }
 function openReset(){
   switchTab("reset");
-  $("#rstStep1").hidden=false; $("#rstStep2").hidden=true;
-  rstMode("code");
+  rstShow("email");
   const e=$("#rEmail"); if(e){ e.value = ($("#cEmail").value||"").trim(); if(e.focus) e.focus(); }
   msg("","");
 }
@@ -2766,23 +2754,20 @@ async function resetSend(again){
   try{
     await cloudSendCode(email);
     RST.email = email;
-    $("#rstStep1").hidden=true; $("#rstStep2").hidden=false;
-    msg("", again ? TR("أرسلناه مرة ثانية.") : TR("أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز."));
-    const c=$("#rCode"); if(c){ c.value=""; if(c.focus) c.focus(); }
+    rstShow("wait");
+    const nt=$("#rWaitNote");
+    if(nt) nt.textContent = again ? TR("أرسلناه مرة ثانية.") : TR("أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز.");
+    msg("","");
   }catch(e){ msg(cloudErr(e),""); }
   finally{ if(b) b.disabled=false; }
 }
 async function resetApply(){
   const b=$("#rSet"); if(b && b.disabled) return;
-  const link = RST.mode==="link";
-  const code = link ? "" : ($("#rCode").value||"").replace(/\D/g,"");
   const pass = ($("#rPass").value||"");
-  if(!link && !code){ msg(TR("اكتب الكود اللي وصلك."),""); $("#rCode").focus(); return; }
   if(pass.length<6){ msg(TR("كلمة السر الجديدة ٦ خانات فأكثر."),""); $("#rPass").focus(); return; }
   if(b) b.disabled=true;
   msg("", TR("جارٍ التأكيد…"));
   try{
-    if(!link) await cloudVerifyCode(RST.email, code);
     await cloudUpdateUser({ password: pass });
     toast(TR("تغيّرت كلمة السر ودخلناك."),"🔑");
     await afterCloudAuth(true);
@@ -2987,52 +2972,29 @@ function openAccountEdit(){
   const fg=$("#eForgot"); if(fg) fg.onclick = openResetInSheet;
   const nameIn=$("#eName"); if(nameIn && nameIn.focus) nameIn.focus();
 }
-/* ── استرجاع كلمة السر من داخل ورقة الحساب ── */
+/* ── استرجاع كلمة السر من داخل ورقة الحساب: نرسل رابطاً ونسكّر الورقة ──
+   المستخدم يكمل من الإيميل، ويرجع للتطبيق عبر openResetLink() فوق. */
 function openResetInSheet(){
-  const mail = CURRENT.email||"";
   el.sheetBody.innerHTML =
     '<h3 style="margin:0 0 3px">'+TR("استرجاع كلمة السر")+'</h3>'+
-    '<p class="gsub" style="text-align:start;margin:0 0 14px" id="sRnote">'+
-      TR("أرسلنا الكود لإيميلك. افحص الوارد، وشوف السبام إذا ما وصل.")+'</p>'+
+    '<p class="gsub" style="text-align:start;margin:0 0 14px" id="sRnote">'+TR("جارٍ الإرسال…")+'</p>'+
     '<p class="gok" id="eOk" hidden></p><p class="gerr" id="eErr"></p>'+
-    '<label class="fld"><span>'+TR("كود التأكيد")+'</span>'+
-      '<input id="sRcode" type="text" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="10" placeholder="••••••"></label>'+
-    '<label class="fld"><span>'+TR("كلمة السر الجديدة")+'</span>'+
-      '<input id="sRpass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("٦ خانات فأكثر"))+'"></label>'+
     '<div class="row-actions">'+
-      '<button class="btn btn-primary" id="sRset">'+TR("عيّن كلمة السر")+'</button>'+
       '<button class="btn btn-quiet" id="sRagain">'+TR("أرسل مرة ثانية")+'</button>'+
       '<button class="btn btn-quiet" id="sRback">'+TR("رجوع")+'</button>'+
     '</div>';
   $("#sRback").onclick  = openAccountEdit;
-  $("#sRagain").onclick = ()=>sheetSendCode(true);
-  $("#sRset").onclick   = sheetApplyCode;
-  sheetSendCode(false);
+  $("#sRagain").onclick = ()=>sheetSendLink(true);
+  sheetSendLink(false);
 }
-async function sheetSendCode(again){
+async function sheetSendLink(again){
   const b=$("#sRagain"); if(b) b.disabled=true;
-  emsg("", TR("جارٍ الإرسال…"));
+  const nt=$("#sRnote"); if(nt) nt.textContent = TR("جارٍ الإرسال…");
   try{
     await cloudSendCode(CURRENT.email);
-    emsg("", again ? TR("أرسلناه مرة ثانية.") : TR("الكود وصل لإيميلك."));
-    const c=$("#sRcode"); if(c && c.focus) c.focus();
-  }catch(e){ emsg(cloudErr(e)); }
-  finally{ if(b) b.disabled=false; }
-}
-async function sheetApplyCode(){
-  const b=$("#sRset"); if(b && b.disabled) return;
-  const code=($("#sRcode").value||"").replace(/\D/g,"");
-  const pass=($("#sRpass").value||"");
-  if(!code){ emsg(TR("اكتب الكود اللي وصلك.")); $("#sRcode").focus(); return; }
-  if(pass.length<6){ emsg(TR("كلمة السر الجديدة ٦ خانات فأكثر.")); $("#sRpass").focus(); return; }
-  if(b) b.disabled=true;
-  emsg("", TR("جارٍ التأكيد…"));
-  try{
-    await cloudVerifyCode(CURRENT.email, code);
-    await cloudUpdateUser({ password: pass });
-    CURRENT = cloudUser();
-    closeSheet();
-    toast(TR("تغيّرت كلمة السر."),"🔑");
+    if(nt) nt.textContent = again
+      ? TR("أرسلناه مرة ثانية.")
+      : TR("أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز، وبيرجّعك عشان تحط كلمة سر جديدة.");
   }catch(e){ emsg(cloudErr(e)); }
   finally{ if(b) b.disabled=false; }
 }
