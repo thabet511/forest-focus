@@ -25,19 +25,25 @@
   font-display:swap;
 }
 :root{
-  --field:#E3E9DC;      --field-edge:#D3DCC8;
-  --paper:#F8F6EF;      --paper-2:#F1EDE0;   --paper-3:#E9E5D6;
-  --line:#C8D1BE;       --line-soft:#DEE4D5;
-  --ink:#1E2A23;        --ink-2:#56645A;     --ink-3:#83907F;
-  --viridian:#2F6B4F;   --viridian-deep:#22503C; --viridian-soft:#DCE8DB;
+  --field:#DFE8D6;      --field-edge:#CEDAC2;
+  --paper:#FBFAF3;      --paper-2:#F3F0E3;   --paper-3:#EAE7D8;
+  --line:#C4CFB8;       --line-soft:#DDE4D2;
+  --ink:#19251E;        --ink-2:#4F5E54;     --ink-3:#7E8C7A;
+  --viridian:#2A7052;   --viridian-deep:#1C5540; --viridian-soft:#D9E9D8;
+  --viridian-lift:#3C8A66;
+  --vig:rgba(28,40,33,.15);
+  --ease:cubic-bezier(.22,.8,.28,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
   --ochre:#B8761E;      --ochre-soft:#F4E6C9;
+  --amber:#C2871F;      --amber-soft:rgba(194,135,31,.11);
   --brick:#A8412E;      --brick-soft:#F4DFD9;
   --husk:#8A6A4F;
   --soil:#5E4834;       --soil-2:#7C6149;    --soil-3:#93785A;
   --dome-a:#F2F6EC;     --dome-b:#DCE7D6;    --dome-c:#C9D8C4;
   --glass:rgba(255,255,255,.55);
-  --shadow-1:0 1px 0 rgba(30,42,35,.05), 0 2px 6px -2px rgba(30,42,35,.14);
-  --shadow-2:0 1px 0 rgba(30,42,35,.06), 0 14px 32px -16px rgba(30,42,35,.34);
+  --shadow-1:0 1px 0 rgba(25,37,30,.045), 0 1px 3px -1px rgba(25,37,30,.10), 0 4px 10px -4px rgba(25,37,30,.13);
+  --shadow-2:0 1px 0 rgba(25,37,30,.06), 0 6px 14px -8px rgba(25,37,30,.22), 0 20px 42px -20px rgba(25,37,30,.34);
+  --shadow-lift:0 2px 4px -1px rgba(25,37,30,.13), 0 12px 24px -10px rgba(28,85,64,.40);
   --r-s:10px; --r-m:16px; --r-l:22px;
   --sans:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
   --kufi:"Saudi","Reem Kufi","IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif;
@@ -45,19 +51,23 @@
   color-scheme:light;
 }
 :root[data-theme="night"]{
-  --field:#121A17;      --field-edge:#0C1310;
-  --paper:#1A2320;      --paper-2:#212C28;   --paper-3:#273430;
-  --line:#2F3C36;       --line-soft:#26322E;
-  --ink:#E7EEE4;        --ink-2:#9BAAA1;     --ink-3:#77867C;
-  --viridian:#58A97C;   --viridian-deep:#3E8A61; --viridian-soft:#1D2E26;
+  --field:#0E1613;      --field-edge:#080D0B;
+  --paper:#18211E;      --paper-2:#1F2B27;   --paper-3:#26332F;
+  --line:#31403A;       --line-soft:#27342F;
+  --ink:#EAF1E7;        --ink-2:#9EAEA4;     --ink-3:#78887E;
+  --viridian:#5CB283;   --viridian-deep:#43926A; --viridian-soft:#1B2D25;
+  --viridian-lift:#6FC495;
+  --vig:rgba(0,0,0,.44);
   --ochre:#E0A64A;      --ochre-soft:#2E2718;
+  --amber:#E0A64A;      --amber-soft:rgba(224,166,74,.10);
   --brick:#D2695A;      --brick-soft:#2E1C18;
   --husk:#A88463;
   --soil:#33261B;       --soil-2:#463525;    --soil-3:#584431;
   --dome-a:#1B2622;     --dome-b:#141D1A;    --dome-c:#101715;
   --glass:rgba(255,255,255,.06);
-  --shadow-1:0 1px 0 rgba(0,0,0,.2), 0 2px 8px -2px rgba(0,0,0,.5);
-  --shadow-2:0 1px 0 rgba(0,0,0,.25), 0 16px 36px -18px rgba(0,0,0,.7);
+  --shadow-1:0 1px 0 rgba(0,0,0,.24), 0 2px 8px -2px rgba(0,0,0,.52);
+  --shadow-2:0 1px 0 rgba(0,0,0,.28), 0 8px 18px -10px rgba(0,0,0,.6), 0 22px 46px -22px rgba(0,0,0,.76);
+  --shadow-lift:0 2px 6px -1px rgba(0,0,0,.5), 0 14px 28px -12px rgba(92,178,131,.34);
   color-scheme:dark;
 }
 
@@ -115,7 +125,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   position:relative; margin-top:4px;
   border:1px solid var(--line);
   border-radius:clamp(120px,46vw,210px) clamp(120px,46vw,210px) var(--r-l) var(--r-l);
-  background:linear-gradient(180deg,var(--dome-a) 0%,var(--dome-b) 62%,var(--dome-c) 100%);
+  background:var(--dome-c);
   box-shadow:var(--shadow-1), inset 0 1px 0 var(--glass);
   overflow:hidden; isolation:isolate;
 }
@@ -126,14 +136,25 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       color-mix(in srgb, var(--ink) 9%, transparent) calc(100%/7 - 1px) calc(100%/7)),
     repeating-linear-gradient(180deg, transparent 0 62px,
       color-mix(in srgb, var(--ink) 6%, transparent) 62px 63px);
-  mask-image:linear-gradient(180deg,#000 0%,#000 46%,transparent 78%);
-  opacity:.55;
+  mask-image:linear-gradient(180deg,#000 0%,#000 30%,transparent 56%);
+  opacity:.22;
 }
 .stage::after{
   content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:inherit;
+  background:radial-gradient(124% 88% at 50% 30%, transparent 50%, var(--vig) 100%);
   box-shadow:inset 0 0 0 1px var(--glass), inset 0 26px 40px -30px rgba(255,255,255,.9);
 }
 #plantCanvas{display:block;width:100%;height:auto;position:relative;z-index:1}
+.daypart{
+  position:absolute; z-index:3; inset-block-start:11px; inset-inline-start:13px;
+  display:flex; align-items:center; gap:6px; pointer-events:none;
+  padding:5px 11px; border-radius:999px;
+  font-family:var(--kufi); font-size:12px; font-weight:600; letter-spacing:.01em;
+  color:#F6FBF4; background:rgba(12,22,18,.30); backdrop-filter:blur(7px);
+  border:1px solid rgba(255,255,255,.16); text-shadow:0 1px 3px rgba(0,0,0,.45);
+  transition:opacity .5s var(--ease);
+}
+@media (max-width:420px){ .daypart{font-size:11px;padding:4px 9px} }
 
 /* ── العدّاد ─────────────────────────────────────────── */
 .readout{text-align:center;padding:14px 0 2px}
@@ -182,7 +203,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .switch-row strong{display:block;font-size:14.5px;font-weight:600}
 .switch-row small{display:block;font-size:12.5px;color:var(--ink-3);line-height:1.45}
 .switch{flex:none;width:48px;height:28px;border-radius:99px;position:relative;background:var(--line);transition:background .2s}
-.switch::after{content:"";position:absolute;top:3px;inset-inline-end:3px;width:22px;height:22px;border-radius:50%;background:var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.28);transition:transform .2s}
+.switch::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.28);transition:transform .22s var(--ease)}
 .switch[aria-checked="true"]{background:var(--viridian)}
 .switch[aria-checked="true"]::after{transform:translateX(-20px)}
 html[dir="ltr"] .switch[aria-checked="true"]::after{transform:translateX(20px)}
@@ -199,6 +220,23 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .guest-banner{margin:0 0 14px;padding:10px 12px;border-radius:10px;
   background:var(--amber-soft,rgba(214,158,46,.12));border:1px solid var(--amber,#d69e2e);
   font-size:13px;line-height:1.6;color:var(--ink-2)}
+.guest-lockscreen{
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+  text-align:center; padding:56px 18px; margin-top:6px;
+}
+.guest-lockscreen .lockface{
+  font-size:56px; line-height:1;
+  filter:drop-shadow(0 6px 14px rgba(20,30,24,.18));
+}
+.guest-lockscreen p{
+  margin:0; font-family:var(--kufi); font-size:19px; font-weight:600;
+  line-height:1.7; color:var(--ink); max-width:320px;
+}
+.guest-lockscreen button{
+  display:inline-block; margin-top:4px; font-family:var(--kufi);
+  font-size:19px; font-weight:700; color:var(--viridian);
+  text-decoration:underline; background:none; border:0; padding:0; cursor:pointer;
+}
 .glang{display:block;margin:16px auto 0;font-size:12.5px;font-weight:600;color:var(--viridian);text-decoration:underline}
 
 .actions{display:flex;gap:10px;margin-top:16px}
@@ -338,7 +376,10 @@ body.gated{overflow:hidden}
   border-radius:24px;padding:6px 20px 20px;box-shadow:var(--shadow-2);
   min-height:min(100%,560px);display:flex;flex-direction:column;
 }
-.gatecard > canvas{display:block;margin:0 auto -6px}
+.gatecard > canvas{
+  display:block; margin:0 auto -2px; border-radius:var(--r-l);
+  box-shadow:0 10px 26px -14px rgba(20,30,24,.38), 0 2px 6px -2px rgba(20,30,24,.16);
+}
 .gatecard h2{font-family:var(--kufi);font-size:26px;margin:0;text-align:center}
 .gatecard h2 span{color:var(--viridian)}
 .gatecard h2 em{font-style:normal;font-size:14px;font-weight:500;opacity:.55;margin-inline-start:7px;letter-spacing:.2px}
@@ -408,6 +449,86 @@ body.gated{overflow:hidden}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .view.on{animation:none}
 }
+/* ═══════════════════════════════════════════════════════════
+   طبقة الحركة والصقل — بصريات فقط، ما تمسّ أي وظيفة
+   ═══════════════════════════════════════════════════════════ */
+@keyframes hz-rise   { from{opacity:0;transform:translateY(10px)}   to{opacity:1;transform:none} }
+@keyframes hz-pop    { 0%{transform:scale(.90)} 60%{transform:scale(1.04)} 100%{transform:scale(1)} }
+@keyframes hz-sheen  { from{transform:translateX(-120%)} to{transform:translateX(320%)} }
+@keyframes hz-breathe{ 0%,100%{opacity:.55;transform:scale(1)} 50%{opacity:1;transform:scale(1.28)} }
+@keyframes hz-grow   { from{transform:scaleY(.12);opacity:.3} to{transform:scaleY(1);opacity:1} }
+
+/* الألوان تنتقل بنعومة عند تبديل الليل/النهار */
+body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
+  transition:background-color .40s var(--ease), border-color .40s var(--ease), color .28s var(--ease);
+}
+
+/* دخول اللوحات بتتابع خفيف */
+.panel,.switch-row,.farmwrap{ animation:hz-rise .46s var(--ease-out) both }
+.panel:nth-of-type(2){animation-delay:.05s}
+.panel:nth-of-type(3){animation-delay:.10s}
+.panel:nth-of-type(4){animation-delay:.15s}
+
+/* الأزرار: تدرّج، ارتفاع عند اللمس، وهج خفيف */
+.btn{ transition:transform .18s var(--ease), box-shadow .22s var(--ease), background .20s var(--ease), filter .20s }
+.btn-primary{
+  background:linear-gradient(170deg,var(--viridian-lift),var(--viridian) 58%,var(--viridian-deep));
+  box-shadow:var(--shadow-1); position:relative; overflow:hidden;
+}
+.btn-primary::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.26) 50%,transparent 62%);
+  transform:translateX(-120%);
+}
+.btn-primary:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lift); filter:saturate(1.06) }
+.btn-primary:hover::after{ animation:hz-sheen .85s var(--ease-out) }
+.btn-primary:active{ transform:translateY(0) scale(.985) }
+.btn-quiet:hover{ transform:translateY(-1px); box-shadow:var(--shadow-1) }
+.btn-danger:hover{ transform:translateY(-1px) }
+
+/* الشرائح: نبضة عند الاختيار ورفعة عند التمرير */
+.chip{ transition:color .18s var(--ease), border-color .18s var(--ease),
+       background .18s var(--ease), transform .18s var(--ease), box-shadow .18s var(--ease) }
+.chip:hover{ transform:translateY(-1.5px) }
+.chip:active{ transform:scale(.95) }
+.chip[aria-pressed="true"]{ animation:hz-pop .30s var(--ease-out); box-shadow:0 3px 10px -3px var(--viridian) }
+
+/* شريط التقدّم: انتقال ناعم للعرض + لمعة تمشي عليه */
+.bar{ position:relative; overflow:hidden }
+.bar > i{
+  transition:width .70s var(--ease-out);
+  background:linear-gradient(90deg,var(--viridian-deep),var(--viridian-lift));
+  position:relative; overflow:hidden;
+}
+.bar > i::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.42) 50%,transparent 70%);
+  animation:hz-sheen 2.6s var(--ease) infinite;
+}
+
+/* نقطة الحالة تتنفّس، والأعمدة تطلع من الأرض */
+.tierline .dot{ animation:hz-breathe 3.4s var(--ease) infinite }
+.week .col{ transform-origin:bottom; animation:hz-grow .60s var(--ease-out) both;
+  background:linear-gradient(180deg,var(--viridian-lift),var(--viridian)) }
+.week .d:nth-child(2) .col{animation-delay:.04s}
+.week .d:nth-child(3) .col{animation-delay:.08s}
+.week .d:nth-child(4) .col{animation-delay:.12s}
+.week .d:nth-child(5) .col{animation-delay:.16s}
+.week .d:nth-child(6) .col{animation-delay:.20s}
+.week .d:nth-child(7) .col{animation-delay:.24s}
+
+/* الإنجازات ترتفع عند التمرير */
+.badges .badge{ transition:transform .20s var(--ease), box-shadow .20s var(--ease) }
+.badges .badge:hover{ transform:translateY(-3px); box-shadow:var(--shadow-1) }
+
+/* المسرح يرتفع قليلاً — يحس إنه لوح زجاج فوق الصفحة */
+.stage{ transition:box-shadow .45s var(--ease) }
+.stage:hover{ box-shadow:var(--shadow-2), inset 0 1px 0 var(--glass) }
+
+/* احترام تفضيل تقليل الحركة: كل ما فوق ينطفئ */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation:none !important; transition:none !important }
+}
 </style>
 </head>
 <body>
@@ -431,6 +552,7 @@ body.gated{overflow:hidden}
   <main class="view on" id="view-plant">
     <section class="stage" aria-label="النبتة">
       <canvas id="plantCanvas" width="520" height="440" role="img" aria-label="نبتة تكبر مع وقت تركيزك"></canvas>
+      <div class="daypart" id="dayPart" aria-hidden="true"></div>
     </section>
 
     <div class="readout">
@@ -538,7 +660,7 @@ body.gated{overflow:hidden}
   <main class="view" id="view-seeds">
     <div class="view-head">
       <h2>كيس البذور</h2>
-      <p>كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثماني ساعات تركيز.</p>
+      <p id="seedsIntro">كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثماني ساعات تركيز.</p>
     </div>
     <div id="seedGallery"></div>
   </main>
@@ -567,7 +689,7 @@ body.gated{overflow:hidden}
 
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="الدخول إلى حصاد الإنتاجية">
   <div class="gatecard">
-    <canvas id="gateCv" width="210" height="160"></canvas>
+    <canvas id="gateCv" width="330" height="330"></canvas>
     <h2>حصاد<em>الإنتاجية</em><span>.</span></h2>
     <p class="gsub" id="gateSub">سجّل دخولك عشان مزرعتك تنحفظ باسمك.</p>
     <div class="gtabs" role="tablist" id="gateTabs">
@@ -802,6 +924,7 @@ const DICT = {
  "من أطول الأشجار، تعيش آلاف السنين.":"One of the tallest trees, living for thousands of years.",
  "عشان تشوف باقي النباتات، ":"To see the rest of the plants, ",
  "أنشئ حسابك!":"create your account!",
+ "سجّل دخولك!":"log in!",
  "يبي صبر، وزهرته تفتح متأخرة.":"It wants patience; its blossom opens late.",
  "تاجه بنفسجي ما يشبه غيره.":"A purple crown like no other.",
  "أعشاب وزهور":"Herbs & Flowers",
@@ -832,6 +955,20 @@ const DICT = {
  "قبل الفجر":"Before Dawn",
  "بعد منتصف الليل":"After Midnight",
  "عشرة أنواع":"Ten Species",
+ "ليل":"Night",
+ "شروق":"Sunrise",
+ "صباح":"Morning",
+ "ظهر":"Noon",
+ "عصر":"Afternoon",
+ "غروب":"Sunset",
+ "محاق":"New Moon",
+ "هلال":"Waxing Crescent",
+ "تربيع أول":"First Quarter",
+ "أحدب متزايد":"Waxing Gibbous",
+ "بدر":"Full Moon",
+ "أحدب متناقص":"Waning Gibbous",
+ "تربيع أخير":"Last Quarter",
+ "هلال آخر":"Waning Crescent",
  "مئة نبتة":"Hundred Plants",
  "ألف نبتة":"Thousand Plants",
  "خمسمئة ساعة":"500 Hours",
@@ -1158,6 +1295,9 @@ function hex2rgb(h){ h=String(h).replace("#",""); if(h.length===3) h=h.split("")
 function rgb2hex(r){ return "#"+r.map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,"0")).join(""); }
 function mix(a,b,t){ const A=hex2rgb(a),B=hex2rgb(b); return rgb2hex([lerp(A[0],B[0],t),lerp(A[1],B[1],t),lerp(A[2],B[2],t)]); }
 function shade(c,t){ return mix(c, t<0?"#000000":"#ffffff", Math.abs(t)); }
+/* ─── نموذج إضاءة: مصدر واحد من أعلى اليسار، يوحّد كل المشهد ─── */
+let LIGHT_ANG = -2.30;        /* تتحدّث كل رسمة حسب موقع الشمس الفعلي */
+function litness(ang){ return .5 + .5*Math.cos(ang - LIGHT_ANG); }   /* ٠ = ظل · ١ = مواجه للضوء */
 
 /* ─── ٢. نموذج النموّ ────────────────────────────────────────── */
 const PHASE1 = 80;                  /* ٤٠ دقيقة = نبتة مكتملة، ثم تبدأ الشجرة */
@@ -1349,18 +1489,31 @@ function palFor(id, withered){
 /* ─── ٤. فرش أساسية ─────────────────────────────────────────── */
 function leaf(ctx,x,y,len,wid,ang,c1,c2,curl){
   if(!(len>0.5)) return;
+  const lit = litness(ang);
+  const a = shade(c1, -.16 + lit*.32);          /* الوجه المواجه للضوء يفتح */
+  const b = shade(c2, -.26 + lit*.22);          /* والوجه البعيد يغمق */
   ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
-  const g = ctx.createLinearGradient(0,-wid,len,wid);
-  g.addColorStop(0,c1); g.addColorStop(1,c2);
-  ctx.fillStyle = g;
+  if(len>16 && wid>3.5){                         /* التدرّج يبين بس بالورقة الكبيرة العريضة */
+    const g = ctx.createLinearGradient(0,-wid,len*.92,wid);
+    g.addColorStop(0,a); g.addColorStop(.52,mix(a,b,.46)); g.addColorStop(1,b);
+    ctx.fillStyle = g;
+  } else {                                       /* والصغيرة لون مسطّح — الفرق ما يبين والكلفة تنزل كثير */
+    ctx.fillStyle = mix(a,b,.42);
+  }
   ctx.beginPath(); ctx.moveTo(0,0);
   ctx.quadraticCurveTo(len*.45,-wid,len,-len*curl*.12);
   ctx.quadraticCurveTo(len*.45, wid,0,0);
   ctx.fill();
-  if(len>6){
-    ctx.strokeStyle="rgba(0,0,0,.14)"; ctx.lineWidth=Math.max(.5,len*.022);
+  if(len>5){
+    ctx.strokeStyle="rgba(0,0,0,.17)"; ctx.lineWidth=Math.max(.5,len*.020);
     ctx.beginPath(); ctx.moveTo(len*.04,0);
     ctx.quadraticCurveTo(len*.5,-wid*.12,len*.94,-len*curl*.1); ctx.stroke();
+    if(lit>.56){                                 /* لمعة على الحافة المواجهة للشمس */
+      ctx.strokeStyle="rgba(255,255,255,"+(.09+(lit-.56)*.44).toFixed(3)+")";
+      ctx.lineWidth=Math.max(.4,len*.015);
+      ctx.beginPath(); ctx.moveTo(len*.12,-wid*.34);
+      ctx.quadraticCurveTo(len*.52,-wid*.88,len*.88,-len*curl*.10); ctx.stroke();
+    }
   }
   ctx.restore();
 }
@@ -1390,21 +1543,382 @@ function frond(ctx,sp,x,y,L,ang,lf,wid){
 }
 function berry(ctx,x,y,R,cFrom,cTo){
   if(!(R>0.5)) return;
+  if(R<3.2){                                   /* الحبّة الصغيرة: لون مسطّح، الفرق ما يبين */
+    ctx.fillStyle=mix(cFrom,cTo,.55);
+    ctx.beginPath(); ctx.arc(x,y,R,0,TAU); ctx.fill(); return;
+  }
   const g=ctx.createRadialGradient(x-R*.3,y-R*.35,R*.1,x,y,R*1.15);
   g.addColorStop(0,cFrom); g.addColorStop(1,cTo);
   ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,R,0,TAU); ctx.fill();
 }
 
+
+
+
+/* ═══════════════════════════════════════════════════════════════
+   فلك: موقع الشمس الحقيقي، وطور القمر، والتقويم الهجري
+   الموقع يُستنتج من منطقتك الزمنية — بلا طلب إذن ولا تتبّع.
+   ═══════════════════════════════════════════════════════════════ */
+const TZ_SITE = {
+  "Asia/Riyadh":[24.71,46.68], "Asia/Qatar":[25.29,51.53], "Asia/Kuwait":[29.38,47.99],
+  "Asia/Bahrain":[26.23,50.59], "Asia/Dubai":[25.20,55.27], "Asia/Muscat":[23.59,58.41],
+  "Asia/Baghdad":[33.32,44.36], "Asia/Amman":[31.95,35.93], "Asia/Damascus":[33.51,36.29],
+  "Asia/Beirut":[33.89,35.50], "Asia/Jerusalem":[31.78,35.22], "Asia/Gaza":[31.50,34.47],
+  "Asia/Aden":[12.79,45.03], "Africa/Cairo":[30.04,31.24], "Africa/Khartoum":[15.50,32.56],
+  "Africa/Tripoli":[32.89,13.19], "Africa/Tunis":[36.81,10.17], "Africa/Algiers":[36.75,3.06],
+  "Africa/Casablanca":[33.57,-7.59], "Africa/Nouakchott":[18.08,-15.98],
+  "Africa/Mogadishu":[2.05,45.32], "Africa/Djibouti":[11.59,43.15],
+  "Europe/London":[51.51,-0.13], "Europe/Paris":[48.86,2.35], "Europe/Berlin":[52.52,13.40],
+  "Europe/Madrid":[40.42,-3.70], "Europe/Rome":[41.90,12.50], "Europe/Istanbul":[41.01,28.98],
+  "Europe/Moscow":[55.76,37.62], "Europe/Amsterdam":[52.37,4.90], "Europe/Stockholm":[59.33,18.07],
+  "America/New_York":[40.71,-74.01], "America/Chicago":[41.88,-87.63],
+  "America/Denver":[39.74,-104.99], "America/Los_Angeles":[34.05,-118.24],
+  "America/Toronto":[43.65,-79.38], "America/Mexico_City":[19.43,-99.13],
+  "America/Sao_Paulo":[-23.55,-46.63], "America/Bogota":[4.71,-74.07],
+  "Asia/Karachi":[24.86,67.01], "Asia/Kolkata":[19.08,72.88], "Asia/Dhaka":[23.81,90.41],
+  "Asia/Jakarta":[-6.21,106.85], "Asia/Kuala_Lumpur":[3.14,101.69],
+  "Asia/Singapore":[1.35,103.82], "Asia/Manila":[14.60,120.98],
+  "Asia/Bangkok":[13.76,100.50], "Asia/Tokyo":[35.68,139.69], "Asia/Seoul":[37.57,126.98],
+  "Asia/Shanghai":[31.23,121.47], "Asia/Hong_Kong":[22.32,114.17],
+  "Asia/Tehran":[35.69,51.39], "Asia/Kabul":[34.53,69.17], "Asia/Tashkent":[41.30,69.24],
+  "Australia/Sydney":[-33.87,151.21], "Australia/Perth":[-31.95,115.86],
+  "Pacific/Auckland":[-36.85,174.76], "Africa/Lagos":[6.52,3.38],
+  "Africa/Nairobi":[-1.29,36.82], "Africa/Johannesburg":[-26.20,28.05]
+};
+let SITE = null;
+function siteLatLon(){
+  if(SITE) return SITE;
+  try{
+    const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if(TZ_SITE[tz]) return (SITE=TZ_SITE[tz]);
+  }catch(e){}
+  /* بلا جدول: نقدّر الطول من فرق التوقيت، وخط عرض معتدل */
+  const off = -(new Date().getTimezoneOffset())/60;
+  return (SITE=[24, clamp(off*15,-180,180)]);
+}
+
+const D2R=Math.PI/180, R2D=180/Math.PI;
+/* ارتفاع الشمس وسمتها — خوارزمية NOAA المبسّطة، دقّتها أفضل من درجة */
+function solarAltAz(date,lat,lon){
+  const n   = date.getTime()/86400000 + 2440587.5 - 2451545.0;
+  const L   = (280.460 + 0.9856474*n) % 360;
+  const g   = ((357.528 + 0.9856003*n) % 360)*D2R;
+  const lam = (L + 1.915*Math.sin(g) + 0.020*Math.sin(2*g))*D2R;
+  const eps = (23.439 - 0.0000004*n)*D2R;
+  const dec = Math.asin(Math.sin(eps)*Math.sin(lam));
+  const ra  = Math.atan2(Math.cos(eps)*Math.sin(lam), Math.cos(lam));
+  const gmst= ((18.697374558 + 24.06570982441908*n) % 24 + 24) % 24;
+  const ha  = (gmst*15 + lon)*D2R - ra;
+  const phi = lat*D2R;
+  const alt = Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(ha));
+  const az  = Math.atan2(-Math.sin(ha), Math.tan(dec)*Math.cos(phi)-Math.sin(phi)*Math.cos(ha));
+  return { alt:alt*R2D, az:((az*R2D)%360+360)%360, dec:dec*R2D };
+}
+/* نحوّل ارتفاع الشمس إلى «ساعة مكافئة» فنستفيد من تدرّج المراحل الست */
+function solarHour(alt,rising,maxAlt){
+  const A=[-18,-0.8,12,Math.max(20,maxAlt)];
+  const H= rising ? [0,4.6,7.2,11.8] : [24.4,17.6,15.2,11.8];
+  const a=clamp(alt,A[0],A[3]);
+  for(let i=0;i<3;i++) if(a<=A[i+1]) return lerp(H[i],H[i+1],(a-A[i])/(A[i+1]-A[i]));
+  return H[3];
+}
+function solarState(date){
+  date = date || new Date();
+  const ll = siteLatLon();
+  const now  = solarAltAz(date, ll[0], ll[1]);
+  const then = solarAltAz(new Date(date.getTime()+600000), ll[0], ll[1]);
+  const rising = then.alt > now.alt;
+  const maxAlt = 90 - Math.abs(ll[0]-now.dec);
+  return {
+    alt:now.alt, az:now.az, rising, maxAlt,
+    hour: ((solarHour(now.alt,rising,maxAlt)%24)+24)%24,
+    sunX: clamp(1-(now.az-90)/180, .05, .95),        /* يشرق يميناً ويغرب يساراً */
+    elev: clamp((now.alt+2)/Math.max(24,maxAlt), 0, 1)
+  };
+}
+
+/* ── طور القمر ── */
+const SYNODIC = 29.530588853;
+const NEWMOON_REF = Date.UTC(2000,0,6,18,14)/86400000;   /* محاق مرجعي مؤكّد */
+function moonPhase(date){
+  const d=(date||new Date()).getTime()/86400000;
+  const age=((d-NEWMOON_REF)%SYNODIC+SYNODIC)%SYNODIC;
+  const frac=age/SYNODIC;
+  return { age, frac, illum:(1-Math.cos(TAU*frac))/2, waxing:frac<.5 };
+}
+const MOON_NAMES=["محاق","هلال","تربيع أول","أحدب متزايد","بدر","أحدب متناقص","تربيع أخير","هلال آخر"];
+function moonName(frac){
+  const e=.035;
+  if(frac<e||frac>1-e) return MOON_NAMES[0];
+  if(Math.abs(frac-.25)<e) return MOON_NAMES[2];
+  if(Math.abs(frac-.5)<e)  return MOON_NAMES[4];
+  if(Math.abs(frac-.75)<e) return MOON_NAMES[6];
+  if(frac<.25) return MOON_NAMES[1];
+  if(frac<.5)  return MOON_NAMES[3];
+  if(frac<.75) return MOON_NAMES[5];
+  return MOON_NAMES[7];
+}
+/* التاريخ الهجري (أم القرى) من المتصفّح مباشرة */
+function hijriText(date,lang){
+  try{
+    const loc=(lang==="en"?"en-US":"ar-SA")+"-u-ca-islamic-umalqura";
+    return new Intl.DateTimeFormat(loc,{day:"numeric",month:"long",year:"numeric"})
+             .format(date||new Date());
+  }catch(e){ return ""; }
+}
+/* رسم القمر بطوره الحقيقي: الحدّ الفاصل قطع ناقص، مثل السماء تماماً */
+function drawMoonDisc(ctx,cx,cy,R,frac,litC,darkC){
+  const k    = Math.cos(TAU*frac);            /* ‎+١ محاق · ‎٠ تربيع · ‎−١ بدر */
+  const side = frac<.5 ? 1 : -1;              /* المضيء يمين وقت التزايد */
+  ctx.fillStyle=darkC;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,TAU); ctx.fill();
+  /* المحاق الفعلي فقط (frac قريبة من ٠ أو ١) — abs(k) وحده يتشابه عند
+     المحاق والبدر معاً فيطفئ القمر غلطاً قبل البدر بنص يوم تقريباً */
+  if(frac<.006 || frac>.994) return;
+  ctx.fillStyle=litC;
+  ctx.beginPath();
+  const N=44;
+  for(let i=0;i<=N;i++){ const th=-Math.PI/2+Math.PI*i/N;
+    ctx.lineTo(cx+Math.cos(th)*R*side, cy+Math.sin(th)*R); }
+  for(let i=N;i>=0;i--){ const th=-Math.PI/2+Math.PI*i/N;
+    ctx.lineTo(cx+Math.cos(th)*R*k*side, cy+Math.sin(th)*R); }
+  ctx.closePath(); ctx.fill();
+}
+/* ═══════════════════════════════════════════════════════════════
+   محرّك وقت اليوم — ست مراحل تتبع ساعة المستخدم الحقيقية
+   المراحل تتداخل بنعومة، فالسماء تتغيّر تدريجياً بلا قفزات.
+   ═══════════════════════════════════════════════════════════════ */
+const SKY_KEYS = [
+  { h:0,    id:"night",   n:"ليل",   sunX:.30, elev:.60, disc:"moon",
+    sky:["#050B18","#0C1729","#16263C"], hills:["#17273B","#101D2D","#0B1622"],
+    discC:["#F4F8FF","#DCE8FA","rgba(198,218,245,.30)"],
+    halo:["rgba(188,214,246,.30)","rgba(146,182,224,.11)"],
+    haze:"rgba(36,56,82,.42)", stars:1,    gTint:-.30, warmth:0 },
+  { h:4.6,  id:"dawn",    n:"شروق",  sunX:.86, elev:.04, disc:"sun",
+    sky:["#222C4A","#7A4F63","#E89A70"], hills:["#4C3A52","#3A2B41","#2A2032"],
+    discC:["#FFF0D2","#FFC98C","rgba(255,170,104,.40)"],
+    halo:["rgba(255,176,116,.44)","rgba(228,132,96,.16)"],
+    haze:"rgba(232,154,112,.44)", stars:.34, gTint:-.16, warmth:.55 },
+  { h:7.2,  id:"morning", n:"صباح",  sunX:.70, elev:.34, disc:"sun",
+    sky:["#8CBCDE","#BCDBE8","#F2E7CA"], hills:["#A9C5C1","#8FB1A9","#77988D"],
+    discC:["#FFFCEC","#FFF2BE","rgba(255,226,140,.42)"],
+    halo:["rgba(255,232,162,.44)","rgba(255,216,134,.16)"],
+    haze:"rgba(246,233,202,.44)", stars:0,   gTint:.04,  warmth:.18 },
+  { h:11.8, id:"noon",    n:"ظهر",   sunX:.50, elev:.93, disc:"sun",
+    sky:["#69B0DC","#A6D3E8","#DCEBDE"], hills:["#B7CFC5","#9DBBAD","#84A594"],
+    discC:["#FFFFF4","#FFFAD8","rgba(255,244,180,.40)"],
+    halo:["rgba(255,248,196,.38)","rgba(255,236,160,.13)"],
+    haze:"rgba(226,238,224,.32)", stars:0,   gTint:.10,  warmth:0 },
+  { h:15.2, id:"asr",     n:"عصر",   sunX:.30, elev:.44, disc:"sun",
+    sky:["#7CB5D6","#C8DEDE","#F5E3B6"], hills:["#B3C7B9","#98B09F","#7F9888"],
+    discC:["#FFF8DC","#FFE8A4","rgba(255,206,118,.42)"],
+    halo:["rgba(255,222,142,.44)","rgba(250,198,118,.16)"],
+    haze:"rgba(244,227,184,.40)", stars:0,   gTint:.02,  warmth:.34 },
+  { h:17.6, id:"sunset",  n:"غروب",  sunX:.12, elev:.04, disc:"sun",
+    sky:["#313C6C","#C46A54","#F2A65E"], hills:["#5F4459","#472F45","#311E2F"],
+    discC:["#FFD9A2","#FF9E56","rgba(240,128,70,.42)"],
+    halo:["rgba(255,142,80,.48)","rgba(224,106,70,.18)"],
+    haze:"rgba(240,152,94,.46)", stars:.22, gTint:-.14, warmth:.85 },
+  { h:19.8, id:"night",   n:"ليل",   sunX:.72, elev:.58, disc:"moon",
+    sky:["#050B18","#0C1729","#16263C"], hills:["#17273B","#101D2D","#0B1622"],
+    discC:["#F4F8FF","#DCE8FA","rgba(198,218,245,.30)"],
+    halo:["rgba(188,214,246,.30)","rgba(146,182,224,.11)"],
+    haze:"rgba(36,56,82,.42)", stars:1,    gTint:-.30, warmth:0 }
+];
+/* ساعة عشرية من كائن تاريخ */
+function hourOf(d){ d=d||new Date(); return d.getHours()+d.getMinutes()/60+d.getSeconds()/3600; }
+function mixList(A,B,t){ return A.map((c,i)=> c.indexOf("rgba")===0 ? (t<.5?c:B[i]) : mix(c,B[i],t)); }
+
+/* يرجّع لوحة السماء الكاملة لهذه اللحظة، مُمزَّجة بين مرحلتين */
+function skyAt(hr){
+  let astro=null;
+  if(hr==null){ astro=solarState(); hr=astro.hour; }
+  hr=((hr%24)+24)%24;
+  let i=0; for(let k=0;k<SKY_KEYS.length-1;k++) if(hr>=SKY_KEYS[k].h) i=k;
+  const A=SKY_KEYS[i], B=SKY_KEYS[Math.min(i+1,SKY_KEYS.length-1)];
+  const span=Math.max(.001,B.h-A.h);
+  const t=smooth(clamp((hr-A.h)/span,0,1));
+  return {
+    id: t<.5?A.id:B.id,
+    n:  t<.5?A.n :B.n,
+    sunX: lerp(A.sunX,B.sunX,t), elev: lerp(A.elev,B.elev,t),
+    disc: t<.5?A.disc:B.disc,
+    sky:   mixList(A.sky,B.sky,t),
+    hills: mixList(A.hills,B.hills,t),
+    discC: mixList(A.discC,B.discC,t),
+    halo:  mixList(A.halo,B.halo,t),
+    haze:  t<.5?A.haze:B.haze,
+    stars: lerp(A.stars,B.stars,t),
+    gTint: lerp(A.gTint,B.gTint,t),
+    warmth:lerp(A.warmth,B.warmth,t),
+    sunX2: astro?astro.sunX:null, elev2: astro?astro.elev:null,
+    alt: astro?astro.alt:null, az: astro?astro.az:null, astro:!!astro
+  };
+}
+/* شهاب: واحد كل دقيقة تقريباً، يعبر خلال ١.٤ ثانية */
+const METEOR_PERIOD = 60000;
+function meteorAt(t){
+  const idx = Math.floor(t/METEOR_PERIOD);
+  const ph  = (t % METEOR_PERIOD) / 1400;        /* ٠..١ خلال ١.٤ ثانية ثم يختفي */
+  if(ph > 1) return null;
+  const r1 = ((idx*2654435761) % 1000)/1000;     /* عشوائية ثابتة لكل شهاب */
+  const r2 = ((idx*40503)      % 997 )/997;
+  const r3 = ((idx*2246822519) % 991 )/991;
+  return { x0:.10+r1*.74, y0:.04+r2*.26, len:.16+r3*.16,
+           ang:.55+r2*.40, t:ph, bright:.7+r3*.3 };
+}
+/* ─── بيئة كاملة: سماء، شمس، تلال، سهل ممتد ─────────────────
+   تُرسم قبل كل شي. لا تستهلك rnd() نهائياً عشان أشكال النبتات
+   تبقى مطابقة تماماً لبذورها المحفوظة.
+   ──────────────────────────────────────────────────────────── */
+function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
+  const K = skyAt(hr);
+  const sunX = K.astro ? K.sunX2 : K.sunX;          /* فلكي إن توفّر، وإلا جدول الساعات */
+  const elev = K.astro ? K.elev2 : K.elev;
+  const sx = w*sunX, sy = gy - (h*.10 + (gy-h*.02)*elev*.92);
+  const dull = withered ? .55 : 0;                 /* الذبول يسحب اللون للرمادي */
+  const C = c => dull ? mix(c,"#9A968A",dull) : c;
+
+  /* ١) السماء */
+  const sky=ctx.createLinearGradient(0,0,0,gy);
+  sky.addColorStop(0,   C(K.sky[0]));
+  sky.addColorStop(.46, C(K.sky[1]));
+  sky.addColorStop(1,   C(K.sky[2]));
+  ctx.fillStyle=sky; ctx.fillRect(0,0,w,gy+1);
+
+  /* ٢) نجوم — كثافتها تتبع المرحلة، وتخفت قرب القمر */
+  if(K.stars>.02){
+    ctx.fillStyle="#EAF2FF";
+    for(let i=0;i<54;i++){
+      const x=((i*0.6180339887)%1)*w, y=((i*0.7548776662)%1)*gy*.82;
+      const near = Math.hypot(x-sx,y-sy) < s*.32;
+      const tw = tms==null ? 1 : (.72+.28*Math.sin(tms/700+i*1.7));
+      ctx.globalAlpha = K.stars*(.12+.50*((i*37)%11)/11)*(near?.18:1)*tw;
+      const r=s*.0017*(1+((i*53)%5)/5*1.7);
+      ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  /* ٣) شهاب — يعبر السماء كل دقيقة تقريباً، بالليل والشفق فقط */
+  if(tms!=null && K.stars>.15){
+    const m=meteorAt(tms);
+    if(m){
+      const fade = Math.sin(m.t*Math.PI);                 /* يظهر ويختفي بنعومة */
+      const travel = m.t;
+      const hx=w*m.x0 - Math.cos(m.ang)*w*m.len*travel;
+      const hy=gy*m.y0 + Math.sin(m.ang)*gy*m.len*travel;
+      const tailL = w*m.len*.55;
+      const tx=hx+Math.cos(m.ang)*tailL, ty=hy-Math.sin(m.ang)*tailL;
+      const tg=ctx.createLinearGradient(hx,hy,tx,ty);
+      tg.addColorStop(0,"rgba(255,255,255,"+(.92*fade*m.bright).toFixed(3)+")");
+      tg.addColorStop(.35,"rgba(196,224,255,"+(.42*fade*m.bright).toFixed(3)+")");
+      tg.addColorStop(1,"rgba(160,200,255,0)");
+      ctx.strokeStyle=tg; ctx.lineCap="round";
+      ctx.lineWidth=Math.max(1,s*.0042*fade);
+      ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(tx,ty); ctx.stroke();
+      const head=ctx.createRadialGradient(hx,hy,0,hx,hy,s*.014*fade+.6);
+      head.addColorStop(0,"rgba(255,255,255,"+(.95*fade).toFixed(3)+")");
+      head.addColorStop(1,"rgba(180,214,255,0)");
+      ctx.fillStyle=head;
+      ctx.beginPath(); ctx.arc(hx,hy,s*.014*fade+.6,0,TAU); ctx.fill();
+    }
+  }
+
+  /* ٤) قرص الشمس أو القمر مع هالته */
+  const dR=s*(K.disc==="moon"?.052:.060);
+  const halo=ctx.createRadialGradient(sx,sy,dR*.2,sx,sy,dR*7.8);
+  halo.addColorStop(0,  K.halo[0]); halo.addColorStop(.28,K.halo[1]);
+  halo.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=halo; ctx.fillRect(0,0,w,gy+1);
+  if(K.disc==="moon"){
+    /* القمر بطوره الحقيقي المطابق لليلة الهجرية */
+    const mp=moonPhase(mdate);
+    drawMoonDisc(ctx,sx,sy,dR,mp.frac,C(K.discC[0]),"rgba(52,72,102,.42)");
+    if(mp.illum>.34){                               /* البحار تبين بس لما يكبر المضيء */
+      ctx.save();
+      ctx.beginPath(); ctx.arc(sx,sy,dR,0,TAU); ctx.clip();
+      ctx.fillStyle="rgba(150,172,200,"+(.10+.18*mp.illum).toFixed(3)+")";
+      [[-.28,-.20,.30],[.22,.10,.24],[-.06,.32,.18]].forEach(m=>{
+        ctx.beginPath(); ctx.arc(sx+m[0]*dR,sy+m[1]*dR,m[2]*dR,0,TAU); ctx.fill(); });
+      ctx.restore();
+    }
+  } else {
+    const disc=ctx.createRadialGradient(sx,sy,0,sx,sy,dR);
+    disc.addColorStop(0,C(K.discC[0])); disc.addColorStop(.60,C(K.discC[1])); disc.addColorStop(1,K.discC[2]);
+    ctx.fillStyle=disc; ctx.beginPath(); ctx.arc(sx,sy,dR,0,TAU); ctx.fill();
+  }
+
+  /* ٥) ثلاث طبقات تلال — منظور جوّي */
+  const layers=[
+    { y:gy-s*.150, amp:s*.046, f:1.7, ph:0.4, c:C(K.hills[0]), a:.54 },
+    { y:gy-s*.092, amp:s*.036, f:2.4, ph:2.1, c:C(K.hills[1]), a:.70 },
+    { y:gy-s*.042, amp:s*.024, f:3.3, ph:4.7, c:C(K.hills[2]), a:.88 }
+  ];
+  layers.forEach(L=>{
+    ctx.globalAlpha=L.a; ctx.fillStyle=L.c;
+    ctx.beginPath(); ctx.moveTo(0,gy+2);
+    for(let x=0;x<=w;x+=6){
+      const t=x/w;
+      ctx.lineTo(x, L.y - Math.sin(t*Math.PI*L.f+L.ph)*L.amp
+                        - Math.sin(t*Math.PI*L.f*2.3+L.ph*1.7)*L.amp*.34);
+    }
+    ctx.lineTo(w,gy+2); ctx.closePath(); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+
+  /* ٦) ضباب الأفق */
+  const haze=ctx.createLinearGradient(0,gy-s*.17,0,gy+s*.02);
+  haze.addColorStop(0,"rgba(0,0,0,0)"); haze.addColorStop(1,K.haze);
+  ctx.fillStyle=haze; ctx.fillRect(0,gy-s*.17,w,s*.19);
+
+  /* ٧) السهل الممتد، بدرجة تتبع ضوء المرحلة */
+  const soilTop = shade(mix(PAL.soil3, K.sky[2], K.warmth*.22), .18+K.gTint*.5);
+  const soilMid = shade(mix(PAL.soil3, K.sky[2], K.warmth*.14), K.gTint);
+  const soilLow = shade(PAL.soil, -.14+K.gTint*.6);
+  const gnd=ctx.createLinearGradient(0,gy,0,h);
+  gnd.addColorStop(0,soilTop); gnd.addColorStop(.28,soilMid); gnd.addColorStop(1,soilLow);
+  ctx.fillStyle=gnd; ctx.fillRect(0,gy,w,h-gy+1);
+  ctx.fillStyle = K.stars>.5 ? "rgba(150,180,205,.20)" : "rgba(255,246,214,.46)";
+  ctx.fillRect(0,gy-Math.max(1,s*.0022),w,Math.max(1,s*.0038));
+}
+
 /* ─── ٥. الأرض والبذرة ──────────────────────────────────────── */
 function drawGround(ctx,cx,gy,w,s,rnd){
-  const bw = Math.min(w*.72, s*.78);
-  const g = ctx.createLinearGradient(cx,gy-s*.05,cx,gy+s*.10);
-  g.addColorStop(0,PAL.soil3); g.addColorStop(1,PAL.soil);
+  const bw = Math.min(w*1.02, s*1.18);      /* تربة ممتدة، ما هي بقعة صغيرة */
+  /* هالة ترابية تذوّب الحافة في الخلفية بدل القصّة الحادّة */
+  const halo=ctx.createRadialGradient(cx,gy,bw*.16,cx,gy,bw*.66);
+  halo.addColorStop(0, PAL.night?"rgba(58,46,33,.40)":"rgba(142,118,88,.28)");
+  halo.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=halo;
+  ctx.beginPath(); ctx.ellipse(cx,gy+s*.006,bw*.66,s*.062,0,0,TAU); ctx.fill();
+  /* جسم التراب بتدرّج ثلاثي */
+  const g = ctx.createLinearGradient(cx,gy-s*.055,cx,gy+s*.10);
+  g.addColorStop(0,shade(PAL.soil3,.12)); g.addColorStop(.55,PAL.soil3); g.addColorStop(1,PAL.soil);
   ctx.fillStyle=g;
-  ctx.beginPath(); ctx.ellipse(cx,gy,bw/2,s*.042,0,0,TAU); ctx.fill();
-  ctx.fillStyle=shade(PAL.soil,-.16);
-  for(let i=0;i<5;i++){ const a=rnd()*TAU, r=rnd()*bw*.32;
-    ctx.beginPath(); ctx.ellipse(cx+Math.cos(a)*r, gy+Math.sin(a)*s*.016, s*.010, s*.005,0,0,TAU); ctx.fill(); }
+  ctx.beginPath(); ctx.ellipse(cx,gy,bw/2,s*.044,0,0,TAU); ctx.fill();
+  /* حافة مضيئة من جهة مصدر الضوء */
+  ctx.strokeStyle = PAL.night?"rgba(152,180,198,.15)":"rgba(255,246,216,.38)";
+  ctx.lineWidth=Math.max(.7,s*.0042);
+  ctx.beginPath(); ctx.ellipse(cx,gy-s*.0015,bw*.492,s*.042,0,Math.PI*1.06,Math.PI*1.94); ctx.stroke();
+  /* حصى ونثار */
+  for(let i=0;i<16;i++){
+    const a=rnd()*TAU, r=rnd()*bw*.42;
+    const px=cx+Math.cos(a)*r, py=gy+Math.sin(a)*s*.024;
+    ctx.fillStyle = i%3 ? shade(PAL.soil,-.18) : shade(PAL.soil3,.18);
+    ctx.beginPath(); ctx.ellipse(px,py,s*.0085+rnd()*s*.006,s*.0044,0,0,TAU); ctx.fill();
+  }
+  /* خصل عشب على الحافة تكسر استدارة البقعة */
+  const grass = mix(PAL.soil3, "#5E8A4E", .58);
+  for(let i=0;i<16;i++){
+    const t=(i+.5)/16, side=i%2?1:-1;
+    const px=cx+(t-.5)*bw*1.04, py=gy+s*.012*(i%2?1:.4);
+    const hh=s*(.015+rnd()*.020);
+    ctx.strokeStyle = i%2?grass:shade(grass,-.15);
+    ctx.lineWidth=Math.max(.6,s*.0032); ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(px,py);
+    ctx.quadraticCurveTo(px+side*hh*.30,py-hh*.62,px+side*hh*.72,py-hh); ctx.stroke();
+  }
 }
 function drawSeed(ctx,cx,gy,s,g,sp){
   const r = s*.0085 + s*.010*smooth(clamp(g/.05,0,1));   /* بذرة صغيرة جداً */
@@ -1681,11 +2195,13 @@ function sunHead(ctx,sp,x,y,R,rnd){
 
 /* ─── ٧. ما بعد الشجرة: أربع عمارات ─────────────────────────── */
 function fitOf(M){ return 1 - 1/(1+(M-1)*1.7); }          /* ٠ → ١ بلا وصول */
+/* سقف ارتفاع النبتة: reach = كم يمتد المشهد فوق القاعدة مقارنةً بارتفاعها */
+function capH(gy,reach){ return Math.max(2, gy*.88/reach); }
 
 /* شجرة بتفريع تكراري */
 function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
   const fit=fitOf(M), style=sp.canopy||"round";
-  const Hd = s*(.58+.32*fit);
+  const Hd = Math.min(s*(.58+.32*fit), capH(gy,1.18));
   const trunkLen = style==="conic" ? Hd*.86 : style==="spread" ? Hd*.30 : Hd*.36;
   const ratio = style==="conic" ? .45 : .56;          /* يحدّد أقصى امتداد للأغصان */
   const reach = trunkLen*ratio/(1-ratio);
@@ -1705,13 +2221,18 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
   }
   /* كتلة التاج خلف الأغصان */
   if(!withered && style!=="conic"){
-    const blobs = small?4:7;
+    const blobs = small?7:14;
     for(let i=0;i<blobs;i++){
-      const an=i/blobs*TAU+rnd()*.5, rr=crownR*(.52+rnd()*.42);
+      const an=i/blobs*TAU+rnd()*.5, rr=crownR*(.50+rnd()*.44);
       const bx=cx+Math.cos(an)*crownR*(style==="spread"?.72:.52)+sway*s*.004;
       const by=crownY+Math.sin(an)*crownR*(style==="spread"?.30:.44);
-      ctx.fillStyle = i%2 ? canopyCol : canopyCol2;
-      ctx.globalAlpha = .92;
+      /* كل كتلة كرة لها وجه مضاء ووجه مظلم — هذا اللي يعطي التاج حجماً */
+      const rg=ctx.createRadialGradient(bx-rr*.44,by-rr*.48,rr*.06,bx,by,rr*1.10);
+      rg.addColorStop(0, shade(canopyCol2,.22));
+      rg.addColorStop(.50, i%2?canopyCol:canopyCol2);
+      rg.addColorStop(1, shade(canopyCol,-.32));
+      ctx.fillStyle=rg;
+      ctx.globalAlpha = .90;
       ctx.beginPath(); ctx.ellipse(bx,by,rr,rr*(style==="spread"?.62:.82),an*.2,0,TAU); ctx.fill();
     }
     ctx.globalAlpha=1;
@@ -1735,12 +2256,21 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
     ctx.strokeStyle = d>depth-2 ? shade(bark,-.10) : mix(bark,sp.stem,.35);
     ctx.lineWidth=Math.max(.7,w); ctx.lineCap="round";
     ctx.beginPath(); ctx.moveTo(x,y); ctx.quadraticCurveTo(mx,my,x2,y2); ctx.stroke();
+    if(d===depth && w>2.2){        /* لحاء الجذع: خطّ مضيء جهة الضوء وخطّ ظل مقابله */
+      for(let q=-1;q<=1;q+=2){
+        ctx.strokeStyle = q<0 ? "rgba(255,246,222,.14)" : "rgba(0,0,0,.18)";
+        ctx.lineWidth = Math.max(.5, w*.17);
+        ctx.beginPath(); ctx.moveTo(x+q*w*.30,y);
+        ctx.quadraticCurveTo(mx+q*w*.26,my,x2+q*w*.20,y2); ctx.stroke();
+      }
+      ctx.lineWidth=Math.max(.7,w);
+    }
     if(d<=1){
       if(!withered){
         const L=Math.max(2,len*.62);
-        for(let i=0;i<3;i++)
-          leaf(ctx,x2,y2,L,L*(sp.blossom?.5:.34),ang+(i-1)*.7+sway*.03,
-               canopyCol2,canopyCol,i-1||1);
+        for(let i=0;i<4;i++)
+          leaf(ctx,x2,y2,L*(1-Math.abs(i-1.5)*.09),L*(sp.blossom?.5:.34),
+               ang+(i-1.5)*.60+sway*.03, canopyCol2,canopyCol,i<2?-1:1);
       }
       return;
     }
@@ -1785,35 +2315,234 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
   }
 }
 /* نخلة كبيرة */
-function drawPalmM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
-  const fit=fitOf(M), Hd=s*(.60+.32*fit), th=Hd*(sp.slim?.030:.045)*(.85+.3*fit);
-  const st=makeStem(cx,gy,Hd,0,sway); rnd();   /* جذع النخلة مستقيم دايماً */
-  const g=ctx.createLinearGradient(cx-th,gy,cx+th,gy);
-  g.addColorStop(0,shade(sp.stem,-.22)); g.addColorStop(.45,sp.stem); g.addColorStop(1,shade(sp.stem,-.30));
-  ctx.fillStyle=g;
-  ctx.beginPath(); ctx.moveTo(cx-th,gy); ctx.lineTo(st.tipx-th*.58,st.tipy);
-  ctx.lineTo(st.tipx+th*.58,st.tipy); ctx.lineTo(cx+th,gy); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.lineWidth=Math.max(.6,th*.16);
-  const segs=small?7:Math.min(22,10+Math.round(M*3));
-  for(let i=1;i<=segs;i++){ const t=i/(segs+1), p=st.pt(t);
-    ctx.beginPath(); ctx.moveTo(p[0]-th*(1-t*.3),p[1]); ctx.lineTo(p[0]+th*(1-t*.3),p[1]); ctx.stroke(); }
-  const n=small?9:Math.min(20,9+Math.round(M*2.6));
-  for(let i=0;i<n;i++){
-    const spread=(i-(n-1)/2)/Math.max(1,(n-1)/2);
-    frond(ctx,sp,st.tipx,st.tipy,Hd*(.34+.10*fit),
-      -Math.PI/2+spread*1.48+sway*.05+(withered?.5:0), small?7:10, .42);
+/* ═══════════════════════════════════════════════════════════════
+   نخلة التمر — محرّك مخصّص
+   جذع بندوب السعف المعيّنة، تاج بثلاث طبقات، خوص يتمايل مع الهوا،
+   وعذوق رطب معلّقة. مبنيّ على شكل النخلة السعودية الحقيقي.
+   ═══════════════════════════════════════════════════════════════ */
+function palmFrond(ctx,sp,x,y,L,ang,droop,flex,depth,leaflets,withered,wide,rnd,dry){
+  dry = dry||0;
+  /* الجريد قوس متيبّس مركّب: صلب عند القاعدة، ينثني أكثر بعد المنتصف —
+     منحنى تكعيبي بنقطتي تحكّم بدل التربيعي، أقرب لصلابة السعفة الحقيقية */
+  const dx=Math.cos(ang), dy=Math.sin(ang);
+  const nx=-dy, ny=dx;
+  const bend = droop + flex*.34;
+  const c1x=x+dx*L*.30+nx*L*bend*.05, c1y=y+dy*L*.30+ny*L*bend*.05+L*bend*.03;
+  const c2x=x+dx*L*.68+nx*L*bend*.22, c2y=y+dy*L*.68+ny*L*bend*.22+L*bend*.22;
+  const ex =x+dx*L*.97+flex*L*.22,    ey =y+dy*L*.97+L*bend*.56;
+  const pt =t=>{ const u=1-t;
+    return [u*u*u*x+3*u*u*t*c1x+3*u*t*t*c2x+t*t*t*ex,
+            u*u*u*y+3*u*u*t*c1y+3*u*t*t*c2y+t*t*t*ey]; };
+  const tan=t=>{ const u=1-t;
+    return Math.atan2(3*u*u*(c1y-y)+6*u*t*(c2y-c1y)+3*t*t*(ey-c2y),
+                       3*u*u*(c1x-x)+6*u*t*(c2x-c1x)+3*t*t*(ex-c2x)); };
+
+  const back = depth<0;
+  const dim  = back ? -.24 : depth>0 ? .05 : -.08;
+  /* السعفة الجافة: أصفر-بني بدل الأخضر — تنّورة النخلة الطبيعية غير المشذّبة */
+  const leafC  = dry>0.01 ? mix(sp.leaf ,"#8A6B3C",dry*.85) : sp.leaf;
+  const leaf2C = dry>0.01 ? mix(sp.leaf2,"#6B4F2A",dry*.85) : sp.leaf2;
+  const lf   = shade(leafC ,dim), lf2 = shade(leaf2C,dim);
+
+  /* ── الخوص ── أطول في الوسط، بتموّج طبيعي خفيف لكل خوصة عبر rnd */
+  for(let i=1;i<=leaflets;i++){
+    const t=i/(leaflets+1);
+    const p=pt(t), an=tan(t);
+    const bell = Math.sin(Math.PI*Math.pow(t,.78));
+    const jitter = rnd ? (rnd()-.5)*.10 : 0;              /* تموّج عضوي خفيف، لا يكسر التماثل العام */
+    const ll = L*wide*bell*(1+jitter*.5);
+    if(ll<.7) continue;
+    const spine = t<.13;                       /* قاعدة الجريد أشواك لا خوص */
+    const w = spine ? ll*.055 : ll*.105;       /* خوصة عريضة، مو خيط */
+    /* الخوصة تتأخر عن حركة الجريد — هذا اللي يعطي إحساس الوزن */
+    const lag = flex*(.10+t*.30);
+    const open = (spine ? .98 : (1.07 - t*.32)) + jitter*.14;
+    /* تدرّج لوني خفيف من القاعدة (أدفأ) للطرف (أنضر) — يمنح عمقاً حيوياً */
+    const tipMix = dry>0.01 ? 0 : t*.16;
+    const lfT  = tipMix ? shade(lf ,tipMix*.4) : lf;
+    const lf2T = tipMix ? shade(lf2,tipMix*.4) : lf2;
+    leaf(ctx,p[0],p[1],ll*(spine?.40:1)   ,w,an-open+lag, lf2T,lfT, 1);
+    leaf(ctx,p[0],p[1],ll*(spine?.40:.95) ,w,an+open+lag, lfT ,lf2T,-1);
   }
-  if(sp.fruit && !withered){
-    const n2=small?10:Math.min(60,Math.round(16*M));
-    for(let i=0;i<n2;i++){ const an=rnd()*TAU, r=Hd*.10*rnd();
-      ctx.fillStyle=i%3?sp.flower:sp.core;
-      ctx.beginPath(); ctx.ellipse(st.tipx+Math.cos(an)*r,st.tipy+Hd*.05+Math.abs(Math.sin(an))*r*.8,
-        Hd*.014*bloom,Hd*.020*bloom,0,0,TAU); ctx.fill(); }
+  /* عود الجريد فوق الخوص، بتدرّج طولي يحاكي دائرية الساق */
+  const ribBase = dry>0.01 ? mix((back?shade(sp.stem,-.20):sp.stem),"#7A5A32",dry*.7) : (back?shade(sp.stem,-.20):sp.stem);
+  const rib = shade(ribBase, withered?-.12:.06);
+  ctx.strokeStyle=rib; ctx.lineCap="round";
+  ctx.lineWidth=Math.max(.9,L*.030);
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.bezierCurveTo(c1x,c1y,c2x,c2y,ex,ey); ctx.stroke();
+  ctx.strokeStyle="rgba(255,248,224,"+(back?.05:.13)+")";
+  ctx.lineWidth=Math.max(.4,L*.011);
+  ctx.beginPath(); ctx.moveTo(x,y-L*.006); ctx.bezierCurveTo(c1x,c1y-L*.010,c2x,c2y-L*.008,ex,ey-L*.008); ctx.stroke();
+  return ex;
+}
+
+function drawPalmM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
+  const fit  = fitOf(M);
+  const Hd   = Math.min(s*(.64+.30*fit), capH(gy,1.66));
+  const slim = sp.slim?.70:1;
+  const thB  = Hd*.058*slim*(.86+.26*fit);
+  const thT  = thB*.56;
+  const t    = SCENE_T;
+  const topX = cx + sway*Hd*.020;
+  const topY = gy - Hd;
+  const bark = sp.bark || sp.stem;
+  const litT = litness(-Math.PI/2);
+
+  /* ── ١) الجذع: تعرّج انتفاخات عضوي بدل تدرّج خطي بحت — جذوع النخيل نادراً
+     ما تكون أسطوانة مثالية، فيها موجات خفيفة على طول الساق ── */
+  function trunkHalfWidth(tt){
+    const taper = lerp(thB,thT,tt);
+    const bulge = 1 + Math.sin(tt*7.2+.6)*.045 + Math.sin(tt*13.7+2.1)*.022;
+    const flare = tt<.05 ? 1+(1-tt/.05)*.30 : 1;         /* انتفاخ قاعدي خفيف عند التقاء الأرض */
+    return taper*bulge*flare;
+  }
+  const rows=28;
+  const leftPts=[], rightPts=[];
+  for(let r=0;r<=rows;r++){
+    const tt=r/rows, hw=trunkHalfWidth(tt);
+    const xc = topX + (cx-topX)*(1-tt)*(1-tt);            /* نفس منحنى الميلان الأصلي */
+    const yy = gy-Hd*tt;
+    leftPts.push([xc-hw,yy]); rightPts.push([xc+hw,yy]);
+  }
+  const tg=ctx.createLinearGradient(cx-thB,0,cx+thB,0);
+  tg.addColorStop(0,  shade(bark,-.36));
+  tg.addColorStop(.26,shade(bark, .02+.20*litT));
+  tg.addColorStop(.58,bark);
+  tg.addColorStop(1,  shade(bark,-.42));
+  ctx.fillStyle=tg;
+  ctx.beginPath();
+  ctx.moveTo(leftPts[0][0],leftPts[0][1]);
+  for(let r=1;r<=rows;r++) ctx.lineTo(leftPts[r][0],leftPts[r][1]);
+  for(let r=rows;r>=0;r--) ctx.lineTo(rightPts[r][0],rightPts[r][1]);
+  ctx.closePath(); ctx.fill();
+  /* خط لمعان طولي رفيع على الوجه المضاء — يبرز استدارة الساق */
+  ctx.strokeStyle="rgba(255,246,222,"+(.05+.10*litT).toFixed(3)+")";
+  ctx.lineWidth=Math.max(.6,thB*.10);
+  ctx.beginPath();
+  for(let r=0;r<=rows;r++){ const p=[leftPts[r][0]+ (rightPts[r][0]-leftPts[r][0])*.30, leftPts[r][1]];
+    r===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]); }
+  ctx.stroke();
+
+  /* ── ٢) ندوب السعف المعيّنة، بتوهين تدريجي: أوضح وأنضر قرب القمة،
+     وأكثر تجعّداً وتقادماً قرب القاعدة (نسيج عمر الجذع) ── */
+  const rowsScar = small?9:Math.min(30,13+Math.round(M*3.2));
+  for(let r=0;r<rowsScar;r++){
+    const tt=(r+.55)/(rowsScar+.6), y=gy-Hd*tt, xc=topX+(cx-topX)*(1-tt)*(1-tt);
+    const hw=trunkHalfWidth(tt), dh=Hd/rowsScar*.48;
+    const age = 1-tt;                                    /* ١=قاعدة قديمة، ٠=قمة جديدة */
+    const worn = .5+age*.5;
+    for(let c=0;c<3;c++){
+      const u=(c+(r%2?.5:0)+.5)/3, px=xc+(u-.5)*2*hw*.82;
+      const face=Math.cos((u-.5)*2.5); if(face<.10) continue;
+      const dw=hw*.31;
+      ctx.fillStyle="rgba(0,0,0,"+(.06+.15*face*worn).toFixed(3)+")";
+      ctx.beginPath();
+      ctx.moveTo(px,y-dh*.52); ctx.lineTo(px+dw,y);
+      ctx.lineTo(px,y+dh*.52); ctx.lineTo(px-dw,y);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle="rgba(255,244,216,"+(.05+.11*face*litT*(1-age*.4)).toFixed(3)+")";
+      ctx.lineWidth=Math.max(.4,dw*.15);
+      ctx.beginPath(); ctx.moveTo(px-dw,y); ctx.lineTo(px,y-dh*.52); ctx.stroke();
+      if(age>.55){                                        /* شقوق طولية خفيفة بالجزء القديم */
+        ctx.strokeStyle="rgba(0,0,0,"+(.05*face*(age-.55)).toFixed(3)+")";
+        ctx.lineWidth=Math.max(.3,dw*.08);
+        ctx.beginPath(); ctx.moveTo(px,y-dh*.5); ctx.lineTo(px,y+dh*.5); ctx.stroke();
+      }
+    }
+  }
+
+  /* ── ٣) كتلة تيجان السعف الجافة (boots) حول أعلى الجذع — النخلة غير
+     المشذّبة تحتفظ بقواعد السعف القديمة كطبقة خشنة قبل أن تتساقط ── */
+  const headR=thT*2.05, bootN=small?7:10;
+  for(let i=0;i<bootN;i++){
+    const a=(i/bootN)*TAU+.3, rr=headR*(.62+((i*53)%7)/7*.30);
+    const bx=topX+Math.cos(a)*headR*.55, by=topY+Math.sin(a)*headR*.42+headR*.10;
+    const bootLit = litness(a);
+    ctx.fillStyle=shade(mix(bark,"#8A6B3C",.55), -.10+bootLit*.20);
+    ctx.beginPath();
+    ctx.moveTo(bx,by-rr*.5); ctx.lineTo(bx+rr*.42,by); ctx.lineTo(bx,by+rr*.62); ctx.lineTo(bx-rr*.42,by);
+    ctx.closePath(); ctx.fill();
+  }
+  const hg=ctx.createRadialGradient(topX-headR*.4,topY-headR*.3,headR*.1,topX,topY,headR*1.25);
+  hg.addColorStop(0,shade(bark,.16)); hg.addColorStop(1,shade(bark,-.32));
+  ctx.fillStyle=hg;
+  ctx.beginPath(); ctx.ellipse(topX,topY+headR*.14,headR*.86,headR*.68,0,0,TAU); ctx.fill();
+
+  /* ── ٤) التاج: سعف كثيرة على ثلاث طبقات، وتنّورة سفلية بعضها جاف طبيعياً ── */
+  const nF = small?15:Math.min(44,20+Math.round(M*4.4));
+  const FL = Hd*(.40+.12*fit);
+  const leaflets = small?12:19;
+  const wideF    = .31;
+  const list=[];
+  for(let i=0;i<nF;i++){
+    const u = nF===1?0:(i/(nF-1))*2-1;
+    list.push({ u, i, layer: i%3===0?-1 : i%3===1?0 : 1 });
+  }
+  list.sort((a,b)=>a.layer-b.layer);
+  list.forEach(f=>{
+    const age   = Math.abs(f.u);
+    const ang   = -Math.PI/2 + f.u*1.50 + (withered?.42:0);
+    const droop = .26+age*.80+(withered?.55:0);
+    const ph      = f.i*1.37;
+    const flutter = Math.sin(t/430+ph)*.10 + Math.sin(t/255+ph*1.9)*.042;
+    const flex    = sway*(.42+age*1.00) + flutter*(.30+Math.abs(sway)*1.25);
+    const L  = FL*(1-age*.14)*(f.layer<0?.86:f.layer>0?1.05:.95);
+    const oy = topY + (f.layer<0?-Hd*.014:f.layer>0?Hd*.010:0);
+    palmFrond(ctx,sp,topX,oy,L,ang,droop,flex,f.layer,leaflets,withered,wideF,rnd,0);
+  });
+  /* تنّورة السعف الأقدم المتدلّي — بعضها ذابل طبيعياً حتى بشجرة صحيحة تماماً،
+     تماماً مثل نخلة حقيقية غير مشذّبة (سعف سفلي يجفّ ويبقى معلّقاً) */
+  const nSkirt = small?4:7;
+  for(let i=0;i<nSkirt;i++){
+    const u=(i/(nSkirt-1||1))*2-1;
+    const ph=i*2.1;
+    const flex=sway*.95 + Math.sin(t/470+ph)*.09;
+    const dry = withered ? 1 : (i%3===0 ? .55+((i*29)%5)/5*.35 : 0);
+    palmFrond(ctx,sp,topX,topY+Hd*.020,FL*.76,
+      -Math.PI/2+u*2.06, 1.08, flex, -1, small?9:14, withered, wideF*.90, rnd, dry);
+  }
+
+  /* ── ٥) القلب: السعف الجديد الواقف، أنضر لون من البقية ── */
+  if(!withered){
+    for(let i=0;i<4;i++){
+      const a=-Math.PI/2+(i-1.5)*.19+sway*.05+Math.sin(t/620+i)*.022;
+      const L=FL*.48;
+      ctx.strokeStyle=shade(sp.leaf2,.22);
+      ctx.lineWidth=Math.max(1,L*.058); ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(topX,topY+Hd*.004);
+      ctx.quadraticCurveTo(topX+Math.cos(a)*L*.5,topY+Math.sin(a)*L*.5,
+                           topX+Math.cos(a)*L,   topY+Math.sin(a)*L);
+      ctx.stroke();
+    }
+  }
+
+  /* ── ٦) عذوق الرطب، معلّقة من عرذوق خشبي واضح ── */
+  if(sp.fruit && !withered && bloom>.02 && M>1.05){
+    const bunches = small?2:Math.min(6,2+Math.round(M*.8));
+    for(let b=0;b<bunches;b++){
+      const u=bunches===1?0:(b/(bunches-1))*2-1;
+      const swing = sway*.05 + Math.sin(t/760+b)*.012;
+      const bx0=topX+u*thT*1.5, by0=topY+Hd*.028;
+      const bx1=topX+u*Hd*.16+swing*Hd, by1=topY+Hd*.128;
+      ctx.strokeStyle=shade(sp.core,-.28); ctx.lineCap="round";
+      ctx.lineWidth=Math.max(1.1,Hd*.013);
+      ctx.beginPath(); ctx.moveTo(bx0,by0);
+      ctx.quadraticCurveTo(bx0+u*Hd*.10,by0+Hd*.055,bx1,by1); ctx.stroke();
+      const per=small?9:Math.min(28,11+Math.round(M*3));
+      for(let i=0;i<per;i++){
+        const tt=i/per, a=rnd()*TAU, rr=Hd*.049*(1-tt*.42);
+        const px=bx1+Math.cos(a)*rr+u*Hd*.014*tt+swing*Hd*tt;
+        const py=by1+Hd*.082*tt+Math.abs(Math.sin(a))*rr*.5;
+        berry(ctx,px,py,Hd*.0132*bloom*(1-tt*.18), shade(sp.flower,.24), shade(sp.core,-.16));
+      }
+    }
   }
 }
+
 /* صبّار عملاق / وريدة عملاقة */
 function drawColumnM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
-  const fit=fitOf(M), Hd=s*(.52+.34*fit);
+  /* الوريدة تنشر أوراقها فوق بكثير، والصبّارة أقرب لعمود */
+  const fit=fitOf(M), Hd=Math.min(s*(.52+.34*fit), capH(gy, sp.kind==="rosette"?1.86:1.58));
   if(sp.kind==="rosette"){
     const n=small?12:Math.min(30,12+Math.round(M*5));
     for(let i=0;i<n;i++){
@@ -1861,7 +2590,7 @@ function drawColumnM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
 function drawClumpM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
   const fit=fitOf(M);
   const n = small ? 5 : Math.min(34, 4+Math.round(M*7));
-  const W = Math.min(s*(.26+.34*fit), s*.46), Hmax = s*(.50+.26*fit);
+  const W = Math.min(s*(.26+.34*fit), s*.46), Hmax = Math.min(s*(.50+.26*fit), capH(gy,1.84));
   const items=[];
   for(let i=0;i<n;i++){
     const u=(i/(n-1||1))*2-1;
@@ -1878,7 +2607,9 @@ function drawClumpM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
 }
 
 /* ─── ٨. المشهد الكامل ──────────────────────────────────────── */
+let SCENE_T = 0;                       /* وقت الرسمة — يغذّي رفرفة السعف لكل سعفة بطورها */
 function drawScene(ctx,o){
+  SCENE_T = o.tms||0;
   const w=o.w, h=o.h, cx=w/2, s=o.sizeRef || Math.min(w,h);
   const mins = Math.max(0, +o.minutes||0);
   const { g, M } = grow(mins);
@@ -1886,31 +2617,31 @@ function drawScene(ctx,o){
   const sp = palFor(base, o.withered);
   const rnd = mulberry(hashStr(o.seedStr||"x"));
   const sway = o.sway||0, bloom = o.bloom==null?1:o.bloom;
-  const gy = h*(o.ground===false?.965:.93);           /* دايماً على التراب، بلا علبة */
+  const gy = h*(o.groundFrac!=null?o.groundFrac:(o.ground===false?.965:.93));
+  /* زاوية الضوء = الاتجاه من النبتة للشمس. صباحاً من جهة، وعصراً من الجهة الثانية. */
+  const K0 = skyAt(o.hour);
+  const eK = K0.astro?K0.elev2:K0.elev, xK = K0.astro?K0.sunX2:K0.sunX;
+  LIGHT_ANG = Math.atan2((gy-(h*.10+(gy-h*.02)*eK*.92)) - gy*.55, w*xK - cx);
 
   if(!o.noClear) ctx.clearRect(0,0,w,h);
 
-  if(o.glow){
-    const p=clamp(mins/PHASE1,0,1);
-    const sx=lerp(w*.78,w*.22,p), sy=lerp(h*.26,h*.12,Math.sin(p*Math.PI));
-    const warm = o.withered ? "rgba(120,104,84,.10)"
-               : PAL.night ? "rgba(186,212,232,.12)" : "rgba(255,229,158,.20)";
-    const rg=ctx.createRadialGradient(sx,sy,0,sx,sy,s*1.05);
-    rg.addColorStop(0,warm); rg.addColorStop(1,"rgba(0,0,0,0)");
-    ctx.fillStyle=rg; ctx.fillRect(0,0,w,h);
-  }
+  if(o.glow && o.ground!==false && !o.noEnv) drawEnvironment(ctx,w,h,gy,s,mins,o.withered,o.hour,o.tms,o.mdate);
   if(g>.05){
     const spread = M>1 ? s*(.10+.16*fitOf(M)) : s*.05*g;
-    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.30)" : "rgba(35,50,40,.14)";
-    ctx.beginPath(); ctx.ellipse(cx+s*.02,gy+s*.010,spread+s*.02,s*.014,0,0,TAU); ctx.fill();
+    /* نصف الظل: واسع وخفيف */
+    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.17)" : "rgba(32,46,36,.075)";
+    ctx.beginPath(); ctx.ellipse(cx+s*.032,gy+s*.012,(spread+s*.02)*1.48,s*.021,0,0,TAU); ctx.fill();
+    /* نواة الظل: ضيّقة وأغمق، تلصق النبتة بالأرض */
+    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.32)" : "rgba(32,46,36,.155)";
+    ctx.beginPath(); ctx.ellipse(cx+s*.022,gy+s*.010,spread+s*.02,s*.014,0,0,TAU); ctx.fill();
   }
-  if(o.ground!==false) drawGround(ctx,cx,gy,w,s,rnd);
+  if(o.ground!==false && !o.noGround) drawGround(ctx,cx,gy,w,s,rnd);
 
   if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); return; }
 
   const opt = { rnd, sway, withered:o.withered, bloom };
   if(M<=1.001){
-    const H = s*(.010+.66*Math.pow(g,1.25));      /* يبدأ مجهرياً */
+    const H = Math.min(s*(.010+.66*Math.pow(g,1.25)), capH(gy,1.84));      /* يبدأ مجهرياً */
     drawForm(ctx,sp,cx,gy,s,g,H,opt);
     return;
   }
@@ -2199,7 +2930,7 @@ const SIZES = [
 ];
 
 let sess = null, anim = null, rafOn = false, hiddenAt = null;
-let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30;
+let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30, drawCost = 6;
 
 const el = {
   cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
@@ -2210,7 +2941,8 @@ const el = {
   sheet:$("#sheet"), sheetBg:$("#sheetBg"), sheetBody:$("#sheetBody"),
   garden:$("#gardenBody"), gardenSub:$("#gardenSub"),
   statCards:$("#statCards"), week:$("#weekChart"), weekTotal:$("#weekTotal"),
-  tagBars:$("#tagBars"), badges:$("#badges"), achCount:$("#achCount"), gallery:$("#seedGallery")
+  tagBars:$("#tagBars"), badges:$("#badges"), achCount:$("#achCount"), gallery:$("#seedGallery"),
+  dayPart:$("#dayPart"), seedsIntro:$("#seedsIntro")
 };
 
 /* ─── الإنجازات ─────────────────────────────────────────────── */
@@ -2329,40 +3061,129 @@ function resumeSession(){
 function sizeHero(){
   const box=$(".stage").clientWidth||340;
   if(!box) return;
-  heroW=box; heroH=Math.round(Math.min(box*.90,(window.innerHeight||760)*.46));
+  heroW=box; heroH=Math.round(Math.min(box*1.04,(window.innerHeight||760)*.56));
   lastDraw=0; drawHero();
+}
+/* ريح بثلاث ترددات: ما تحس إنها تتكرر، عكس الموجة الواحدة */
+function windAt(t){
+  return Math.sin(t/1900)*.50 + Math.sin(t/760+1.7)*.20 + Math.sin(t/430+.6)*.09;
+}
+/* ذرّات تسبح في الهواء — تخلّي المشهد حيّ حتى والنبتة ساكنة */
+function drawMotes(ctx,w,h,t,sp,n,petals){
+  ctx.save();
+  for(let i=0;i<n;i++){
+    const ph = i*2.399963;                                  /* توزيع ذهبي: ما يتكتّلون */
+    const rate = .055 + ((i*37)%17)/17*.075;
+    const drift = Math.sin(t/(1500+((i*53)%9)*260)+ph)*w*.055;
+    const x = ((i*0.6180339887)%1)*w + drift;
+    const y = h - ((t*rate*.030 + i*137.5) % (h*1.25));
+    if(y< -8 || y > h+8) continue;
+    const tw = .5+.5*Math.sin(t/820+ph);
+    if(petals){
+      const r = w*.0075*(.7+((i*29)%7)/7*.6);
+      ctx.globalAlpha = (.20+.30*tw)*.9;
+      ctx.fillStyle = sp.flower;
+      ctx.save(); ctx.translate(x,y); ctx.rotate(t/900+ph);
+      ctx.beginPath(); ctx.ellipse(0,0,r,r*.52,0,0,TAU); ctx.fill(); ctx.restore();
+    } else {
+      const r = w*.0030*(.6+((i*29)%7)/7*.8);
+      ctx.globalAlpha = .10+.22*tw;
+      ctx.fillStyle = PAL.night ? "#CFE2F2" : "#FFF3C8";
+      ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+function heroMotes(ctx,t,speciesId,mins){
+  if(reduceMotion) return;
+  const sp = SPECIES[speciesId] || SPECIES.basil;
+  drawMotes(ctx,heroW,heroH,t,sp,9,false);
+  if(sp.blossom && mins>=PHASE1*.55) drawMotes(ctx,heroW,heroH,t*1.15,sp,7,true);
+}
+/* ── مشهد البوابة: نخلة سعودية تتمايل، سماء تتبع ساعتك، وشهب ──
+   تشتغل بمعدّل هادئ وتتوقف تلقائياً أول ما تنغلق البوابة أو تُخفى الصفحة. */
+let gateRaf=0, gateLast=0, gateCost=6;
+function drawGateScene(){
+  const cv=$("#gateCv"); if(!cv) return;
+  /* clientWidth يشمل حشوة .gatecard (٢٠+٢٠=٤٠px) — لازم نطرحها، وإلا
+     تكبر القماشة عن المساحة الفعلية بمقدار الحشوة وتطلع من حافة البطاقة */
+  let box = 330;
+  if(cv.parentNode){
+    const pp = getComputedStyle(cv.parentNode);
+    box = cv.parentNode.clientWidth - (parseFloat(pp.paddingLeft)||0) - (parseFloat(pp.paddingRight)||0);
+  }
+  const w = Math.max(240, Math.min(430, box)), h = w;      /* مربّعة — القصّ الدائري يحتاج نسبة ١:١ */
+  const ctx=fitCanvas(cv,w,h);
+  const t=performance.now();
+  drawScene(ctx,{ w, h, species:"palm", minutes:PHASE1*4.2, seedStr:"gate",
+                  glow:true, sway: reduceMotion?0:windAt(t)*1.25, tms:t, mdate:new Date() });
+  if(!reduceMotion) drawMotes(ctx,w,h,t,SPECIES.palm,7,false);
+}
+function gateLoop(){
+  if(!gateRaf) return;
+  if(!gate.classList.contains("on") || document.hidden){ gateRaf=0; return; }
+  const now=performance.now();
+  const gap = reduceMotion ? 4000 : Math.max(8, gateCost*2);
+  if(now-gateLast>gap){
+    gateLast=now;
+    const t0=performance.now(); drawGateScene();
+    gateCost = gateCost*.82 + (performance.now()-t0)*.18;
+  }
+  gateRaf=requestAnimationFrame(gateLoop);
+}
+function startGateScene(){
+  drawGateScene();
+  if(!gateRaf && !reduceMotion){ gateLast=0; gateRaf=requestAnimationFrame(gateLoop); }
+}
+const DAYPART_ICON = { night:"\u{1F319}", dawn:"\u{1F305}", morning:"\u2600\uFE0F",
+                       noon:"\u{1F506}", asr:"\u{1F324}\uFE0F", sunset:"\u{1F307}" };
+let dayPartShown = "";
+function updateDayPart(){
+  if(!el.dayPart) return;
+  const K = skyAt();
+  const key = K.id + "|" + LANG;
+  if(key === dayPartShown) return;               /* ما نلمس DOM إلا لما تتغيّر فعلاً */
+  dayPartShown = key;
+  el.dayPart.textContent = (DAYPART_ICON[K.id]||"") + " " + TR(K.n);
 }
 function drawHero(){
   if(!heroW) return;
   const ctx=fitCanvas(el.cv,heroW,heroH);
   const species = sess?sess.seed:DB.seed;
-  const base = { species, seedStr: sess?sess.id:"preview-"+species, glow:true, w:heroW, h:heroH };
-  const swayNow = reduceMotion?0:Math.sin(performance.now()/1900)*.75;
+  const base = { species, seedStr: sess?sess.id:"preview-"+species, glow:true, w:heroW, h:heroH, tms:performance.now(), mdate:new Date() };
+  const tNow = performance.now();
+  const swayNow = reduceMotion?0:windAt(tNow);
 
   if(anim && anim.kind==="wither"){
-    const t=clamp((performance.now()-anim.t0)/anim.dur,0,1);
+    const t=clamp((tNow-anim.t0)/anim.dur,0,1);
     drawScene(ctx,Object.assign({},base,{ species:anim.species, minutes:anim.mins*(1-.10*smooth(t)),
       withered:true, bloom:0, seedStr:anim.seedStr, sway:0 }));
     return;
   }
   if(anim && anim.kind==="bloom"){
-    const t=clamp((performance.now()-anim.t0)/anim.dur,0,1);
+    const t=clamp((tNow-anim.t0)/anim.dur,0,1);
     drawScene(ctx,Object.assign({},base,{ species:anim.species, minutes:anim.mins,
       bloom:smooth(t), seedStr:anim.seedStr, sway:swayNow*.5 }));
+    heroMotes(ctx,tNow,anim.species,anim.mins);
     return;
   }
   if(sess){
     const m=elapsedMin();
-    drawScene(ctx,Object.assign({},base,{ minutes:m, sway:m<10?swayNow:0 }));
+    drawScene(ctx,Object.assign({},base,{ minutes:m, sway:swayNow }));   /* الريح ما تسكن أبداً */
+    heroMotes(ctx,tNow,species,m);
     return;
   }
+  const over = { glow:false, noEnv:true, noGround:true, noClear:true };
+  drawScene(ctx,Object.assign({},base,{ minutes:.4, sway:swayNow }));              /* البيئة والتربة */
   ctx.globalAlpha=ghostAlpha;
-  drawScene(ctx,Object.assign({},base,{ minutes:PHASE1*.92, glow:false, sway:0 }));
+  drawScene(ctx,Object.assign({},base,over,{ minutes:PHASE1*.92, sway:swayNow*.55 })); /* شبح ما بتصير عليه */
   ctx.globalAlpha=1;
-  drawScene(ctx,Object.assign({},base,{ minutes:.4, noClear:true, glow:true }));
+  drawScene(ctx,Object.assign({},base,over,{ minutes:.4, sway:swayNow }));         /* البادرة فوق الكل */
+  heroMotes(ctx,tNow,species,.4);
 }
 
 function paintClock(mins){
+  updateDayPart();
   const secs = sess ? Math.floor((sessNow()-sess.startedAt)/1000) : 0;
   const h=Math.floor(secs/3600), m=Math.floor(secs%3600/60), s2=secs%60;
   const txt = h ? h+":"+fmt2(m)+":"+fmt2(s2) : fmt2(m)+":"+fmt2(s2);
@@ -2393,8 +3214,13 @@ function loop(){
     const m=elapsedMin();
     paintClock(m);
     const now=performance.now();
-    const gap = m<10?40 : m<60?500 : 2500;
-    if(!sess.paused && now-lastDraw>gap){ lastDraw=now; drawHero(); }
+    /* الفجوة تتكيّف مع كلفة الرسمة: نبتة بسيطة تصل ١٢٠ إطار/ثانية، ومعقّدة تخفّ تلقائياً بلا تهنيج */
+    const gap = reduceMotion ? 2000 : Math.max(8, drawCost*2);
+    if(!sess.paused && now-lastDraw>gap){
+      lastDraw=now;
+      const t0=performance.now(); drawHero();
+      drawCost = drawCost*.82 + (performance.now()-t0)*.18;
+    }
     beat(); checkTier(m);
   } else if(anim){
     drawHero();
@@ -2707,7 +3533,22 @@ function renderStats(){
 
 /* ─── معرض البذور ───────────────────────────────────────────── */
 function renderGallery(){
+  const guest = !!(CURRENT && CURRENT.guest);
   el.gallery.innerHTML="";
+  if(el.seedsIntro) el.seedsIntro.hidden = guest;   /* "كل الأنواع مفتوحة ومجاناً" ما تصح بوضع الضيف */
+  if(guest){
+    /* الضيف ما يشوف ولا نوع هنا إطلاقاً — رسالة واحدة كبيرة بنص الصفحة */
+    const wrap=document.createElement("div"); wrap.className="guest-lockscreen";
+    const ic=document.createElement("div"); ic.className="lockface"; ic.textContent="🔒";
+    const msg=document.createElement("p");
+    msg.innerHTML = TR("عشان تشوف باقي النباتات، ")+'<br>'+
+      '<button type="button" id="gallLockCta">'+TR("سجّل دخولك!")+'</button>';
+    wrap.appendChild(ic); wrap.appendChild(msg);
+    el.gallery.appendChild(wrap);
+    const cta=$("#gallLockCta");
+    if(cta) cta.onclick=()=>{ leaveGuest(); const t=$("#tabSignup"); if(t) t.click(); };
+    return;
+  }
   FAMS.forEach(f=>{
     const ttl=document.createElement("div"); ttl.className="famtitle"; ttl.textContent=TR(f.n);
     el.gallery.appendChild(ttl);
@@ -2746,7 +3587,7 @@ function go(name){
 $$(".nav-btn").forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 function applyTheme(){
-  const night = DB.theme ? DB.theme==="night" : matchMedia("(prefers-color-scheme: dark)").matches;
+  const night = DB.theme ? DB.theme==="night" : skyAt().stars>.5;   /* تلقائي = يتبع ساعتك */
   document.documentElement.dataset.theme = night?"night":"day";
   const mt=$('meta[name=theme-color]'); if(mt) mt.setAttribute("content", night?"#121A17":"#E3E9DC");
   $("#themeIcon").innerHTML = night
@@ -2777,9 +3618,12 @@ $("#resetBtn").onclick=()=>{
   DB=normalize(null); writeStore();
   renderAll(); go("plant"); toast(TR("رجعت الأرض بيضاء."),"🧹");
 };
-let rz; window.addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{
+let rz; function onResize(){ clearTimeout(rz); rz=setTimeout(()=>{
   sizeHero(); if($("#view-garden").classList.contains("on")) renderGarden();
-},160); });
+  if(gate.classList.contains("on")) drawGateScene();   /* بوابة الدخول ما كانت تتزامن مع تغيّر حجم الشاشة */
+},160); }
+window.addEventListener("resize",onResize);
+window.addEventListener("orientationchange",onResize);   /* بعض الأجهزة القديمة ما تُطلق resize فوراً بعد الدوران */
 
 /* ─── تشغيل ─────────────────────────────────────────────────── */
 function renderAll(){
@@ -2810,7 +3654,7 @@ function msg(err,okText){
 function showGate(){
   gate.classList.add("on"); document.body.classList.add("gated");
   msg("","");
-  paint($("#gateCv"),210,160,{ species:"sakura", minutes:1500, seedStr:"gate", glow:true });
+  startGateScene();
   switchTab("login");
 }
 function switchTab(which, keepOk){
@@ -3225,7 +4069,7 @@ function exportBackup(){
 /* بدء التشغيل: دخول تلقائي إذا اختار "خلّني داخل" */
 (function start(){
   syncPalette();
-  const night = matchMedia("(prefers-color-scheme: dark)").matches;
+  const night = skyAt().stars>.5;
   document.documentElement.dataset.theme = night?"night":"day";
   syncPalette();
   /* رجع من رابط الإيميل؟ نوقف كل شي ونوديه لتعيين كلمة السر */
