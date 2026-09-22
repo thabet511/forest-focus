@@ -1632,7 +1632,7 @@ function solarState(date){
   return {
     alt:now.alt, az:now.az, rising, maxAlt,
     hour: ((solarHour(now.alt,rising,maxAlt)%24)+24)%24,
-    sunX: clamp(1-(now.az-90)/180, .05, .95),        /* يشرق يميناً ويغرب يساراً */
+    sunX: clamp((now.az-90)/180, .05, .95),          /* يشرق يساراً (شرق) ويغرب يميناً (غرب) */
     elev: clamp((now.alt+2)/Math.max(24,maxAlt), 0, 1)
   };
 }
@@ -1689,17 +1689,17 @@ function drawMoonDisc(ctx,cx,cy,R,frac,litC,darkC){
    المراحل تتداخل بنعومة، فالسماء تتغيّر تدريجياً بلا قفزات.
    ═══════════════════════════════════════════════════════════════ */
 const SKY_KEYS = [
-  { h:0,    id:"night",   n:"ليل",   sunX:.30, elev:.60, disc:"moon",
+  { h:0,    id:"night",   n:"ليل",   sunX:.70, elev:.60, disc:"moon",
     sky:["#050B18","#0C1729","#16263C"], hills:["#17273B","#101D2D","#0B1622"],
     discC:["#F4F8FF","#DCE8FA","rgba(198,218,245,.30)"],
     halo:["rgba(188,214,246,.30)","rgba(146,182,224,.11)"],
     haze:"rgba(36,56,82,.42)", stars:1,    gTint:-.30, warmth:0 },
-  { h:4.6,  id:"dawn",    n:"شروق",  sunX:.86, elev:.04, disc:"sun",
+  { h:4.6,  id:"dawn",    n:"شروق",  sunX:.14, elev:.04, disc:"sun",
     sky:["#222C4A","#7A4F63","#E89A70"], hills:["#4C3A52","#3A2B41","#2A2032"],
     discC:["#FFF0D2","#FFC98C","rgba(255,170,104,.40)"],
     halo:["rgba(255,176,116,.44)","rgba(228,132,96,.16)"],
     haze:"rgba(232,154,112,.44)", stars:.34, gTint:-.16, warmth:.55 },
-  { h:7.2,  id:"morning", n:"صباح",  sunX:.70, elev:.34, disc:"sun",
+  { h:7.2,  id:"morning", n:"صباح",  sunX:.30, elev:.34, disc:"sun",
     sky:["#8CBCDE","#BCDBE8","#F2E7CA"], hills:["#A9C5C1","#8FB1A9","#77988D"],
     discC:["#FFFCEC","#FFF2BE","rgba(255,226,140,.42)"],
     halo:["rgba(255,232,162,.44)","rgba(255,216,134,.16)"],
@@ -1709,17 +1709,17 @@ const SKY_KEYS = [
     discC:["#FFFFF4","#FFFAD8","rgba(255,244,180,.40)"],
     halo:["rgba(255,248,196,.38)","rgba(255,236,160,.13)"],
     haze:"rgba(226,238,224,.32)", stars:0,   gTint:.10,  warmth:0 },
-  { h:15.2, id:"asr",     n:"عصر",   sunX:.30, elev:.44, disc:"sun",
+  { h:15.2, id:"asr",     n:"عصر",   sunX:.70, elev:.44, disc:"sun",
     sky:["#7CB5D6","#C8DEDE","#F5E3B6"], hills:["#B3C7B9","#98B09F","#7F9888"],
     discC:["#FFF8DC","#FFE8A4","rgba(255,206,118,.42)"],
     halo:["rgba(255,222,142,.44)","rgba(250,198,118,.16)"],
     haze:"rgba(244,227,184,.40)", stars:0,   gTint:.02,  warmth:.34 },
-  { h:17.6, id:"sunset",  n:"غروب",  sunX:.12, elev:.04, disc:"sun",
+  { h:17.6, id:"sunset",  n:"غروب",  sunX:.88, elev:.04, disc:"sun",
     sky:["#313C6C","#C46A54","#F2A65E"], hills:["#5F4459","#472F45","#311E2F"],
     discC:["#FFD9A2","#FF9E56","rgba(240,128,70,.42)"],
     halo:["rgba(255,142,80,.48)","rgba(224,106,70,.18)"],
     haze:"rgba(240,152,94,.46)", stars:.22, gTint:-.14, warmth:.85 },
-  { h:19.8, id:"night",   n:"ليل",   sunX:.72, elev:.58, disc:"moon",
+  { h:19.8, id:"night",   n:"ليل",   sunX:.28, elev:.58, disc:"moon",
     sky:["#050B18","#0C1729","#16263C"], hills:["#17273B","#101D2D","#0B1622"],
     discC:["#F4F8FF","#DCE8FA","rgba(198,218,245,.30)"],
     halo:["rgba(188,214,246,.30)","rgba(146,182,224,.11)"],
