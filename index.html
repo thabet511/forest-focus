@@ -439,6 +439,12 @@ body.gated{overflow:hidden}
   font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;display:inline-block}
 .setup pre{background:var(--paper-3);border:1px solid var(--line);border-radius:8px;padding:9px;
   font-size:10.5px;overflow-x:auto;direction:ltr;text-align:left;margin:8px 0 0;line-height:1.5}
+.uni-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-2);border:1px solid var(--line-soft);border-radius:var(--r-m);margin-bottom:8px}
+.uni-rank{min-width:22px;text-align:center;font-weight:700;color:var(--viridian);font-variant-numeric:tabular-nums}
+.uni-logo{width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;flex:none}
+.uni-logo-ph{display:flex;align-items:center;justify-content:center;font-size:16px}
+.uni-name{flex:1;font-weight:600;font-size:14px}
+.uni-mins{color:var(--ink-2);font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .syncdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ink-3);margin-inline-end:6px}
 .syncdot.ok{background:var(--viridian)} .syncdot.off{background:var(--ochre)} .syncdot.err{background:var(--brick)}
 .sheet .row-actions{display:grid;gap:8px;margin-top:18px}
@@ -664,6 +670,15 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     </div>
     <div id="seedGallery"></div>
   </main>
+
+  <!-- ══ ٥) ترتيب الجامعات ══ -->
+  <main class="view" id="view-uni">
+    <div class="view-head">
+      <h2>ترتيب الجامعات</h2>
+      <p>أكثر الجامعات طلابها يزرعون تركيزاً، بالساعات والدقائق. يبان للجميع حتى بدون تسجيل دخول.</p>
+    </div>
+    <div id="uniBoardList"></div>
+  </main>
 </div>
 
 <nav class="nav" aria-label="التنقل">
@@ -683,6 +698,10 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     <button class="nav-btn" data-go="seeds">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.1 11a2 2 0 0 1-2 1.8H8.1a2 2 0 0 1-2-1.8Z"/><path d="M9 8V6.4A3 3 0 0 1 15 6.4V8"/><path d="M9.5 12.5h5"/></svg>
       البذور
+    </button>
+    <button class="nav-btn" data-go="uni">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 4l9 5-9 5-9-5Z"/><path d="M6.5 11.5v4c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4"/><path d="M19.5 10v5"/></svg>
+      الجامعات
     </button>
   </div>
 </nav>
@@ -747,6 +766,10 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
         <input id="sEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
       <label class="fld"><span>كلمة السر <i>*</i></span>
         <input id="sPass" type="password" autocomplete="new-password" placeholder="٦ خانات فأكثر" dir="ltr"></label>
+      <label class="fld"><span>المنطقة <i>*</i></span>
+        <select id="sRegion"></select></label>
+      <label class="fld"><span>الجامعة <i>*</i></span>
+        <select id="sUni" disabled></select></label>
       <button class="btn btn-primary" id="cUpBtn" style="width:100%">إنشاء الحساب</button>
       <p class="gswap">عندك حساب؟ <button type="button" id="goLogin">سجّل دخول</button></p>
     </div>
@@ -1201,7 +1224,34 @@ const DICT = {
  "من":"from",
  " من ":" of ",
  "ذبلت":"Wilted",
- "إذا طلعت من الصفحة أو انقفلت الشاشة، عندك مهلة ترجع فيها قبل ما تذبل النبتة.":"If you leave the page or the screen locks, you get a grace period to come back before the plant wilts."
+ "إذا طلعت من الصفحة أو انقفلت الشاشة، عندك مهلة ترجع فيها قبل ما تذبل النبتة.":"If you leave the page or the screen locks, you get a grace period to come back before the plant wilts.",
+ "المنطقة":"Region",
+ "الجامعة":"University",
+ "اختر منطقتك":"Choose your region",
+ "اختر جامعتك":"Choose your university",
+ "اختر المنطقة أولاً":"Choose your region first",
+ "طالب مدرسة":"School student",
+ "اختر منطقتك.":"Choose your region.",
+ "اختر جامعتك، أو طالب مدرسة.":"Choose your university, or school student.",
+ "الجامعات":"Universities",
+ "ترتيب الجامعات":"University Ranking",
+ "أكثر الجامعات طلابها يزرعون تركيزاً، بالساعات والدقائق. يبان للجميع حتى بدون تسجيل دخول.":"The universities whose students grow the most focus, in hours and minutes. Visible to everyone, even without signing in.",
+ "جارٍ التحميل…":"Loading…",
+ "ما فيه بيانات كافية بعد. كن أول من يمثّل جامعتك!":"Not enough data yet. Be the first to represent your university!",
+ "ما قدرنا نجيب الترتيب الآن. جرّب لاحقاً.":"Couldn't load the ranking right now. Try again later.",
+ "منطقة الرياض":"Riyadh Region",
+ "منطقة مكة المكرمة":"Makkah Region",
+ "منطقة المدينة المنورة":"Madinah Region",
+ "المنطقة الشرقية":"Eastern Region",
+ "منطقة عسير":"Asir Region",
+ "منطقة القصيم":"Qassim Region",
+ "منطقة حائل":"Hail Region",
+ "منطقة تبوك":"Tabuk Region",
+ "منطقة الحدود الشمالية":"Northern Borders Region",
+ "منطقة جازان":"Jazan Region",
+ "منطقة نجران":"Najran Region",
+ "منطقة الباحة":"Al Bahah Region",
+ "منطقة الجوف":"Al Jouf Region"
 };
 let LANG = "ar";
 try{ const v = localStorage.getItem("hasad.lang"); if(v==="en"||v==="ar") LANG=v; }catch(e){}
@@ -2679,6 +2729,120 @@ const CLOUD = {
 };
 const cloudReady = () => !!(CLOUD.url && CLOUD.key);
 
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  الجامعات السعودية — حكومية وأهلية، حسب مناطق المملكة    ║
+   ║  الشعار يُجلب تلقائياً من موقع كل جامعة (بلا رفع صور).   ║
+   ╚══════════════════════════════════════════════════════════╝ */
+const REGIONS = [
+  { id:"riyadh",   n:"منطقة الرياض" },
+  { id:"makkah",   n:"منطقة مكة المكرمة" },
+  { id:"madinah",  n:"منطقة المدينة المنورة" },
+  { id:"eastern",  n:"المنطقة الشرقية" },
+  { id:"asir",     n:"منطقة عسير" },
+  { id:"qassim",   n:"منطقة القصيم" },
+  { id:"hail",     n:"منطقة حائل" },
+  { id:"tabuk",    n:"منطقة تبوك" },
+  { id:"northern", n:"منطقة الحدود الشمالية" },
+  { id:"jazan",    n:"منطقة جازان" },
+  { id:"najran",   n:"منطقة نجران" },
+  { id:"bahah",    n:"منطقة الباحة" },
+  { id:"jouf",     n:"منطقة الجوف" }
+];
+const SCHOOL_OPT = { id:"school", n:"طالب مدرسة", d:null };
+const UNIVERSITIES = {
+  riyadh:[
+    {id:"ksu",n:"جامعة الملك سعود",d:"ksu.edu.sa"},
+    {id:"imamu",n:"جامعة الإمام محمد بن سعود الإسلامية",d:"imamu.edu.sa"},
+    {id:"pnu",n:"جامعة الأميرة نورة بنت عبدالرحمن",d:"pnu.edu.sa"},
+    {id:"ksauhs",n:"جامعة الملك سعود بن عبدالعزيز للعلوم الصحية",d:"ksau-hs.edu.sa"},
+    {id:"seu",n:"الجامعة السعودية الإلكترونية",d:"seu.edu.sa"},
+    {id:"nauss",n:"جامعة نايف العربية للعلوم الأمنية",d:"nauss.edu.sa"},
+    {id:"psau",n:"جامعة الأمير سطام بن عبدالعزيز",d:"psau.edu.sa"},
+    {id:"shaqra",n:"جامعة شقراء",d:"su.edu.sa"},
+    {id:"majmaah",n:"جامعة المجمعة",d:"mu.edu.sa"},
+    {id:"psu",n:"جامعة الأمير سلطان",d:"psu.edu.sa"},
+    {id:"alfaisal",n:"جامعة الفيصل",d:"alfaisal.edu"},
+    {id:"yu",n:"جامعة اليمامة",d:"yu.edu.sa"},
+    {id:"relm",n:"جامعة رياض العلم",d:"riyadh.edu.sa"},
+    {id:"dau",n:"جامعة دار العلوم",d:"dau.edu.sa"},
+    {id:"aou",n:"الجامعة العربية المفتوحة",d:"arabou.edu.sa"}
+  ],
+  makkah:[
+    {id:"uqu",n:"جامعة أم القرى",d:"uqu.edu.sa"},
+    {id:"kau",n:"جامعة الملك عبدالعزيز",d:"kau.edu.sa"},
+    {id:"tu",n:"جامعة الطائف",d:"tu.edu.sa"},
+    {id:"uj",n:"جامعة جدة",d:"uj.edu.sa"},
+    {id:"kaust",n:"جامعة الملك عبدالله للعلوم والتقنية",d:"kaust.edu.sa"},
+    {id:"effat",n:"جامعة عفت",d:"effatuniversity.edu.sa"},
+    {id:"ubt",n:"جامعة الأعمال والتكنولوجيا",d:"ubt.edu.sa"},
+    {id:"dah",n:"جامعة دار الحكمة",d:"daralhekma.edu.sa"}
+  ],
+  madinah:[
+    {id:"iu",n:"الجامعة الإسلامية بالمدينة المنورة",d:"iu.edu.sa"},
+    {id:"taibah",n:"جامعة طيبة",d:"taibahu.edu.sa"},
+    {id:"ipmu",n:"جامعة الأمير مقرن بن عبدالعزيز",d:"ipmu.edu.sa"}
+  ],
+  eastern:[
+    {id:"kfupm",n:"جامعة الملك فهد للبترول والمعادن",d:"kfupm.edu.sa"},
+    {id:"kfu",n:"جامعة الملك فيصل",d:"kfu.edu.sa"},
+    {id:"iau",n:"جامعة الإمام عبدالرحمن بن فيصل",d:"iau.edu.sa"},
+    {id:"uhb",n:"جامعة حفر الباطن",d:"uhb.edu.sa"},
+    {id:"pmu",n:"جامعة الأمير محمد بن فهد",d:"pmu.edu.sa"}
+  ],
+  asir:[
+    {id:"kku",n:"جامعة الملك خالد",d:"kku.edu.sa"},
+    {id:"ub",n:"جامعة بيشة",d:"ub.edu.sa"}
+  ],
+  qassim:[
+    {id:"qu",n:"جامعة القصيم",d:"qu.edu.sa"},
+    {id:"mustaqbal",n:"جامعة المستقبل",d:"future.edu.sa"},
+    {id:"sru",n:"جامعة سليمان الراجحي",d:"sr.edu.sa"}
+  ],
+  hail:[
+    {id:"uoh",n:"جامعة حائل",d:"uoh.edu.sa"}
+  ],
+  tabuk:[
+    {id:"ut",n:"جامعة تبوك",d:"ut.edu.sa"},
+    {id:"fbsu",n:"جامعة فهد بن سلطان",d:"fbsu.edu.sa"}
+  ],
+  northern:[
+    {id:"nbu",n:"جامعة الحدود الشمالية",d:"nbu.edu.sa"}
+  ],
+  jazan:[
+    {id:"jazanu",n:"جامعة جازان",d:"jazanu.edu.sa"}
+  ],
+  najran:[
+    {id:"nu",n:"جامعة نجران",d:"nu.edu.sa"}
+  ],
+  bahah:[
+    {id:"bu",n:"جامعة الباحة",d:"bu.edu.sa"}
+  ],
+  jouf:[
+    {id:"ju",n:"جامعة الجوف",d:"ju.edu.sa"}
+  ]
+};
+const uniLogo = d => d ? ("https://www.google.com/s2/favicons?sz=128&domain="+d) : "";
+function findUni(id){
+  if(!id) return null;
+  if(id==="school") return SCHOOL_OPT;
+  for(const r in UNIVERSITIES){ const f=UNIVERSITIES[r].find(u=>u.id===id); if(f) return f; }
+  return null;
+}
+function fillRegionSelect(selector, selected){
+  const sel=$(selector); if(!sel) return;
+  sel.innerHTML = '<option value="">'+TR("اختر منطقتك")+'</option>'+
+    REGIONS.map(r=>'<option value="'+r.id+'"'+(r.id===selected?" selected":"")+'>'+TR(r.n)+'</option>').join("");
+}
+function fillUniSelect(regionId, selector, selected){
+  const sel=$(selector); if(!sel) return;
+  if(!regionId){ sel.disabled=true; sel.innerHTML='<option value="">'+TR("اختر المنطقة أولاً")+'</option>'; return; }
+  sel.disabled=false;
+  const list=(UNIVERSITIES[regionId]||[]);
+  sel.innerHTML = '<option value="">'+TR("اختر جامعتك")+'</option>'+
+    list.map(u=>'<option value="'+u.id+'"'+(u.id===selected?" selected":"")+'>'+u.n+'</option>').join("")+
+    '<option value="school"'+(selected==="school"?" selected":"")+'>'+TR("طالب مدرسة")+'</option>';
+}
+
 const CLOUD_KEY = "hasad.cloud";
 let TOK = null;                       /* {access, refresh, exp, uid, email} */
 let pushTimer = null, syncState = "off", lastSync = 0;
@@ -2702,10 +2866,13 @@ async function sbFetch(path, opts, useAuth){
 }
 function saveSession(js){
   if(!js || !js.access_token) return false;
+  const md = js.user && js.user.user_metadata;
   TOK = { access:js.access_token, refresh:js.refresh_token,
           exp: Date.now() + (js.expires_in||3600)*1000 - 60000,
           uid: js.user ? js.user.id : (TOK&&TOK.uid), email: js.user ? js.user.email : (TOK&&TOK.email),
-          name: (js.user && js.user.user_metadata && js.user.user_metadata.name) || (TOK&&TOK.name) || null };
+          name:   (md && md.name)   || (TOK&&TOK.name)   || null,
+          region: (md && md.region) || (TOK&&TOK.region) || null,
+          uni:    (md && md.uni)    || (TOK&&TOK.uni)    || null };
   writeTok(TOK); return true;
 }
 async function ensureToken(){
@@ -2714,7 +2881,7 @@ async function ensureToken(){
   const js = await sbFetch("/auth/v1/token?grant_type=refresh_token", { method:"POST", body:{ refresh_token:TOK.refresh } });
   if(!saveSession(js)) throw new Error(TR("انتهت الجلسة"));
 }
-const cloudSignUp = (email,password,name) => sbFetch("/auth/v1/signup", { method:"POST", body:{ email, password, data:{ name } } });
+const cloudSignUp = (email,password,name,region,uni) => sbFetch("/auth/v1/signup", { method:"POST", body:{ email, password, data:{ name, region, uni } } });
 const cloudSignIn = (email,password) => sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } });
 
 /* ── الرجوع من رابط الإيميل: الجلسة تجي في عنوان الصفحة ── */
@@ -2738,7 +2905,9 @@ async function recoveryFromHash(){
   try{
     const u = await sbFetch("/auth/v1/user", {}, true);
     TOK.uid=u.id; TOK.email=u.email;
-    TOK.name=(u.user_metadata && u.user_metadata.name)||null;
+    TOK.name  =(u.user_metadata && u.user_metadata.name)  ||null;
+    TOK.region=(u.user_metadata && u.user_metadata.region)||null;
+    TOK.uni   =(u.user_metadata && u.user_metadata.uni)   ||null;
     writeTok(TOK); return true;
   }catch(e){ TOK=null; writeTok(null); return false; }
 }
@@ -2760,10 +2929,13 @@ async function cloudPull(){
 }
 async function cloudPush(data){
   await ensureToken();
+  const mins = (data.plants||[]).filter(p=>p.survived).reduce((a,p)=>a+p.minutes,0);
   await sbFetch("/rest/v1/farms", {
     method:"POST",
     headers:{ "Prefer":"resolution=merge-duplicates,return=minimal" },
-    body:[{ user_id:TOK.uid, data, updated_at:new Date().toISOString() }]
+    body:[{ user_id:TOK.uid, data, updated_at:new Date().toISOString(),
+            uni:(CURRENT&&CURRENT.uni)||null, region:(CURRENT&&CURRENT.region)||null,
+            total_minutes: Math.round(mins) }]
   }, true);
   lastSync = Date.now();
 }
@@ -2822,6 +2994,40 @@ async function pushNow(quiet){
     return false;
   }
 }
+/* ── ترتيب الجامعات: بيانات مجمّعة وعامة، تُقرأ حتى بلا تسجيل دخول ── */
+let uniBoardCache=null, uniBoardAt=0;
+function fetchUniLeaderboard(){
+  return sbFetch("/rest/v1/rpc/university_leaderboard", { method:"POST", body:{} }, false);
+}
+async function renderUniBoard(){
+  const wrap = $("#uniBoardList"); if(!wrap) return;
+  wrap.innerHTML = '<p class="gsub" style="text-align:center;padding:28px 0">'+TR("جارٍ التحميل…")+'</p>';
+  if(!cloudReady()){ wrap.innerHTML='<p class="gsub" style="text-align:center;padding:28px 0">'+TR("الاتصال بالسيرفر مو مضبوط.")+'</p>'; return; }
+  try{
+    let rows;
+    if(uniBoardCache && Date.now()-uniBoardAt<60000) rows=uniBoardCache;
+    else { rows = await fetchUniLeaderboard(); uniBoardCache=rows; uniBoardAt=Date.now(); }
+    if(!rows || !rows.length){
+      wrap.innerHTML = '<p class="gsub" style="text-align:center;padding:28px 0">'+TR("ما فيه بيانات كافية بعد. كن أول من يمثّل جامعتك!")+'</p>';
+      return;
+    }
+    wrap.innerHTML = rows.map((r,i)=>{
+      const u = findUni(r.uni), nm = u ? u.n : r.uni;
+      const logo = u && u.d ? uniLogo(u.d) : "";
+      return '<div class="uni-row">'+
+        '<span class="uni-rank">'+(i+1)+'</span>'+
+        (logo
+          ? '<img class="uni-logo" src="'+logo+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'uni-logo uni-logo-ph\',textContent:\'🎓\'}))">'
+          : '<span class="uni-logo uni-logo-ph">🎓</span>')+
+        '<span class="uni-name">'+nm+'</span>'+
+        '<span class="uni-mins">'+hhmm(r.total_minutes)+'</span>'+
+      '</div>';
+    }).join("");
+  }catch(e){
+    wrap.innerHTML = '<p class="gsub" style="text-align:center;padding:28px 0">'+TR("ما قدرنا نجيب الترتيب الآن. جرّب لاحقاً.")+'</p>';
+  }
+}
+
 const ACC_KEY = "hasad.accounts";
 const userKey = id => "hasad.user." + id;
 let memFallback = null, accMem = null, CURRENT = null, guestMem = null;
@@ -3580,6 +3786,7 @@ function go(name){
   if(name==="garden") renderGarden();
   if(name==="stats")  renderStats();
   if(name==="seeds")  renderGallery();
+  if(name==="uni")    renderUniBoard();
   if(name==="plant"){ setTimeout(sizeHero,20); window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"}); }
 }
 $$(".nav-btn").forEach(b=>b.onclick=()=>go(b.dataset.go));
@@ -3765,7 +3972,8 @@ function cloudErr(e){
 }
 function cloudUser(){
   const name = TOK.name || (TOK.email||TR("مزارع")).split("@")[0];
-  return { id:"cloud-"+TOK.uid, name, cloud:true, email:TOK.email, created:Date.now(), seen:Date.now() };
+  return { id:"cloud-"+TOK.uid, name, cloud:true, email:TOK.email,
+           region:TOK.region||null, uni:TOK.uni||null, created:Date.now(), seen:Date.now() };
 }
 function enterGuest(){
   guestMem = null;
@@ -3833,14 +4041,18 @@ async function doSignup(){
   const name=($("#sName").value||"").trim();
   const email=($("#sEmail").value||"").trim();
   const pass=$("#sPass").value||"";
+  const region=($("#sRegion")?$("#sRegion").value:"");
+  const uni=($("#sUni")?$("#sUni").value:"");
   if(!name){ msg(TR("اكتب اسمك.")); $("#sName").focus(); return; }
   if(!email){ msg(TR("اكتب إيميلك.")); $("#sEmail").focus(); return; }
   if(!/.+@.+\..+/.test(email)){ msg(TR("الإيميل غير صحيح.")); $("#sEmail").focus(); return; }
   if(!pass){ msg(TR("اكتب كلمة السر.")); $("#sPass").focus(); return; }
   if(pass.length<6){ msg(TR("كلمة السر ٦ خانات فأكثر.")); $("#sPass").focus(); return; }
+  if(!region){ msg(TR("اختر منطقتك.")); $("#sRegion").focus(); return; }
+  if(!uni){ msg(TR("اختر جامعتك، أو طالب مدرسة.")); $("#sUni").focus(); return; }
   const btn=$("#cUpBtn"); busy(btn,true); msg("","");
   try{
-    await cloudSignUp(email,pass,name);
+    await cloudSignUp(email,pass,name,region,uni);
     TOK=null; writeTok(null);                 /* ما ندخله على طول — يسجّل دخوله بنفسه */
     $("#sName").value=""; $("#sEmail").value=""; $("#sPass").value="";
     $("#cEmail").value=email; $("#cPass").value="";
@@ -3857,6 +4069,9 @@ $("#cPass").onkeydown  = e=>{ if(e.key==="Enter") doLogin(); };
 $("#sName").onkeydown  = e=>{ if(e.key==="Enter") $("#sEmail").focus(); };
 $("#sEmail").onkeydown = e=>{ if(e.key==="Enter") $("#sPass").focus(); };
 $("#sPass").onkeydown  = e=>{ if(e.key==="Enter") doSignup(); };
+fillRegionSelect("#sRegion");
+fillUniSelect("", "#sUni");
+$("#sRegion").onchange = ()=>fillUniSelect($("#sRegion").value, "#sUni");
 
 /* ورقة الحساب */
 $("#userBtn").onclick=()=>openAccountSheet();
@@ -3924,7 +4139,9 @@ function openAccountEdit(){
     '<label class="fld"><span>'+TR("الاسم")+'</span>'+
       '<input id="eName" type="text" autocomplete="name" value="'+escAttr(CURRENT.name||"")+'"></label>'+
     (cloud
-      ? '<label class="fld"><span>'+TR("الإيميل")+'</span>'+
+      ? '<label class="fld"><span>'+TR("المنطقة")+'</span><select id="eRegion"></select></label>'+
+        '<label class="fld"><span>'+TR("الجامعة")+'</span><select id="eUni"></select></label>'+
+        '<label class="fld"><span>'+TR("الإيميل")+'</span>'+
           '<input id="eEmail" type="email" inputmode="email" autocomplete="email" dir="ltr" value="'+escAttr(CURRENT.email||"")+'"></label>'+
         '<label class="fld"><span>'+TR("كلمة سر جديدة")+'</span>'+
           '<input id="ePass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية إذا ما تبي تغيّرها"))+'"></label>'+
@@ -3936,6 +4153,11 @@ function openAccountEdit(){
       '<button class="btn btn-primary" id="eSave">'+TR("حفظ التعديلات")+'</button>'+
       '<button class="btn btn-quiet" id="eBack">'+TR("رجوع")+'</button>'+
     '</div>';
+  if(cloud){
+    fillRegionSelect("#eRegion", CURRENT.region);
+    fillUniSelect(CURRENT.region||"", "#eUni", CURRENT.uni);
+    $("#eRegion").onchange = ()=>fillUniSelect($("#eRegion").value, "#eUni");
+  }
   $("#eBack").onclick = openAccountSheet;
   $("#eSave").onclick = saveAccountEdit;
   const fg=$("#eForgot"); if(fg) fg.onclick = openResetInSheet;
@@ -3989,13 +4211,16 @@ async function saveAccountEdit(){
 
   const email = ($("#eEmail").value||"").trim();
   const pass  = ($("#ePass").value||"");
+  const region = ($("#eRegion") ? $("#eRegion").value : (CURRENT.region||""));
+  const uni    = ($("#eUni")    ? $("#eUni").value    : (CURRENT.uni||""));
   if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ emsg(TR("الإيميل غير صحيح.")); $("#eEmail").focus(); return; }
   if(pass && pass.length<6){ emsg(TR("كلمة السر الجديدة ٦ خانات فأكثر.")); $("#ePass").focus(); return; }
   const cur = ($("#eCur") ? $("#eCur").value : "");
   if(pass && !cur){ emsg(TR("اكتب كلمة السر الحالية.")); $("#eCur").focus(); return; }
 
   const body={};
-  if(name !== CURRENT.name)   body.data  = { name:name };
+  const dataChanged = name!==CURRENT.name || region!==(CURRENT.region||"") || uni!==(CURRENT.uni||"");
+  if(dataChanged) body.data = { name:name, region:region||null, uni:uni||null };
   if(email && email!==CURRENT.email) body.email = email;
   if(pass)                    body.password = pass;
   if(!Object.keys(body).length){ emsg(TR("ما غيّرت شي.")); return; }
@@ -4008,7 +4233,7 @@ async function saveAccountEdit(){
       if(!okCur){ emsg(TR("كلمة السر الحالية غلط.")); $("#eCur").focus(); return; }
     }
     const js = await cloudUpdateUser(body);
-    if(body.data)  TOK.name = name;
+    if(body.data){ TOK.name = name; TOK.region = region||null; TOK.uni = uni||null; }
     let pending = false;
     if(body.email){
       if(js && js.email === body.email) TOK.email = body.email;
