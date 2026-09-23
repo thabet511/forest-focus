@@ -2825,7 +2825,7 @@ const UNIVERSITIES = {
   madinah:[
     {id:"iu",n:"الجامعة الإسلامية بالمدينة المنورة",d:"iu.edu.sa"},
     {id:"taibah",n:"جامعة طيبة",d:"taibahu.edu.sa"},
-    {id:"ipmu",n:"جامعة الأمير مقرن بن عبدالعزيز",d:"ipmu.edu.sa"}
+    {id:"ipmu",n:"جامعة الأمير مقرن بن عبدالعزيز",d:"upm.edu.sa"}
   ],
   eastern:[
     {id:"kfupm",n:"جامعة الملك فهد للبترول والمعادن",d:"kfupm.edu.sa"},
@@ -2866,7 +2866,22 @@ const UNIVERSITIES = {
     {id:"ju",n:"جامعة الجوف",d:"ju.edu.sa"}
   ]
 };
-const uniLogo = d => d ? ("https://www.google.com/s2/favicons?sz=256&domain="+d) : "";
+/* بعض الجامعات ما عندها شعار مخزّن عند مزوّد واحد — نجرّب أكثر من مصدر بالترتيب */
+function uniLogoChain(d){
+  if(!d) return [];
+  return [
+    "https://www.google.com/s2/favicons?sz=256&domain="+d,
+    "https://icons.duckduckgo.com/ip3/"+d+".ico",
+    "https://logo.clearbit.com/"+d+"?size=128"
+  ];
+}
+/* لما مصدر يفشل (أو يرجّع أيقونة فاضية شفافة)، ننتقل للمصدر التالي تلقائياً */
+window.nextUniLogo = function(img){
+  let list; try{ list = JSON.parse(img.dataset.fallbacks||"[]"); }catch(e){ list=[]; }
+  const next = list.shift();
+  if(next){ img.dataset.fallbacks = JSON.stringify(list); img.src = next; }
+  else img.replaceWith(Object.assign(document.createElement("span"),{className:"uni-logo uni-logo-ph",textContent:"🎓"}));
+};
 function findUni(id){
   if(!id) return null;
   if(id==="school") return SCHOOL_OPT;
@@ -3058,11 +3073,12 @@ async function renderUniBoard(){
     }
     wrap.innerHTML = rows.map((r,i)=>{
       const u = findUni(r.uni), nm = u ? TR(u.n) : r.uni;
-      const logo = u && u.d ? uniLogo(u.d) : "";
+      const chain = u && u.d ? uniLogoChain(u.d) : [];
+      const first = chain.shift();
       return '<div class="uni-row">'+
         '<span class="uni-rank">'+(i+1)+'</span>'+
-        (logo
-          ? '<img class="uni-logo" src="'+logo+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'uni-logo uni-logo-ph\',textContent:\'🎓\'}))">'
+        (first
+          ? '<img class="uni-logo" src="'+first+'" alt="" loading="lazy" data-fallbacks=\''+JSON.stringify(chain)+'\' onerror="nextUniLogo(this)">'
           : '<span class="uni-logo uni-logo-ph">🎓</span>')+
         '<span class="uni-name">'+nm+'</span>'+
         '<span class="uni-mins">'+hhmm(r.total_minutes)+'</span>'+
