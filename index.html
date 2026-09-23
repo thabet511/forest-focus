@@ -1687,6 +1687,44 @@ function solarState(date){
   };
 }
 
+/* ── موقع القمر الحقيقي: ارتفاعه وسمته، مثل الشمس تماماً ──
+   خوارزمية Schlyter المختصرة — دقّتها بضع درجات، وهي أكثر من كافية بصرياً.
+   لازمة لأن القمر ما يشرق مع غروب الشمس: له مداره وتوقيته الخاص كل ليلة. */
+function moonAltAz(date,lat,lon){
+  const d = date.getTime()/86400000 + 2440587.5 - 2451543.5;
+  const N=(125.1228-0.0529538083*d)*D2R, inc=5.1454*D2R;
+  const w=(318.0634+0.1643573223*d)*D2R, a=60.2666, e=0.054900;
+  const M=((115.3654+13.0649929509*d)%360)*D2R;
+  let E=M+e*Math.sin(M)*(1+e*Math.cos(M));
+  for(let i=0;i<6;i++) E = E - (E-e*Math.sin(E)-M)/(1-e*Math.cos(E));
+  const xv=a*(Math.cos(E)-e), yv=a*(Math.sqrt(1-e*e)*Math.sin(E));
+  const v=Math.atan2(yv,xv), r=Math.hypot(xv,yv);
+  const xe0=r*(Math.cos(N)*Math.cos(v+w)-Math.sin(N)*Math.sin(v+w)*Math.cos(inc));
+  const ye0=r*(Math.sin(N)*Math.cos(v+w)+Math.cos(N)*Math.sin(v+w)*Math.cos(inc));
+  const ze0=r*(Math.sin(v+w)*Math.sin(inc));
+  const ecl=(23.4393-3.563e-7*d)*D2R;
+  const xe=xe0, ye=ye0*Math.cos(ecl)-ze0*Math.sin(ecl), ze=ye0*Math.sin(ecl)+ze0*Math.cos(ecl);
+  const ra=Math.atan2(ye,xe), dec=Math.atan2(ze,Math.hypot(xe,ye));
+  const n2 = date.getTime()/86400000 + 2440587.5 - 2451545.0;
+  const gmst=((18.697374558+24.06570982441908*n2)%24+24)%24;
+  const ha=(gmst*15+lon)*D2R-ra, phi=lat*D2R;
+  const alt=Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(ha));
+  const az =Math.atan2(-Math.sin(ha), Math.tan(dec)*Math.cos(phi)-Math.sin(phi)*Math.cos(ha));
+  return { alt:alt*R2D, az:((az*R2D)%360+360)%360, dec:dec*R2D };
+}
+function moonState(date){
+  date = date || new Date();
+  const ll = siteLatLon();
+  const now = moonAltAz(date, ll[0], ll[1]);
+  const maxAlt = 90 - Math.abs(ll[0]-now.dec);
+  return {
+    alt:now.alt, az:now.az,
+    sunX: clamp((now.az-90)/180, .02, .98),        /* نفس اتجاه الشمس: الشرق يسار */
+    /* نسمح له ينزل تحت الأفق فيختفي خلف التلال، بدل ما ينحشر عند الحافة */
+    elev: clamp((now.alt+2)/Math.max(24,maxAlt), -.14, 1)
+  };
+}
+
 /* ── طور القمر ── */
 const SYNODIC = 29.530588853;
 const NEWMOON_REF = Date.UTC(2000,0,6,18,14)/86400000;   /* محاق مرجعي مؤكّد */
@@ -1788,11 +1826,14 @@ function skyAt(hr){
   const A=SKY_KEYS[i], B=SKY_KEYS[Math.min(i+1,SKY_KEYS.length-1)];
   const span=Math.max(.001,B.h-A.h);
   const t=smooth(clamp((hr-A.h)/span,0,1));
+  const disc = t<.5?A.disc:B.disc;
+  /* القرص القمري يتبع موقع القمر الحقيقي، لا موقع الشمس تحت الأفق */
+  const pos = (astro && disc==="moon") ? moonState() : astro;
   return {
     id: t<.5?A.id:B.id,
     n:  t<.5?A.n :B.n,
     sunX: lerp(A.sunX,B.sunX,t), elev: lerp(A.elev,B.elev,t),
-    disc: t<.5?A.disc:B.disc,
+    disc: disc,
     sky:   mixList(A.sky,B.sky,t),
     hills: mixList(A.hills,B.hills,t),
     discC: mixList(A.discC,B.discC,t),
@@ -1801,7 +1842,7 @@ function skyAt(hr){
     stars: lerp(A.stars,B.stars,t),
     gTint: lerp(A.gTint,B.gTint,t),
     warmth:lerp(A.warmth,B.warmth,t),
-    sunX2: astro?astro.sunX:null, elev2: astro?astro.elev:null,
+    sunX2: pos?pos.sunX:null, elev2: pos?pos.elev:null,
     alt: astro?astro.alt:null, az: astro?astro.az:null, astro:!!astro
   };
 }
@@ -1825,7 +1866,11 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
   const K = skyAt(hr);
   const sunX = K.astro ? K.sunX2 : K.sunX;          /* فلكي إن توفّر، وإلا جدول الساعات */
   const elev = K.astro ? K.elev2 : K.elev;
-  const sx = w*sunX, sy = gy - (h*.10 + (gy-h*.02)*elev*.92);
+  /* القرص لازم يبان كامل: نبعده عن حواف الشاشة بمقدار نصف قطره وزيادة */
+  const discR = s*(K.disc==="moon"?.052:.060);
+  const pad   = discR*1.25;
+  const sx = clamp(w*sunX, pad, w-pad);
+  const sy = clamp(gy - (h*.10 + (gy-h*.02)*elev*.92), pad, gy);
   const dull = withered ? .55 : 0;                 /* الذبول يسحب اللون للرمادي */
   const C = c => dull ? mix(c,"#9A968A",dull) : c;
 
@@ -1876,7 +1921,7 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
   }
 
   /* ٤) قرص الشمس أو القمر مع هالته */
-  const dR=s*(K.disc==="moon"?.052:.060);
+  const dR=discR;
   const halo=ctx.createRadialGradient(sx,sy,dR*.2,sx,sy,dR*7.8);
   halo.addColorStop(0,  K.halo[0]); halo.addColorStop(.28,K.halo[1]);
   halo.addColorStop(1,"rgba(0,0,0,0)");
@@ -2748,7 +2793,7 @@ const REGIONS = [
   { id:"bahah",    n:"منطقة الباحة" },
   { id:"jouf",     n:"منطقة الجوف" }
 ];
-const SCHOOL_OPT = { id:"school", n:"طالب مدرسة", d:null };
+const SCHOOL_OPT = { id:"school", n:"طالب مدرسة", d:"moe.gov.sa" };
 const UNIVERSITIES = {
   riyadh:[
     {id:"ksu",n:"جامعة الملك سعود",d:"ksu.edu.sa"},
@@ -2821,7 +2866,7 @@ const UNIVERSITIES = {
     {id:"ju",n:"جامعة الجوف",d:"ju.edu.sa"}
   ]
 };
-const uniLogo = d => d ? ("https://www.google.com/s2/favicons?sz=128&domain="+d) : "";
+const uniLogo = d => d ? ("https://www.google.com/s2/favicons?sz=256&domain="+d) : "";
 function findUni(id){
   if(!id) return null;
   if(id==="school") return SCHOOL_OPT;
@@ -3012,7 +3057,7 @@ async function renderUniBoard(){
       return;
     }
     wrap.innerHTML = rows.map((r,i)=>{
-      const u = findUni(r.uni), nm = u ? u.n : r.uni;
+      const u = findUni(r.uni), nm = u ? TR(u.n) : r.uni;
       const logo = u && u.d ? uniLogo(u.d) : "";
       return '<div class="uni-row">'+
         '<span class="uni-rank">'+(i+1)+'</span>'+
@@ -3517,7 +3562,7 @@ function graceName(){ const g=GRACES.find(x=>x.ms===DB.grace); return g?g.n:TR("
 
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ if(sess){ hiddenAt=Date.now(); sess.hb=0; beat(); } return; }
-  if(!sess){ if(anim) startLoop(); return; }
+  if(!sess){ lastDraw=0; drawHero(); if(anim) startLoop(); return; }
   const away=Date.now()-(hiddenAt||Date.now());
   hiddenAt=null;
   if(sess.paused){ lastDraw=0; startLoop(); return; }   /* بريك مُعلن — ما نحاسب عليه */
@@ -3528,6 +3573,8 @@ document.addEventListener("visibilitychange", ()=>{
   lastDraw=0; startLoop();
 });
 window.addEventListener("pagehide", ()=>{ if(sess){ sess.hb=0; beat(); } if(CURRENT&&CURRENT.cloud) pushNow(true); });
+/* السماء (الشمس/القمر/الإضاءة) تتبع ساعتك حتى بلا جلسة شغالة — نحدّثها كل دقيقة */
+setInterval(()=>{ if(!sess && !anim && !document.hidden){ lastDraw=0; drawHero(); } }, 60000);
 
 function restore(){
   const a=DB.active;
@@ -4213,6 +4260,8 @@ async function saveAccountEdit(){
   const pass  = ($("#ePass").value||"");
   const region = ($("#eRegion") ? $("#eRegion").value : (CURRENT.region||""));
   const uni    = ($("#eUni")    ? $("#eUni").value    : (CURRENT.uni||""));
+  if(!region){ emsg(TR("اختر منطقتك.")); if($("#eRegion")) $("#eRegion").focus(); return; }
+  if(!uni){ emsg(TR("اختر جامعتك، أو طالب مدرسة.")); if($("#eUni")) $("#eUni").focus(); return; }
   if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ emsg(TR("الإيميل غير صحيح.")); $("#eEmail").focus(); return; }
   if(pass && pass.length<6){ emsg(TR("كلمة السر الجديدة ٦ خانات فأكثر.")); $("#ePass").focus(); return; }
   const cur = ($("#eCur") ? $("#eCur").value : "");
