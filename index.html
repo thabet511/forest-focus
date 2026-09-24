@@ -2872,31 +2872,42 @@ const UNIVERSITIES = {
     {id:"ju",n:"جامعة الجوف",d:"ju.edu.sa"}
   ]
 };
-/* بعض الجامعات ما عندها شعار مخزّن عند مزوّد واحد — نجرّب أكثر من مصدر بالترتيب.
-   ملاحظة مهمة اكتشفناها: الجامعات الحكومية القديمة (أنظمة SharePoint/Drupal) عندها
-   ملف كلاسيكي favicon.ico بجذر الموقع، لكن أغلب الجامعات الأهلية مبنية على منصات حديثة
-   (Webflow/Wix/مواقع مخصصة) وتحط شعارها بصيغة .png أو مسار مختلف كلياً — فتخمين
-   favicon.ico وحده يفشل معاها تحديداً. نجرّب كل المسارات الشائعة من موقع الجامعة نفسه
-   أول شي، وبعدها نتنقل لمزوّدات الشعارات الخارجية، وGoogle آخر خيار لأنه ما يفشل أبداً
-   حتى لو ما عنده الشعار الصح (يرجّع أيقونة عامة باهتة بدل خطأ حقيقي). */
-function uniLogoChain(d){
-  if(!d) return [];
-  return [
-    "https://"+d+"/favicon.ico",
-    "https://"+d+"/favicon.png",
-    "https://"+d+"/apple-touch-icon.png",
-    "https://logo.clearbit.com/"+d+"?size=128",
-    "https://icons.duckduckgo.com/ip3/"+d+".ico",
-    "https://www.google.com/s2/favicons?sz=256&domain="+d
-  ];
+/* ── شعارات الجامعات: صفر اعتماد على الإنترنت ───────────────────────────────
+   ليش ألغينا جلب الشعارات من الشبكة نهائياً:
+   مزوّدات الأيقونات (Google/DuckDuckGo/Clearbit) لما ما يكون عندهم شعار الجامعة
+   ما يرجّعون خطأ — يرجّعون صورة "كوكب" عامة، فتطلع بدل الشعار ولا نقدر نكتشفها
+   برمجياً. وفوق كذا، الضغط المطوّل على الصورة كان يفتح رابط المزوّد نفسه (رابط
+   يبدو غلط وما له علاقة بالجامعة). الحل: نعتمد مصدرين مضمونين ١٠٠٪ فقط:
+   ١) شعار حقيقي مدمج بالكود (LOCAL_UNI_LOGOS) — يُضاف يدوياً لكل جامعة.
+   ٢) شارة مولّدة محلياً بحروف اسم الجامعة ولون ثابت مشتق من معرّفها.
+   الاثنين يشتغلون بدون أي طلب شبكة، فما فيه كوكب ولا رابط غريب أبداً. */
+const UNI_BADGE_COLORS = [
+  "#2A7052","#3C6E9B","#8A5A3B","#6B4C8A","#A8412E",
+  "#1C7A73","#7A6A22","#4A5B8C","#8C3F63","#3E7A3A"
+];
+/* لون ثابت لكل جامعة: نفس المعرّف يعطي نفس اللون دائماً */
+function uniBadgeColor(id){
+  let h=0; for(let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0;
+  return UNI_BADGE_COLORS[h % UNI_BADGE_COLORS.length];
 }
-/* لما مصدر يفشل (أو يرجّع أيقونة فاضية شفافة)، ننتقل للمصدر التالي تلقائياً */
-window.nextUniLogo = function(img){
-  let list; try{ list = JSON.parse(img.dataset.fallbacks||"[]"); }catch(e){ list=[]; }
-  const next = list.shift();
-  if(next){ img.dataset.fallbacks = JSON.stringify(list); img.src = next; }
-  else { const ph=document.createElement("span"); ph.className="uni-logo uni-logo-ph"; ph.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.1 2.7 2 6 2s6-.9 6-2v-5.5"/><path d="M22 8v6"/></svg>'; img.replaceWith(ph); }
-};
+/* حروف مختصرة من اسم الجامعة: نتجاهل الكلمات الوظيفية ونأخذ أول حرفين مميزين */
+function uniInitials(name){
+  const skip = ["جامعة","الجامعة","كلية","بن","بنت","آل","في","و","الملك","الأمير","الأميرة"];
+  const words = String(name).trim().split(/\s+/).filter(w=>w && !skip.includes(w));
+  const pick = words.length ? words : String(name).trim().split(/\s+/);
+  const a = (pick[0]||"").replace(/^(ال)/,"").charAt(0) || "";
+  const b = (pick[1]||"").replace(/^(ال)/,"").charAt(0) || "";
+  return (a+b) || "؟";
+}
+/* شارة SVG مولّدة محلياً — تُرسم فوراً بدون شبكة ولا خطوط نظام خاصة */
+function uniBadgeSvg(id, name){
+  const c = uniBadgeColor(id), t = uniInitials(name);
+  return '<svg class="uni-logo" viewBox="0 0 32 32" role="img" aria-label="'+t+'">'+
+    '<rect width="32" height="32" rx="8" fill="'+c+'"/>'+
+    '<text x="16" y="16" fill="#fff" font-size="13" font-weight="700" '+
+    'text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif">'+t+'</text>'+
+  '</svg>';
+}
 function findUni(id){
   if(!id) return null;
   if(id==="school") return SCHOOL_OPT;
@@ -3089,39 +3100,15 @@ async function renderUniBoard(){
     wrap.innerHTML = rows.map((r,i)=>{
       const u = findUni(r.uni), nm = u ? TR(u.n) : r.uni;
       const localLogo = u && LOCAL_UNI_LOGOS[u.id];
-      const hasChain = u && u.d;
-      const phSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.1 2.7 2 6 2s6-.9 6-2v-5.5"/><path d="M22 8v6"/></svg>';
       return '<div class="uni-row">'+
         '<span class="uni-rank">'+(i+1)+'</span>'+
         (localLogo
           ? '<img class="uni-logo" src="'+localLogo+'" alt="" loading="lazy">'
-          : hasChain
-          ? '<span class="uni-logo-slot" data-uni-domain="'+u.d+'"><span class="uni-logo uni-logo-ph">'+phSvg+'</span></span>'
-          : '<span class="uni-logo uni-logo-ph">'+phSvg+'</span>')+
+          : uniBadgeSvg(u ? u.id : String(r.uni||"?"), nm))+
         '<span class="uni-name">'+nm+'</span>'+
         '<span class="uni-mins">'+hhmm(r.total_minutes)+'</span>'+
       '</div>';
     }).join("");
-    /* نتأكد فعلياً إن كل مصدر رجّع صورة حقيقية (مو أيقونة فاضية/تالفة بحجم مجهري) قبل
-       ما نستبدل بيها 🎓 — بعض المزوّدات ترجّع استجابة ناجحة (200) بصورة فاضية بدل خطأ حقيقي،
-       فالاعتماد على onerror وحده ما يكفي لاكتشاف هالحالة. */
-    $$(".uni-logo-slot").forEach(slot=>{
-      const chain = uniLogoChain(slot.dataset.uniDomain);
-      (function tryNext(){
-        const url = chain.shift();
-        if(!url) return; /* خلّه 🎓 */
-        const probe = new Image();
-        probe.onload = function(){
-          if(probe.naturalWidth>=8 && probe.naturalHeight>=8){
-            const img=document.createElement("img");
-            img.className="uni-logo"; img.alt=""; img.loading="lazy"; img.src=url;
-            slot.replaceChildren(img);
-          } else tryNext();
-        };
-        probe.onerror = tryNext;
-        probe.src = url;
-      })();
-    });
   }catch(e){
     wrap.innerHTML = '<p class="gsub" style="text-align:center;padding:28px 0">'+TR("ما قدرنا نجيب الترتيب الآن. جرّب لاحقاً.")+'</p>';
   }
@@ -3892,22 +3879,37 @@ function go(name){
 }
 $$(".nav-btn").forEach(b=>b.onclick=()=>go(b.dataset.go));
 
+/* المظهر: تلقائي (يتبع إعدادات جهازك فاتح/داكن) هو الوضع الأصلي، ويقدر المستخدم
+   يبدّل يدوياً لفاتح أو داكن ثابت، والاختيار يُحفظ. DB.theme = null → تلقائي،
+   "day" → فاتح ثابت، "night" → داكن ثابت. */
+function effectiveNight(){
+  if(DB.theme==="night") return true;
+  if(DB.theme==="day") return false;
+  return matchMedia("(prefers-color-scheme: dark)").matches;   /* تلقائي = يتبع جهازك */
+}
 function applyTheme(){
-  const night = DB.theme ? DB.theme==="night" : skyAt().stars>.5;   /* تلقائي = يتبع ساعتك */
+  const night = effectiveNight();
   document.documentElement.dataset.theme = night?"night":"day";
   const mt=$('meta[name=theme-color]'); if(mt) mt.setAttribute("content", night?"#121A17":"#E3E9DC");
-  $("#themeIcon").innerHTML = night
+  $("#themeIcon").innerHTML = DB.theme==null
+    ? '<path d="M12 3a9 9 0 1 0 0 18Z" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9"/>'
+    : night
     ? '<path d="M20 14.5A8.2 8.2 0 0 1 9.4 3.9a8.6 8.6 0 1 0 10.6 10.6Z"/>'
     : '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>';
+  $("#themeBtn").setAttribute("aria-label",
+    DB.theme==null ? TR("المظهر: تلقائي (يتبع جهازك) — اضغط للتبديل")
+    : night ? TR("المظهر: داكن — اضغط للتبديل")
+    : TR("المظهر: فاتح — اضغط للتبديل"));
   syncPalette(); lastDraw=0; drawHero();
   if($("#view-garden").classList.contains("on")) renderGarden();
   if($("#view-seeds").classList.contains("on")) renderGallery();
 }
 $("#themeBtn").onclick=()=>{
-  DB.theme = document.documentElement.dataset.theme==="night" ? "day":"night";
+  /* دورة ثلاثية: تلقائي ← فاتح ← داكن ← تلقائي... */
+  DB.theme = DB.theme==null ? "day" : (DB.theme==="day" ? "night" : null);
   writeStore(); applyTheme();
 };
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(!DB.theme) applyTheme(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(DB.theme==null) applyTheme(); });
 
 /* ─── أحداث ─────────────────────────────────────────────────── */
 $("#strictSwitch").onclick=e=>{
@@ -3949,22 +3951,32 @@ function bootApp(){
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ lastDraw=0; drawHero(); });
 }
 
-/* موقعك الدقيق (مدينتك)، بدل تقدير المنطقة الزمنية العام (اللي قد يغطّي دولة كاملة).
-   طلب صامت وبلا إلحاح: لو المستخدم وافق، الشروق والغروب يتزامنان مع مدينته بالضبط؛
-   ولو رفض أو المتصفح ما يدعمها، يبقى تقدير المنطقة الزمنية شغّالاً بلا أي تعطّل. */
-function resolveSiteLocation(){
-  if(!navigator.geolocation) return;
-  try{
-    navigator.geolocation.getCurrentPosition(
-      pos=>{
-        SITE = [pos.coords.latitude, pos.coords.longitude];
-        lastDraw = 0; drawHero();                           /* إعادة رسم فورية بالموقع الدقيق */
+/* موقع دقيق (مدينتك الفعلية) صامت بالكامل — بدون أي نافذة إذن.
+   نحدد الموقع من عنوان الإنترنت (IP) عبر خدمتين مستقلتين؛ لو وحدة فشلت أو كانت بطيئة،
+   ننتقل للثانية تلقائياً. لو فشلتا الاثنتين (نادر)، نبقى صامتين على تقدير المنطقة
+   الزمنية (TZ_SITE أعلاه) بدون أي إزعاج للمستخدم — نفس ما كان قبل. */
+async function resolveSiteLocation(){
+  const sources = [
+    { url:"https://ipapi.co/json/", lat:"latitude", lon:"longitude" },
+    { url:"https://get.geojs.io/v1/ip/geo.json", lat:"latitude", lon:"longitude" }
+  ];
+  for(const src of sources){
+    try{
+      const ctrl = (typeof AbortController!=="undefined") ? new AbortController() : null;
+      const t = ctrl ? setTimeout(()=>ctrl.abort(), 5000) : null;
+      const res = await fetch(src.url, ctrl ? { signal: ctrl.signal } : {});
+      if(t) clearTimeout(t);
+      if(!res.ok) continue;
+      const data = await res.json();
+      const lat = parseFloat(data[src.lat]), lon = parseFloat(data[src.lon]);
+      if(Number.isFinite(lat) && Number.isFinite(lon)){
+        SITE = [lat, lon];
+        lastDraw = 0; drawHero();
         if(gate.classList.contains("on")) drawGateScene();
-      },
-      ()=>{ /* رفض أو تعذّر — نبقى على تقدير المنطقة الزمنية بصمت */ },
-      { enableHighAccuracy:false, timeout:8000, maximumAge:21600000 }
-    );
-  }catch(e){}
+        return;
+      }
+    }catch(e){ /* جرّب المصدر التالي بصمت */ }
+  }
 }
 
 /* ════════════════ الحساب والبوابة ════════════════ */
@@ -4413,7 +4425,7 @@ function exportBackup(){
 /* بدء التشغيل: دخول تلقائي إذا اختار "خلّني داخل" */
 (function start(){
   syncPalette();
-  const night = skyAt().stars>.5;
+  const night = matchMedia("(prefers-color-scheme: dark)").matches;   /* تلقائي مبدئي = إعدادات جهازك */
   document.documentElement.dataset.theme = night?"night":"day";
   syncPalette();
   /* رجع من رابط الإيميل؟ نوقف كل شي ونوديه لتعيين كلمة السر */
