@@ -2840,7 +2840,7 @@ const UNIVERSITIES = {
   ],
   qassim:[
     {id:"qu",n:"جامعة القصيم",d:"qu.edu.sa"},
-    {id:"mustaqbal",n:"جامعة المستقبل",d:"future.edu.sa"},
+    {id:"mustaqbal",n:"جامعة المستقبل",d:"uom.edu.sa"},
     {id:"sru",n:"جامعة سليمان الراجحي",d:"sr.edu.sa"}
   ],
   hail:[
@@ -2867,16 +2867,18 @@ const UNIVERSITIES = {
   ]
 };
 /* بعض الجامعات ما عندها شعار مخزّن عند مزوّد واحد — نجرّب أكثر من مصدر بالترتيب.
-   المشكلة السابقة: مزوّد Google للأيقونات نادراً ما يرجّع خطأ حتى لو ما عنده شعار الجامعة —
-   يرجّع أيقونة عامة باهتة بدلاً من ذلك، فـ onerror ما يشتغل ونعلق على شعار خاطئ.
-   الحل: نبدأ بشعار الجامعة الحقيقي من موقعها هي (نفس اللي يطلع لك لما تفتح موقعهم بالمتصفح)،
-   بعدها Clearbit (مزوّد شعارات مخصص يرجّع 404 حقيقي لو ما عنده الشعار)،
-   بعدها DuckDuckGo (يجيب أيقونة الموقع نفسه عبر بروكسي، يرجّع 404 حقيقي أيضاً لو مفقودة)،
-   ونخلي Google آخر خيار لأنه ما يفشل أبداً — نضمن نجرّب كل مصدر حقيقي قبل ما نرضى بأيقونته العامة. */
+   ملاحظة مهمة اكتشفناها: الجامعات الحكومية القديمة (أنظمة SharePoint/Drupal) عندها
+   ملف كلاسيكي favicon.ico بجذر الموقع، لكن أغلب الجامعات الأهلية مبنية على منصات حديثة
+   (Webflow/Wix/مواقع مخصصة) وتحط شعارها بصيغة .png أو مسار مختلف كلياً — فتخمين
+   favicon.ico وحده يفشل معاها تحديداً. نجرّب كل المسارات الشائعة من موقع الجامعة نفسه
+   أول شي، وبعدها نتنقل لمزوّدات الشعارات الخارجية، وGoogle آخر خيار لأنه ما يفشل أبداً
+   حتى لو ما عنده الشعار الصح (يرجّع أيقونة عامة باهتة بدل خطأ حقيقي). */
 function uniLogoChain(d){
   if(!d) return [];
   return [
     "https://"+d+"/favicon.ico",
+    "https://"+d+"/favicon.png",
+    "https://"+d+"/apple-touch-icon.png",
     "https://logo.clearbit.com/"+d+"?size=128",
     "https://icons.duckduckgo.com/ip3/"+d+".ico",
     "https://www.google.com/s2/favicons?sz=256&domain="+d
@@ -3080,17 +3082,36 @@ async function renderUniBoard(){
     }
     wrap.innerHTML = rows.map((r,i)=>{
       const u = findUni(r.uni), nm = u ? TR(u.n) : r.uni;
-      const chain = u && u.d ? uniLogoChain(u.d) : [];
-      const first = chain.shift();
+      const hasChain = u && u.d;
       return '<div class="uni-row">'+
         '<span class="uni-rank">'+(i+1)+'</span>'+
-        (first
-          ? '<img class="uni-logo" src="'+first+'" alt="" loading="lazy" data-fallbacks=\''+JSON.stringify(chain)+'\' onerror="nextUniLogo(this)">'
+        (hasChain
+          ? '<span class="uni-logo-slot" data-uni-domain="'+u.d+'"><span class="uni-logo uni-logo-ph">🎓</span></span>'
           : '<span class="uni-logo uni-logo-ph">🎓</span>')+
         '<span class="uni-name">'+nm+'</span>'+
         '<span class="uni-mins">'+hhmm(r.total_minutes)+'</span>'+
       '</div>';
     }).join("");
+    /* نتأكد فعلياً إن كل مصدر رجّع صورة حقيقية (مو أيقونة فاضية/تالفة بحجم مجهري) قبل
+       ما نستبدل بيها 🎓 — بعض المزوّدات ترجّع استجابة ناجحة (200) بصورة فاضية بدل خطأ حقيقي،
+       فالاعتماد على onerror وحده ما يكفي لاكتشاف هالحالة. */
+    $$(".uni-logo-slot").forEach(slot=>{
+      const chain = uniLogoChain(slot.dataset.uniDomain);
+      (function tryNext(){
+        const url = chain.shift();
+        if(!url) return; /* خلّه 🎓 */
+        const probe = new Image();
+        probe.onload = function(){
+          if(probe.naturalWidth>=8 && probe.naturalHeight>=8){
+            const img=document.createElement("img");
+            img.className="uni-logo"; img.alt=""; img.loading="lazy"; img.src=url;
+            slot.replaceChildren(img);
+          } else tryNext();
+        };
+        probe.onerror = tryNext;
+        probe.src = url;
+      })();
+    });
   }catch(e){
     wrap.innerHTML = '<p class="gsub" style="text-align:center;padding:28px 0">'+TR("ما قدرنا نجيب الترتيب الآن. جرّب لاحقاً.")+'</p>';
   }
