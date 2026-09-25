@@ -360,6 +360,11 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .g-name{font-size:13px;font-weight:600;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .g-uni{font-size:10.5px;color:var(--ink-3);margin-top:2px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .g-state{font-size:10.5px;margin-top:3px;font-weight:600}
+.g-joined{display:flex;flex-direction:column;gap:2px}
+.g-jrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
+.g-jrow:last-child{border-bottom:0}
+.g-jrow b{font-size:13.5px;font-weight:600}
+.g-jrow span{font-size:11.5px;color:var(--ink-3);text-align:end;min-width:0}
 .g-empty{border-style:dashed;display:grid;place-items:center;min-height:150px;color:var(--ink-3);font-size:12px}
 .g-timer{font-family:var(--kufi);font-size:40px;font-weight:600;text-align:center;direction:ltr;font-variant-numeric:tabular-nums}
 .g-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
@@ -869,6 +874,21 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
 
 /* ═══════════════ اللغة: عربي / English ═══════════════ */
 const DICT = {
+ "تصنيف الجلسة":"Session category",
+ "الجلسة مفتوحة بلا مدة — العدّاد يمشي لين ينهيها المنشئ. والوضع الصارم شغّال: اللي يطلع من التطبيق تذبل نبتته.":"The session is open-ended — the timer runs until the host ends it. Strict mode is on: anyone who leaves the app has their plant wilt.",
+ "مفتوحة":"Open-ended",
+ "الدخول مقفول":"Joining locked",
+ "قفل الدخول":"Lock joining",
+ "فتح الدخول":"Unlock joining",
+ "إنهاء الجلسة للجميع":"End session for everyone",
+ "قفلت الدخول. ما أحد يقدر ينضم.":"Joining is locked. No one else can join.",
+ "فتحت الدخول.":"Joining is open again.",
+ "تبي تنهي الجلسة للجميع؟ نبتة كل واحد تنحفظ بالوقت اللي وصله.":"End the session for everyone? Each person's plant is saved at the time they reached.",
+ "الدخول مقفول على هالجلسة.":"Joining is locked for this session.",
+ "من دخل":"Who joined",
+ "أنت":"you",
+ "بدون جامعة":"No university",
+ "تركيز":"Focus",
  "سجّل دخولك":"Log in",
  "إنشاء حساب":"Create account",
  "ازرع تركيزك، واحصد إنتاجيتك.":"Grow your focus, harvest your productivity.",
@@ -4254,11 +4274,11 @@ $("#homeSignup").onclick = ()=>{
    كل شي يمر عبر دوال آمنة بسوبابيس (group_sessions.sql). نسحب حالة الغرفة كل ٤ ثوانٍ
    والسحب نفسه نبضة حضور؛ والتطبيق بالخلفية ما ننبض، فلو طوّل الغياب بالوضع الصارم تذبل النبتة. */
 const GROUP_KEY = "hasad.group";
-const G_DUR   = [25,45,60,90,120];
 const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" }, { ms:300000, n:"٥ دقائق" } ];
-const G_CAT   = { study:"مذاكرة", work:"عمل" };
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false,
-          mode:"home", err:"", form:{ cat:"study", dur:25, max:8, strict:true, grace:60000 } };
+          mode:"home", err:"", form:{ cat:null, max:8, grace:60000 } };
+/* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
+function gCatName(id){ const t=DB.tags.find(x=>x.id===id); return t ? TR(t.n) : (id||TR("تركيز")); }
 
 const gMyId  = () => TOK && TOK.uid;
 const gCanUse= () => !!(CURRENT && CURRENT.cloud && TOK && cloudReady());
@@ -4268,6 +4288,7 @@ function gErrMsg(e){
   if(/NO_ROOM/.test(m))  return "ما لقينا جلسة بهالرمز. تأكد منه.";
   if(/STARTED/.test(m))  return "الجلسة بدأت خلاص، ما تقدر تنضم الحين.";
   if(/FULL/.test(m))     return "الجلسة ممتلئة.";
+  if(/LOCKED/.test(m))   return "الدخول مقفول على هالجلسة.";
   if(/NEED_TWO/.test(m)) return "لازم شخصين على الأقل عشان تبدأ.";
   if(/NOT_HOST/.test(m)) return "اللي أنشأ الجلسة هو اللي يبدأها.";
   if(/group_|PGRST202|Could not find|HTTP 404/.test(m)) return "الجلسات الجماعية ما تفعّلت بقاعدة البيانات بعد.";
@@ -4275,14 +4296,21 @@ function gErrMsg(e){
 }
 function gSave(){ try{ G.code?localStorage.setItem(GROUP_KEY,G.code):localStorage.removeItem(GROUP_KEY); }catch(e){} }
 const gNow       = () => Date.now()+G.off;
+const gOpen      = () => !!(G.room && !G.room.duration_min);       /* جلسة مفتوحة بلا مدة */
 const gTotalMs   = () => G.room ? G.room.duration_min*60000 : 0;
-const gElapsedMs = () => { const r=G.room; return (r&&r.status==="running"&&r.started_at) ? Math.max(0,gNow()-Date.parse(r.started_at)) : 0; };
-const gIsDone    = () => !!(G.room && G.room.status==="running" && gElapsedMs()>=gTotalMs());
+let gEndedAt = 0;                     /* نجمّد العدّاد عند لحظة الإنهاء */
+const gElapsedMs = () => { const r=G.room;
+  if(!r||!r.started_at||(r.status!=="running"&&r.status!=="ended")) return 0;
+  const end = (r.status==="ended" && gEndedAt) ? gEndedAt : gNow();
+  return Math.max(0, end-Date.parse(r.started_at)); };
+const gIsDone    = () => { const r=G.room; if(!r||r.status!=="running") return r?r.status==="ended":false;
+                           return gOpen() ? false : gElapsedMs()>=gTotalMs(); };
+const gEnded     = () => !!(G.room && G.room.status==="ended");
 const gMe        = () => G.room ? G.room.members.find(m=>m.user_id===gMyId()) : null;
 function gClock(){
   const r=G.room; if(!r) return "00:00";
-  const left = r.status==="running" ? Math.max(0,gTotalMs()-gElapsedMs()) : gTotalMs();
-  const s=Math.ceil(left/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
+  const ms = gOpen() ? gElapsedMs() : Math.max(0, gTotalMs()-gElapsedMs());   /* مفتوحة = تصاعدي */
+  const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
   return (h ? h+":"+fmt2(m) : fmt2(m))+":"+fmt2(x);
 }
 function gStopTimers(){ clearInterval(G.poll); clearInterval(G.tick); G.poll=G.tick=null; }
@@ -4292,15 +4320,16 @@ function gStartTimers(){
   G.tick = setInterval(()=>{
     if(!G.room) return;
     const t=$("#gTimer"); if(t) t.textContent=gClock();
-    if(!G.done && gIsDone()){ G.done=true; gRecordMine(); renderGroup(); }
+    if(!G.done && (gIsDone()||gEnded())){ G.done=true; gRecordMine(); renderGroup(); }
   }, 1000);
 }
 function gClear(note){
   gStopTimers();
-  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; gSave();
+  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; gEndedAt=0; gSave();
   renderGroup();
   if(note) toast(note,"👥");
 }
+let gFails = 0;
 async function gRefresh(){
   if(!G.code || G.busy || document.hidden) return;      /* بالخلفية ما ننبض: الغياب ينحسب */
   try{
@@ -4309,19 +4338,26 @@ async function gRefresh(){
     G.off  = Date.parse(r.now) - Date.now();
     G.room = r;
     if(!gMe()){ gClear(TR("طلعت من الجلسة.")); return; }
-    G.done = gIsDone();
+    if(gEnded() && !gEndedAt) gEndedAt = gNow();
+    if(!gEnded()) gEndedAt = 0;
+    G.done = gIsDone() || gEnded();
+    gFails = 0; G.err = "";
     gRecordMine();
     renderGroup();
-  }catch(e){ /* انقطاع عابر — المحاولة الجاية تلحق */ }
+  }catch(e){                       /* انقطاع عابر نتجاوزه، والمستمر نبيّنه بدل ما نعلّق الشاشة */
+    if(++gFails>=3){ G.err = gErrMsg(e); renderGroup(); }
+  }
 }
 /* نسجّل نبتتي بالمزرعة مرة وحدة: لو ذبلت/انسحبت، أو لو خلص الوقت وهي حيّة */
 function gRecordMine(){
-  const r=G.room, me=gMe(); if(!r||!me||r.status!=="running"||!r.started_at) return;
+  const r=G.room, me=gMe();
+  if(!r||!me||!r.started_at||(r.status!=="running"&&r.status!=="ended")) return;
   const id = "g-"+r.code+"-"+Date.parse(r.started_at);
   if(DB.plants.some(p=>p.id===id)) return;
   const dead = me.state!=="alive";
-  if(!dead && !gIsDone()) return;
-  const mins = dead ? Math.max(.2, Math.min(gElapsedMs(),gTotalMs())/60000) : r.duration_min;
+  if(!dead && !gIsDone() && !gEnded()) return;
+  const mins = gOpen() ? Math.max(.2, gElapsedMs()/60000)
+             : (dead ? Math.max(.2, Math.min(gElapsedMs(),gTotalMs())/60000) : r.duration_min);
   const p = { id, species: SPECIES[me.species]?me.species:"basil", tagId:r.category,
               minutes: Math.round(mins*10)/10, startedAt:Date.parse(r.started_at), endedAt:Date.now(),
               survived: !dead,
@@ -4337,9 +4373,10 @@ async function gCreate(){
   if(sess){ toast(TR("خلّص جلستك الفردية أول."),"⏱️"); return; }
   const f=G.form; G.busy=true; G.err=""; renderGroup();
   try{
-    const code = await gRpc("group_create", { p_category:f.cat, p_strict:f.strict, p_grace_ms:f.grace,
-      p_duration:f.dur, p_max:f.max, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:DB.seed });
-    G.busy=false; G.code=String(code); G.room=null; G.done=false; gSave();
+    const code = await gRpc("group_create", { p_category:f.cat||DB.tag, p_grace_ms:f.grace,
+      p_max:f.max, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:DB.seed });
+    G.busy=false; G.code=String(code); G.room=null; G.done=false; gFails=0; gSave();
+    renderGroup();                       /* نطلع من شاشة "لحظة…" فوراً */
     gStartTimers(); await gRefresh();
   }catch(e){ G.busy=false; G.err=gErrMsg(e); renderGroup(); }
 }
@@ -4350,7 +4387,8 @@ async function gJoin(raw){
   G.busy=true; G.err=""; renderGroup();
   try{
     const c = await gRpc("group_join", { p_code:code, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:DB.seed });
-    G.busy=false; G.code=String(c); G.room=null; G.done=false; gSave();
+    G.busy=false; G.code=String(c); G.room=null; G.done=false; gFails=0; gSave();
+    renderGroup();
     gStartTimers(); await gRefresh();
   }catch(e){ G.busy=false; G.err=gErrMsg(e); renderGroup(); }
 }
@@ -4358,9 +4396,19 @@ async function gStart(){
   try{ await gRpc("group_start", { p_code:G.code }); toast(TR("بدأت الجلسة. بالتوفيق للجميع!"),"🌱"); await gRefresh(); }
   catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
 }
+async function gLock(v){
+  try{ await gRpc("group_lock", { p_code:G.code, p_locked:v });
+       toast(TR(v?"قفلت الدخول. ما أحد يقدر ينضم.":"فتحت الدخول."),v?"🔒":"🔓"); await gRefresh(); }
+  catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
+}
+async function gEnd(){
+  if(!confirm(TR("تبي تنهي الجلسة للجميع؟ نبتة كل واحد تنحفظ بالوقت اللي وصله."))) return;
+  try{ await gRpc("group_end", { p_code:G.code }); await gRefresh(); }
+  catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
+}
 async function gLeave(){
   const r=G.room, me=gMe();
-  const running = r && r.status==="running" && !gIsDone();
+  const running = r && r.status==="running" && !gIsDone() && !gEnded();
   if(running && me && me.state==="alive" && !confirm(TR("متأكد؟ لو انسحبت الحين تذبل نبتتك."))) return;
   try{
     await gRpc("group_leave", { p_code:G.code });
@@ -4408,21 +4456,36 @@ function renderGroup(){
   const errHtml = G.err ? '<p class="g-note" style="color:var(--brick)">'+TR(G.err)+'</p>' : "";
   if(!G.code){
     if(G.mode==="create"){
-      const f=G.form;
+      const f=G.form, cur=f.cat||DB.tag;
       box.innerHTML='<section class="panel"><h3>'+TR("إنشاء جلسة")+'</h3>'+
-        '<span class="g-label">'+TR("نوع الجلسة")+'</span>'+
-        gChips("cat",[{v:"study",n:TR("مذاكرة")},{v:"work",n:TR("عمل")}],f.cat)+
-        '<span class="g-label">'+TR("مدة الجلسة")+'</span>'+
-        gChips("dur",G_DUR.map(d=>({v:d,n:hhmm(d)})),f.dur)+
+        '<span class="g-label">'+TR("تصنيف الجلسة")+'</span>'+
+        '<div class="chips" id="gTagChips"></div>'+
         '<span class="g-label">'+TR("أقصى عدد")+'</span>'+
         gChips("max",[2,3,4,5,6,7,8].map(n=>({v:n,n:String(n)})),f.max)+
-        '<div class="switch-row" style="margin-top:14px"><div class="txt"><strong>'+TR("وضع الذبول")+'</strong><span style="font-size:12.5px;color:var(--ink-2)">'+
-          (f.strict?TR("اللي يطلع من التطبيق أطول من المهلة تذبل نبتته."):TR("مريح: ما فيه ذبول، النباتات تكبر لين آخر الوقت."))+'</span></div>'+
-          '<button class="switch" type="button" role="switch" data-act="strict" aria-checked="'+f.strict+'" aria-label="'+escAttr(TR("وضع الذبول"))+'"></button></div>'+
-        (f.strict ? '<span class="g-label">'+TR("مهلة الغياب")+'</span>'+gChips("grace",G_GRACE.map(g=>({v:g.ms,n:TR(g.n)})),f.grace) : "")+
+        '<p class="g-note" style="text-align:start;margin:14px 0 0">'+
+          TR("الجلسة مفتوحة بلا مدة — العدّاد يمشي لين ينهيها المنشئ. والوضع الصارم شغّال: اللي يطلع من التطبيق تذبل نبتته.")+'</p>'+
         errHtml+
         '<div class="g-row"><button class="btn btn-primary" type="button" data-act="create"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("أنشئ الجلسة"))+'</button>'+
         '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
+      const wrap=$("#gTagChips");
+      DB.tags.forEach(t=>{
+        const b=document.createElement("button");
+        b.className="chip tag"; b.type="button"; b.textContent=TR(t.n);
+        b.style.setProperty("--tagc",t.c);
+        b.setAttribute("aria-pressed", cur===t.id);
+        b.onclick=()=>{ G.form.cat=t.id; renderGroup(); };
+        wrap.appendChild(b);
+      });
+      const add=document.createElement("button");
+      add.className="chip ghost"; add.type="button"; add.textContent=TR("+ تصنيف");
+      add.onclick=()=>{
+        const n=(prompt(TR("اسم التصنيف الجديد:"))||"").trim(); if(!n) return;
+        const pool=["#2F6B4F","#3A5E87","#6E5AA0","#B8761E","#A8412E","#1F7A73","#8A5A2B","#4F6D8A"];
+        const id="t"+Date.now().toString(36);
+        DB.tags.push({ id, n:n.slice(0,18), c:pool[DB.tags.length%pool.length] });
+        DB.tag=id; G.form.cat=id; writeStore(); renderGroup();
+      };
+      wrap.appendChild(add);
       return;
     }
     if(G.mode==="join"){
@@ -4443,45 +4506,60 @@ function renderGroup(){
   }
   const r=G.room;
   if(!r){ box.innerHTML='<p class="g-note">'+TR("جاري تحميل الجلسة…")+'</p>'; return; }
-  const me=gMe(), running=r.status==="running", done=gIsDone(), host=r.host===gMyId();
+  const me=gMe(), ended=gEnded(), running=r.status==="running" && !ended, done=gIsDone()||ended, host=r.host===gMyId();
   const graceTxt = (G_GRACE.find(g=>g.ms===r.grace_ms)||{n:Math.round(r.grace_ms/1000)+" ث"}).n;
-  const meta='<div class="g-meta"><span>'+TR(G_CAT[r.category]||"مذاكرة")+'</span><span>'+hhmm(r.duration_min)+'</span>'+
-    '<span>'+(r.strict?TR("ذبول بعد ")+TR(graceTxt):TR("بدون ذبول"))+'</span><span>'+r.members.length+" / "+r.max_members+'</span></div>';
+  const meta='<div class="g-meta"><span>'+gCatName(r.category)+'</span>'+
+    (gOpen()?'<span>'+TR("مفتوحة")+'</span>':'<span>'+hhmm(r.duration_min)+'</span>')+
+    '<span>'+TR("ذبول بعد ")+TR(graceTxt)+'</span>'+
+    '<span>'+r.members.length+" / "+r.max_members+'</span>'+
+    (r.locked?'<span>🔒 '+TR("الدخول مقفول")+'</span>':"")+'</div>';
   let head;
-  if(!running) head='<section class="panel"><h3>'+TR("رمز الجلسة")+'</h3><div class="g-codebox"><div class="g-code">'+r.code+'</div>'+
+  if(!running && !ended) head='<section class="panel"><h3>'+TR("رمز الجلسة")+'</h3><div class="g-codebox"><div class="g-code">'+r.code+'</div>'+
     '<button class="btn btn-quiet" type="button" data-act="share" style="flex:none;padding:9px 14px;font-size:14px">'+TR("شارك")+'</button></div>'+meta+'</section>';
   else head='<section class="panel"><div class="g-timer" id="gTimer">'+gClock()+'</div>'+meta+'</section>';
-  const minsNow = running ? Math.min(gElapsedMs(),gTotalMs())/60000 : 0;
+  const minsNow = (running||ended) ? (gOpen()?gElapsedMs()/60000:Math.min(gElapsedMs(),gTotalMs())/60000) : 0;
   const cards = r.members.map((m,i)=>{
     const u=findUni(m.uni), dead=m.state!=="alive";
-    const st = !running ? '<div class="g-state" style="color:var(--ink-3)">'+TR("جاهز")+'</div>'
+    const st = (!running && !ended) ? '<div class="g-state" style="color:var(--ink-3)">'+TR("جاهز")+'</div>'
       : m.state==="left" ? '<div class="g-state" style="color:var(--brick)">'+TR("انسحب")+'</div>'
       : dead ? '<div class="g-state" style="color:var(--brick)">'+TR("ذبلت")+'</div>'
       : done ? '<div class="g-state" style="color:var(--viridian)">'+TR("نجح")+' ✅</div>'
       : '<div class="g-state" style="color:var(--viridian)">'+TR("يركّز")+'</div>';
-    return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&running?" dead":"")+'"><div data-gcv="'+i+'"></div>'+
+    return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&(running||ended)?" dead":"")+'"><div data-gcv="'+i+'"></div>'+
       '<div class="g-name">'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?' <span title="'+escAttr(TR("المنشئ"))+'">👑</span>':"")+'</div>'+
       '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div>'+st+'</div>';
   });
-  if(!running) for(let k=r.members.length;k<r.max_members;k++) cards.push('<div class="g-member g-empty">'+TR("مكان فاضي")+'</div>');
+  if(!running && !ended) for(let k=r.members.length;k<r.max_members;k++) cards.push('<div class="g-member g-empty">'+TR("مكان فاضي")+'</div>');
+  /* خانة "من دخل" — سطر لكل شخص باسمه وجامعته */
+  const joined='<section class="panel" style="margin-top:14px"><h3>'+TR("من دخل")+' ('+r.members.length+')</h3>'+
+    '<div class="g-joined">'+r.members.map(m=>{
+      const u=findUni(m.uni);
+      return '<div class="g-jrow"><b>'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?" 👑":"")+
+        (m.user_id===gMyId()?' <span style="color:var(--viridian);font-size:11px">'+TR("أنت")+'</span>':"")+'</b>'+
+        '<span>'+(u?escAttr(TR(u.n)):TR("بدون جامعة"))+'</span></div>';
+    }).join("")+'</div></section>';
   let foot;
   if(done){
     const mine=me&&me.state==="alive";
     foot='<p class="g-note"><b>'+TR("خلصت الجلسة")+' 🎉</b><br>'+(mine?TR("نبتتك نجحت ودخلت مزرعتك."):TR("نبتتك ذبلت هالمرة، المرة الجاية أقوى."))+'</p>'+
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="back">'+TR("رجوع")+'</button></div>';
   } else if(running){
-    foot='<p class="g-note">'+(r.strict?TR("خلّ التطبيق مفتوح. لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك."):TR("وضع مريح: ركّز براحتك."))+'</p>'+
-      '<div class="g-row"><button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
+    foot='<p class="g-note">'+TR("خلّ التطبيق مفتوح. لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك.")+'</p>'+
+      '<div class="g-row">'+
+      (host?'<button class="btn btn-primary" type="button" data-act="endall">'+TR("إنهاء الجلسة للجميع")+'</button>':"")+
+      (host?'<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>':"")+
+      '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
   } else if(host){
     const can=r.members.length>=2;
     foot='<p class="g-note">'+(can?TR("كل شي جاهز؟ ابدأ الجلسة للجميع."):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="start"'+(can?"":" disabled")+'>'+TR("ابدأ الجلسة")+'</button>'+
+      '<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>'+
       '<button class="btn btn-quiet" type="button" data-act="leave">'+TR("إلغاء الجلسة")+'</button></div>';
   } else {
     foot='<p class="g-note">'+TR("بانتظار المنشئ يبدأ الجلسة…")+'</p>'+
       '<div class="g-row"><button class="btn btn-quiet" type="button" data-act="leave">'+TR("مغادرة")+'</button></div>';
   }
-  box.innerHTML = head+'<div class="g-members">'+cards.join("")+'</div>'+foot;
+  box.innerHTML = head+'<div class="g-members">'+cards.join("")+'</div>'+foot+joined;
   r.members.forEach((m,i)=>{
     const holder=box.querySelector('[data-gcv="'+i+'"]'); if(!holder) return;
     const cv=document.createElement("canvas"); holder.appendChild(cv);
@@ -4504,6 +4582,8 @@ $("#groupBody").addEventListener("click", e=>{
     case "start":  return gStart();
     case "leave":  return gLeave();
     case "share":  return gShare();
+    case "lock":   return gLock(v==="1");
+    case "endall": return gEnd();
     case "back":   return gClear();
     default: return;
   }
@@ -5088,7 +5168,8 @@ function exportBackup(){
     })();
     return;
   }
-  showLanding();                /* أول ما تفتح الرابط، دايماً — مسجّل كنت أو لا */
+  /* التعريف للي ما سجّل فقط: لو عندك جلسة محفوظة ندخلك التطبيق مباشرة */
+  if(!enterApp()) showLanding();
   resolveSiteLocation();        /* يتزامن مع مدينتك بالضبط لو سمحت، بلا ما يعطّل أي شي لو رفضت */
 })();
 
