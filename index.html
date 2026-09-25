@@ -4345,6 +4345,11 @@ async function gRefresh(){
     G.done = gIsDone() || gEnded();
     gFails = 0; G.err = "";
     gRecordMine();
+    if(r.status==="waiting" && !r.locked && r.host===gMyId() && !G.autostarting &&
+       r.members.length>=r.max_members){
+      G.autostarting = true;
+      gRpc("group_start", { p_code:G.code }).then(()=>gRefresh()).catch(()=>{}).finally(()=>{ G.autostarting=false; });
+    }
     renderGroup();
   }catch(e){                       /* انقطاع عابر نتجاوزه، والمستمر نبيّنه بدل ما نعلّق الشاشة */
     if(++gFails>=3){ G.err = gErrMsg(e); renderGroup(); }
@@ -4485,12 +4490,10 @@ function renderGroupInner(box){
       box.innerHTML='<section class="panel"><h3>'+TR("إنشاء جلسة")+'</h3>'+
         '<span class="g-label">'+TR("تصنيف الجلسة")+'</span>'+
         '<div class="chips" id="gTagChips"></div>'+
-        '<span class="g-label">'+TR("أقصى عدد")+'</span>'+
-        gChips("max",[2,3,4,5,6,7,8].map(n=>({v:n,n:String(n)})),f.max)+
         '<span class="g-label">'+TR("نبتتك بهالجلسة")+'</span>'+
         gSeedChips(f.species||DB.seed)+
         '<p class="g-note" style="text-align:start;margin:14px 0 0">'+
-          TR("الجلسة مفتوحة بلا مدة — العدّاد يمشي لين ينهيها المنشئ. وكل واحد يتحكم بذبول نبتته من داخل الجلسة.")+'</p>'+
+          TR("الجلسة مفتوحة بلا مدة — تبدأ لما تمتلي (٨ أشخاص) أو لما تضغط ابدأ بنفسك. وكل واحد يتحكم بذبول نبتته من داخل الجلسة.")+'</p>'+
         errHtml+
         '<div class="g-row"><button class="btn btn-primary" type="button" data-act="create"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("أنشئ الجلسة"))+'</button>'+
         '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
@@ -4582,18 +4585,21 @@ function renderGroupInner(box){
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="back">'+TR("رجوع")+'</button></div>';
   } else if(running){
     const myStrict = !(me && me.strict===false);
-    foot='<p class="g-note">'+(myStrict
-        ? TR("الذبول شغّال عندك: لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك.")
-        : TR("الذبول مطفي عندك — نبتتك ما تذبل لو طلعت من التطبيق."))+'</p>'+
+    foot='<span class="g-label">'+TR("ذبول نبتتك لو طلعت من التطبيق")+'</span>'+
+      '<div class="chips">'+
+      '<button class="chip" type="button" data-act="mystrict" data-v="1" aria-pressed="'+myStrict+'">🌿 '+TR("يذبل")+'</button>'+
+      '<button class="chip" type="button" data-act="mystrict" data-v="0" aria-pressed="'+(!myStrict)+'">🛡️ '+TR("ما يذبل")+'</button>'+
+      '</div>'+
+      '<p class="g-note" style="margin-top:8px">'+(myStrict
+        ? TR("لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك.")
+        : TR("نبتتك محمية — ما تذبل حتى لو طلعت من التطبيق."))+'</p>'+
       '<div class="g-row">'+
-      '<button class="btn btn-quiet" type="button" data-act="mystrict" data-v="'+(myStrict?"0":"1")+'">'+
-        TR(myStrict?"طفّي الذبول عني":"شغّل الذبول عني")+'</button>'+
       (host?'<button class="btn btn-primary" type="button" data-act="endall">'+TR("إنهاء الجلسة للجميع")+'</button>':"")+
       (host?'<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>':"")+
       '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
   } else if(host){
     const can=r.members.length>=2;
-    foot='<p class="g-note">'+(can?TR("كل شي جاهز؟ ابدأ الجلسة للجميع."):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
+    foot='<p class="g-note">'+(can?TR("كل شي جاهز؟ ابدأ الجلسة، أو انتظرها تبدأ لحالها لما تمتلي (٨ أشخاص)."):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="start"'+(can?"":" disabled")+'>'+TR("ابدأ الجلسة")+'</button>'+
       '<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>'+
       '<button class="btn btn-quiet" type="button" data-act="leave">'+TR("إلغاء الجلسة")+'</button></div>';
