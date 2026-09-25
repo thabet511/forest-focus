@@ -4277,7 +4277,7 @@ $("#homeSignup").onclick = ()=>{
 const GROUP_KEY = "hasad.group";
 const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" }, { ms:300000, n:"٥ دقائق" } ];
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false,
-          mode:"home", err:"", form:{ cat:null, max:8, grace:60000 } };
+          mode:"home", err:"", form:{ cat:null, max:8, grace:60000, species:null } };
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
 function gCatName(id){ const t=DB.tags.find(x=>x.id===id); return t ? TR(t.n) : (id||TR("تركيز")); }
 
@@ -4376,7 +4376,7 @@ async function gCreate(){
   const f=G.form; G.busy=true; G.err=""; renderGroup();
   try{
     const code = await gRpc("group_create", { p_category:f.cat||DB.tag, p_grace_ms:f.grace,
-      p_max:f.max, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:DB.seed });
+      p_max:f.max, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:(f.species||DB.seed) });
     G.busy=false; G.code=String(code); G.room=null; G.done=false; gFails=0; gSave();
     renderGroup();                       /* نطلع من شاشة "لحظة…" فوراً */
     gStartTimers(); await gRefresh();
@@ -4388,7 +4388,7 @@ async function gJoin(raw){
   if(code.length<6){ G.err="الرمز ٦ خانات."; renderGroup(); return; }
   G.busy=true; G.err=""; renderGroup();
   try{
-    const c = await gRpc("group_join", { p_code:code, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:DB.seed });
+    const c = await gRpc("group_join", { p_code:code, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:(G.form.species||DB.seed) });
     G.busy=false; G.code=String(c); G.room=null; G.done=false; gFails=0; gSave();
     renderGroup();
     gStartTimers(); await gRefresh();
@@ -4418,6 +4418,12 @@ async function gLeave(){
   }catch(e){}
   gClear();
 }
+async function gSetStrict(v){
+  try{ await gRpc("group_set_strict", { p_code:G.code, p_strict:v });
+       toast(TR(v?"شغّلت الذبول على نبتتك.":"طفّيت الذبول على نبتتك."), v?"🌿":"🛡️");
+       await gRefresh(); }
+  catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
+}
 async function gShare(){
   const code=G.code; if(!code) return;
   const text = TR("انضم لجلستي الجماعية بحصاد الإنتاجية. الرمز: ")+code;
@@ -4436,12 +4442,21 @@ document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ G.hiddenAt=Date.now(); return; }
   const away = G.hiddenAt ? Date.now()-G.hiddenAt : 0; G.hiddenAt=null;
   const r=G.room, me=gMe();
-  if(r.status==="running" && r.strict && me && me.state==="alive" && !gIsDone() && away>r.grace_ms){
+  if(r.status==="running" && me && me.strict!==false && me.state==="alive" && !gIsDone() && away>r.grace_ms){
     toast(TR("غبت أطول من المهلة، فذبلت نبتتك."),"🥀");
     gRpc("group_wither", { p_code:r.code }).catch(()=>{}).then(gRefresh);
   } else gRefresh();
 });
 
+function gSeedChips(cur){
+  const guest = !!(CURRENT && CURRENT.guest);
+  const list  = guest ? GUEST_SEEDS : SP_ORDER;
+  const sel   = list.includes(cur) ? cur : (list.includes(DB.seed) ? DB.seed : list[0]);
+  return '<div class="chips">'+list.map(k=>
+    '<button class="chip" type="button" data-act="species" data-v="'+k+'" aria-pressed="'+(k===sel)+'">'+
+    TR(SPECIES[k].n)+'</button>').join("")+'</div>'+
+    '<p class="g-note" style="text-align:start;margin:6px 0 0;opacity:.75">'+TR(SPECIES[sel].note)+'</p>';
+}
 function gChips(act, items, cur){
   return '<div class="chips">'+items.map(it=>
     '<button class="chip" type="button" data-act="'+act+'" data-v="'+it.v+'" aria-pressed="'+(String(it.v)===String(cur))+'">'+it.n+'</button>'
@@ -4472,8 +4487,10 @@ function renderGroupInner(box){
         '<div class="chips" id="gTagChips"></div>'+
         '<span class="g-label">'+TR("أقصى عدد")+'</span>'+
         gChips("max",[2,3,4,5,6,7,8].map(n=>({v:n,n:String(n)})),f.max)+
+        '<span class="g-label">'+TR("نبتتك بهالجلسة")+'</span>'+
+        gSeedChips(f.species||DB.seed)+
         '<p class="g-note" style="text-align:start;margin:14px 0 0">'+
-          TR("الجلسة مفتوحة بلا مدة — العدّاد يمشي لين ينهيها المنشئ. والوضع الصارم شغّال: اللي يطلع من التطبيق تذبل نبتته.")+'</p>'+
+          TR("الجلسة مفتوحة بلا مدة — العدّاد يمشي لين ينهيها المنشئ. وكل واحد يتحكم بذبول نبتته من داخل الجلسة.")+'</p>'+
         errHtml+
         '<div class="g-row"><button class="btn btn-primary" type="button" data-act="create"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("أنشئ الجلسة"))+'</button>'+
         '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
@@ -4502,10 +4519,12 @@ function renderGroupInner(box){
       box.innerHTML='<section class="panel"><h3>'+TR("انضمام لجلسة")+'</h3>'+
         '<span class="g-label">'+TR("اكتب الرمز اللي أرسله لك صاحبك")+'</span>'+
         '<input class="g-input" id="gCodeIn" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123">'+
+        '<span class="g-label">'+TR("نبتتك بهالجلسة")+'</span>'+
+        gSeedChips(G.form.species||DB.seed)+
         errHtml+
         '<div class="g-row"><button class="btn btn-primary" type="button" data-act="join"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("انضم"))+'</button>'+
         '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
-      const inp=$("#gCodeIn"); if(inp){ inp.onkeydown=e=>{ if(e.key==="Enter") gJoin(inp.value); }; setTimeout(()=>inp.focus(),40); }
+      const inp=$("#gCodeIn"); if(inp){ inp.value=G.form.code||""; inp.onkeydown=e=>{ if(e.key==="Enter") gJoin(inp.value); }; inp.oninput=()=>{ G.form.code=inp.value; }; setTimeout(()=>inp.focus(),40); }
       return;
     }
     box.innerHTML='<div class="g-choice">'+
@@ -4532,7 +4551,8 @@ function renderGroupInner(box){
   let head;
   if(!running && !ended) head='<section class="panel"><h3>'+TR("رمز الجلسة")+'</h3><div class="g-codebox"><div class="g-code">'+r.code+'</div>'+
     '<button class="btn btn-quiet" type="button" data-act="share" style="flex:none;padding:9px 14px;font-size:14px">'+TR("شارك")+'</button></div>'+meta+'</section>';
-  else head='<section class="panel"><div class="g-timer" id="gTimer">'+gClock()+'</div>'+meta+'</section>';
+  else head='<section class="panel"><div id="gSky" style="margin:-2px 0 8px"></div>'+
+    '<div class="g-timer" id="gTimer">'+gClock()+'</div>'+meta+'</section>';
   const minsNow = (running||ended) ? (gOpen()?gElapsedMs()/60000:Math.min(gElapsedMs(),gTotalMs())/60000) : 0;
   const cards = r.members.map((m,i)=>{
     const u=findUni(m.uni), dead=m.state!=="alive";
@@ -4551,6 +4571,7 @@ function renderGroupInner(box){
     '<div class="g-joined">'+r.members.map(m=>{
       const u=findUni(m.uni);
       return '<div class="g-jrow"><b>'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?" 👑":"")+
+        (m.strict===false?" 🛡️":"")+
         (m.user_id===gMyId()?' <span style="color:var(--viridian);font-size:11px">'+TR("أنت")+'</span>':"")+'</b>'+
         '<span>'+(u?escAttr(TR(u.n)):TR("بدون جامعة"))+'</span></div>';
     }).join("")+'</div></section>';
@@ -4560,8 +4581,13 @@ function renderGroupInner(box){
     foot='<p class="g-note"><b>'+TR("خلصت الجلسة")+' 🎉</b><br>'+(mine?TR("نبتتك نجحت ودخلت مزرعتك."):TR("نبتتك ذبلت هالمرة، المرة الجاية أقوى."))+'</p>'+
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="back">'+TR("رجوع")+'</button></div>';
   } else if(running){
-    foot='<p class="g-note">'+TR("خلّ التطبيق مفتوح. لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك.")+'</p>'+
+    const myStrict = !(me && me.strict===false);
+    foot='<p class="g-note">'+(myStrict
+        ? TR("الذبول شغّال عندك: لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك.")
+        : TR("الذبول مطفي عندك — نبتتك ما تذبل لو طلعت من التطبيق."))+'</p>'+
       '<div class="g-row">'+
+      '<button class="btn btn-quiet" type="button" data-act="mystrict" data-v="'+(myStrict?"0":"1")+'">'+
+        TR(myStrict?"طفّي الذبول عني":"شغّل الذبول عني")+'</button>'+
       (host?'<button class="btn btn-primary" type="button" data-act="endall">'+TR("إنهاء الجلسة للجميع")+'</button>':"")+
       (host?'<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>':"")+
       '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
@@ -4576,6 +4602,16 @@ function renderGroupInner(box){
       '<div class="g-row"><button class="btn btn-quiet" type="button" data-act="leave">'+TR("مغادرة")+'</button></div>';
   }
   box.innerHTML = head+'<div class="g-members">'+cards.join("")+'</div>'+foot+joined;
+  const skyBox=$("#gSky");
+  if(skyBox){
+    const cv=document.createElement("canvas"); skyBox.appendChild(cv);
+    const sw=Math.max(220, skyBox.clientWidth||box.clientWidth||300);
+    const sh=Math.round(Math.min(230, sw*0.46));
+    paint(cv,sw,sh,{ species:(me&&SPECIES[me.species])?me.species:"basil",
+      minutes:Math.max(.4,minsNow), seedStr:r.code+"-sky", glow:true,
+      withered: !!(me && me.state!=="alive"),
+      tms:performance.now(), mdate:new Date() });
+  }
   r.members.forEach((m,i)=>{
     const holder=box.querySelector('[data-gcv="'+i+'"]'); if(!holder) return;
     const cv=document.createElement("canvas"); holder.appendChild(cv);
@@ -4588,6 +4624,10 @@ $("#groupBody").addEventListener("click", e=>{
   const v=b.dataset.v, f=G.form;
   switch(b.dataset.act){
     case "mode":   G.mode=v; G.err=""; break;
+    case "species":
+      if(G.mode==="join"){ const ci=$("#gCodeIn"); if(ci) G.form.code=ci.value; }
+      f.species=v; break;
+    case "mystrict": return gSetStrict(v==="1");
     case "cat":    f.cat=v; break;
     case "dur":    f.dur=+v; break;
     case "max":    f.max=+v; break;
