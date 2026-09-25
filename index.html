@@ -874,6 +874,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
 
 /* ═══════════════ اللغة: عربي / English ═══════════════ */
 const DICT = {
+ "صار خطأ غير متوقع بعرض الجلسة.":"Something unexpected went wrong showing the session.",
  "تصنيف الجلسة":"Session category",
  "الجلسة مفتوحة بلا مدة — العدّاد يمشي لين ينهيها المنشئ. والوضع الصارم شغّال: اللي يطلع من التطبيق تذبل نبتته.":"The session is open-ended — the timer runs until the host ends it. Strict mode is on: anyone who leaves the app has their plant wilt.",
  "مفتوحة":"Open-ended",
@@ -4447,6 +4448,14 @@ function gChips(act, items, cur){
 }
 function renderGroup(){
   const box=$("#groupBody"); if(!box) return;
+  try{ renderGroupInner(box); }
+  catch(e){
+    box.innerHTML='<section class="panel"><p class="g-note" style="color:var(--brick);margin:0">'+
+      TR("صار خطأ غير متوقع بعرض الجلسة.")+'</p>'+
+      '<div class="g-row"><button class="btn btn-quiet" type="button" data-act="back">'+TR("رجوع")+'</button></div></section>';
+  }
+}
+function renderGroupInner(box){
   if(!gCanUse()){
     if(G.code){ gStopTimers(); G.code=null; G.room=null; }
     box.innerHTML='<section class="panel"><h3>'+TR("تحتاج حساب")+'</h3><p class="g-note" style="text-align:start;margin:0">'+
@@ -4505,7 +4514,13 @@ function renderGroup(){
     return;
   }
   const r=G.room;
-  if(!r){ box.innerHTML='<p class="g-note">'+TR("جاري تحميل الجلسة…")+'</p>'; return; }
+  if(!r){
+    box.innerHTML = G.err
+      ? '<section class="panel"><p class="g-note" style="color:var(--brick);margin:0">'+TR(G.err)+'</p>'+
+        '<div class="g-row"><button class="btn btn-quiet" type="button" data-act="back">'+TR("رجوع")+'</button></div></section>'
+      : '<p class="g-note">'+TR("جاري تحميل الجلسة…")+'</p>';
+    return;
+  }
   const me=gMe(), ended=gEnded(), running=r.status==="running" && !ended, done=gIsDone()||ended, host=r.host===gMyId();
   const graceTxt = (G_GRACE.find(g=>g.ms===r.grace_ms)||{n:Math.round(r.grace_ms/1000)+" ث"}).n;
   const meta='<div class="g-meta"><span>'+gCatName(r.category)+'</span>'+
