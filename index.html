@@ -320,16 +320,53 @@ html[lang="en"] .disp{letter-spacing:-.01em}
   backdrop-filter:blur(14px) saturate(1.2);border-top:1px solid var(--line);
 }
 .nav-inner{
-  max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
+  max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:3px;
   background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:var(--shadow-1);
 }
-.nav-btn{padding:8px 2px 7px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.8px;color:var(--ink-3);transition:color .16s,background .16s}
+.nav-btn{padding:8px 1px 7px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.2px;white-space:nowrap;min-width:0;color:var(--ink-3);transition:color .16s,background .16s}
 .nav-btn svg{width:20px;height:20px}
 .nav-btn[aria-current="page"]{background:var(--viridian-soft);color:var(--viridian);font-weight:600}
 
 .view{display:none}
 .view.on{display:block;animation:rise .32s cubic-bezier(.2,.7,.3,1) both}
 @keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+body.landing .nav{display:none}
+body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-direction:column;justify-content:center;padding-bottom:24px}
+/* ── الرئيسية ── */
+.brand{cursor:pointer}
+.home-hero{text-align:center;padding:26px 8px 6px}
+.home-mark{font-size:44px;line-height:1;margin-bottom:8px}
+.home-hero h2{font-family:var(--kufi);font-size:28px;font-weight:600;margin:0}
+.home-tag{margin:8px 0 0;font-size:16px;font-weight:600;color:var(--viridian)}
+.home-lead{margin:10px auto 0;max-width:40ch;font-size:14px;line-height:1.75;color:var(--ink-2)}
+.home-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
+@media (max-width:420px){ .home-grid{grid-template-columns:1fr} }
+.home-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:14px;box-shadow:var(--shadow-1)}
+.home-card b{display:block;font-size:14.5px;margin-bottom:5px}
+.home-card span{font-size:13px;line-height:1.65;color:var(--ink-2)}
+.home-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+/* ── الجلسة الجماعية ── */
+.g-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.g-choice .btn{padding:16px 10px;flex-direction:column;gap:6px;font-size:15px}
+.g-code{font-family:ui-monospace,Menlo,monospace;font-size:30px;font-weight:700;letter-spacing:.28em;text-align:center;color:var(--viridian);direction:ltr}
+.g-codebox{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.g-meta{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.g-meta span{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--paper-2);border:1px solid var(--line);color:var(--ink-2)}
+.g-members{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:10px;margin-top:14px}
+.g-member{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:8px 6px 10px;text-align:center;min-width:0}
+.g-member.me{border-color:var(--viridian);box-shadow:0 0 0 2px var(--viridian-soft)}
+.g-member.dead{opacity:.78}
+.g-member canvas{display:block;margin:0 auto}
+.g-name{font-size:13px;font-weight:600;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-uni{font-size:10.5px;color:var(--ink-3);margin-top:2px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.g-state{font-size:10.5px;margin-top:3px;font-weight:600}
+.g-empty{border-style:dashed;display:grid;place-items:center;min-height:150px;color:var(--ink-3);font-size:12px}
+.g-timer{font-family:var(--kufi);font-size:40px;font-weight:600;text-align:center;direction:ltr;font-variant-numeric:tabular-nums}
+.g-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.g-note{text-align:center;font-size:13px;color:var(--ink-2);margin:10px 0 0;line-height:1.6}
+.g-input{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:22px;letter-spacing:.3em;text-align:center;text-transform:uppercase;direction:ltr;padding:12px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.g-input:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
+.g-label{display:block;font-size:12.5px;color:var(--ink-2);margin:14px 0 7px}
 .view-head{padding:8px 2px 0}
 .view-head h2{font-family:var(--kufi);font-size:24px;font-weight:600;margin:0}
 .view-head p{margin:5px 0 0;font-size:13.5px;color:var(--ink-2);max-width:46ch}
@@ -554,6 +591,26 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     </button>
   </header>
 
+  <!-- ══ ٠) الرئيسية: تعريف مختصر بالتطبيق ══ -->
+  <main class="view" id="view-home">
+    <section class="home-hero">
+      <div class="home-mark" aria-hidden="true">🌱</div>
+      <h2>حصاد الإنتاجية</h2>
+      <p class="home-tag">ازرع تركيزك، واحصد إنتاجيتك.</p>
+      <p class="home-lead">كل دقيقة تركّز فيها تكبّر نبتة. خلّك مركّز وتصير شجرة، وتطلع من التطبيق بالوضع الصارم وتذبل.</p>
+    </section>
+    <div class="home-grid">
+      <div class="home-card"><b>🌿 ازرع بتركيزك</b><span>اختر بذرتك وابدأ العدّاد، والنبتة تكبر مع كل دقيقة لين تصير شجرة.</span></div>
+      <div class="home-card"><b>🌳 مزرعتك تكبر</b><span>كل جلسة ناجحة تنضاف لمزرعتك، وتشوف ساعاتك وأيامك وإنجازاتك بالأرقام.</span></div>
+      <div class="home-card"><b>👥 ركّز مع ربعك</b><span>جلسة جماعية من ٢ إلى ٨ أشخاص، لكل واحد نبتته، مذاكرة أو عمل.</span></div>
+      <div class="home-card"><b>🎓 نافس بجامعتك</b><span>دقائقك تنحسب لجامعتك بترتيب الجامعات السعودية.</span></div>
+    </div>
+    <div class="home-actions">
+      <button class="btn btn-primary" id="homeLogin" type="button">سجّل دخولك</button>
+      <button class="btn btn-quiet" id="homeSignup" type="button">إنشاء حساب</button>
+    </div>
+  </main>
+
   <!-- ══ ١) النبتة ══ -->
   <main class="view on" id="view-plant">
     <section class="stage" aria-label="النبتة">
@@ -679,6 +736,15 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     </div>
     <div id="uniBoardList"></div>
   </main>
+
+  <!-- ══ ٦) الجلسة الجماعية ══ -->
+  <main class="view" id="view-group">
+    <div class="view-head">
+      <h2>جلسة جماعية</h2>
+      <p>ركّزوا سوا من ٢ إلى ٨ أشخاص، لكل واحد نبتته. أنشئ جلسة وشارك الرمز، أو انضم برمز من صاحبك.</p>
+    </div>
+    <div id="groupBody"></div>
+  </main>
 </div>
 
 <nav class="nav" aria-label="التنقل">
@@ -702,6 +768,10 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     <button class="nav-btn" data-go="uni">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 4l9 5-9 5-9-5Z"/><path d="M6.5 11.5v4c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4"/><path d="M19.5 10v5"/></svg>
       الجامعات
+    </button>
+    <button class="nav-btn" data-go="group">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.8" cy="9" r="2.5"/><path d="M15.6 14.2c2.6-.3 4.4 1.2 4.9 4.8"/></svg>
+      جماعية
     </button>
   </div>
 </nav>
@@ -799,6 +869,93 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
 
 /* ═══════════════ اللغة: عربي / English ═══════════════ */
 const DICT = {
+ "سجّل دخولك":"Log in",
+ "إنشاء حساب":"Create account",
+ "ازرع تركيزك، واحصد إنتاجيتك.":"Grow your focus, harvest your productivity.",
+ "كل دقيقة تركّز فيها تكبّر نبتة. خلّك مركّز وتصير شجرة، وتطلع من التطبيق بالوضع الصارم وتذبل.":"Every minute you focus grows a plant. Stay focused and it becomes a tree; leave the app in strict mode and it wilts.",
+ "🌿 ازرع بتركيزك":"🌿 Grow with focus",
+ "اختر بذرتك وابدأ العدّاد، والنبتة تكبر مع كل دقيقة لين تصير شجرة.":"Pick a seed and start the timer; your plant grows every minute until it becomes a tree.",
+ "🌳 مزرعتك تكبر":"🌳 Your farm grows",
+ "كل جلسة ناجحة تنضاف لمزرعتك، وتشوف ساعاتك وأيامك وإنجازاتك بالأرقام.":"Every successful session joins your farm, and your hours, days and achievements show in your stats.",
+ "👥 ركّز مع ربعك":"👥 Focus with friends",
+ "جلسة جماعية من ٢ إلى ٨ أشخاص، لكل واحد نبتته، مذاكرة أو عمل.":"Group sessions of 2 to 8 people, each with their own plant — study or work.",
+ "🎓 نافس بجامعتك":"🎓 Compete for your university",
+ "دقائقك تنحسب لجامعتك بترتيب الجامعات السعودية.":"Your minutes count toward your university in the Saudi university ranking.",
+ "ابدأ جلسة تركيز":"Start a focus session",
+ "جلسة جماعية":"Group session",
+ "جماعية":"Group",
+ "ركّزوا سوا من ٢ إلى ٨ أشخاص، لكل واحد نبتته. أنشئ جلسة وشارك الرمز، أو انضم برمز من صاحبك.":"Focus together, 2 to 8 people, each with their own plant. Create a session and share the code, or join with a friend's code.",
+ "ما لقينا جلسة بهالرمز. تأكد منه.":"No session found with that code. Please check it.",
+ "الجلسة بدأت خلاص، ما تقدر تنضم الحين.":"The session has already started; you can't join now.",
+ "الجلسة ممتلئة.":"The session is full.",
+ "لازم شخصين على الأقل عشان تبدأ.":"You need at least two people to start.",
+ "اللي أنشأ الجلسة هو اللي يبدأها.":"Only the session creator can start it.",
+ "الجلسات الجماعية ما تفعّلت بقاعدة البيانات بعد.":"Group sessions aren't enabled in the database yet.",
+ "صار خطأ بالاتصال. جرّب مرة ثانية.":"Connection error. Please try again.",
+ "الجلسة انتهت أو ألغاها المنشئ.":"The session ended or was cancelled by its creator.",
+ "طلعت من الجلسة.":"You left the session.",
+ "ذبلت نبتتك بالجلسة الجماعية.":"Your plant wilted in the group session.",
+ "خلصت الجلسة الجماعية! نبتتك دخلت المزرعة.":"Group session complete! Your plant joined your farm.",
+ "خلّص جلستك الفردية أول.":"Finish your solo session first.",
+ "الرمز ٦ خانات.":"The code is 6 characters.",
+ "بدأت الجلسة. بالتوفيق للجميع!":"Session started. Good luck, everyone!",
+ "متأكد؟ لو انسحبت الحين تذبل نبتتك.":"Are you sure? If you leave now, your plant will wilt.",
+ "انضم لجلستي الجماعية بحصاد الإنتاجية. الرمز: ":"Join my group session on Hasad. Code: ",
+ "نسخت الرمز.":"Code copied.",
+ "الرمز: ":"Code: ",
+ "غبت أطول من المهلة، فذبلت نبتتك.":"You were away longer than the grace period, so your plant wilted.",
+ "تحتاج حساب":"Account needed",
+ "الجلسات الجماعية للحسابات المسجّلة، عشان يطلع اسمك وجامعتك لربعك. سجّل دخولك وتقدر تنشئ جلسة أو تنضم.":"Group sessions are for signed-in accounts, so your name and university show to your friends. Sign in to create or join a session.",
+ "إنشاء جلسة":"Create session",
+ "نوع الجلسة":"Session type",
+ "مذاكرة":"Study",
+ "مدة الجلسة":"Duration",
+ "أقصى عدد":"Max people",
+ "وضع الذبول":"Wilting mode",
+ "اللي يطلع من التطبيق أطول من المهلة تذبل نبتته.":"Anyone who leaves the app longer than the grace period has their plant wilt.",
+ "مريح: ما فيه ذبول، النباتات تكبر لين آخر الوقت.":"Relaxed: no wilting, plants grow until the end.",
+ "مهلة الغياب":"Grace period",
+ "أنشئ الجلسة":"Create",
+ "انضمام لجلسة":"Join session",
+ "اكتب الرمز اللي أرسله لك صاحبك":"Enter the code your friend sent you",
+ "انضم":"Join",
+ "لكل شخص نبتته من البذرة اللي مختارها. تنحسب الجلسة بمزرعتك وساعاتك وجامعتك.":"Everyone grows a plant from the seed they picked. The session counts toward your farm, hours and university.",
+ "جاري تحميل الجلسة…":"Loading session…",
+ "ذبول بعد ":"Wilts after ",
+ "بدون ذبول":"No wilting",
+ "رمز الجلسة":"Session code",
+ "شارك":"Share",
+ "جاهز":"Ready",
+ "انسحب":"Left",
+ "نجح":"Done",
+ "يركّز":"Focusing",
+ "المنشئ":"Host",
+ "مكان فاضي":"Open spot",
+ "خلصت الجلسة":"Session complete",
+ "نبتتك نجحت ودخلت مزرعتك.":"Your plant made it and joined your farm.",
+ "نبتتك ذبلت هالمرة، المرة الجاية أقوى.":"Your plant wilted this time — next time you'll nail it.",
+ "خلّ التطبيق مفتوح. لو غبت أطول من ":"Keep the app open. If you're away longer than ",
+ " تذبل نبتتك.":", your plant wilts.",
+ "وضع مريح: ركّز براحتك.":"Relaxed mode: focus at your own pace.",
+ "انسحاب":"Leave",
+ "كل شي جاهز؟ ابدأ الجلسة للجميع.":"All set? Start the session for everyone.",
+ "شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ.":"Share the code with friends — you need at least two people to start.",
+ "ابدأ الجلسة":"Start session",
+ "إلغاء الجلسة":"Cancel session",
+ "بانتظار المنشئ يبدأ الجلسة…":"Waiting for the host to start…",
+ "مغادرة":"Leave",
+ "أول جلسة جماعية":"First Group Session",
+ "عشر جلسات جماعية":"Ten Group Sessions",
+ "قائد المجموعة":"Group Leader",
+ "ولا واحد ذبل":"Nobody Wilted",
+ "فريق كامل":"Full Squad",
+ "أكمل أول جلسة جماعية ونبتتك حيّة لين آخر الوقت.":"Complete your first group session with your plant alive until the end.",
+ "أكمل 10 جلسات جماعية ونبتتك حيّة بكل وحدة منها.":"Complete 10 group sessions with your plant alive in each one.",
+ "أنشئ جلسة جماعية بنفسك، وأكملها ونبتتك حيّة.":"Create a group session yourself and complete it with your plant alive.",
+ "أكمل جلسة جماعية ما ذبلت فيها ولا نبتة من نباتات المشاركين.":"Complete a group session where not a single participant's plant wilted.",
+ "أكمل جلسة جماعية فيها 8 أشخاص (العدد الكامل) ونبتتك حيّة.":"Complete a group session with 8 people (the full squad) with your plant alive.",
+ "تم الاستحقاق":"Achieved",
+ "لم يتم الاستحقاق":"Not achieved yet",
  'افتح الرابط اللي وصلك على الإيميل، وبيرجّعك هنا تحط كلمة سر جديدة.':'Open the link we emailed you — it brings you back here to set a new password.',
  'أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز.':'We emailed you a link. Open it on this device.',
  'انتهت صلاحية الرابط. اطلب واحداً جديداً.':'The link has expired. Request a new one.',
@@ -1011,8 +1168,6 @@ const DICT = {
  "مئة محاولة":"Hundred Tries",
  "معدّل مثالي":"Perfect Rate",
  "الاستحقاق":"Status",
- "تم":"Done",
- "لا لم يتم الاستحقاق":"No, not achieved yet",
  "أنهِ أول جلسة تركيز بنجاح، وتطلع لك أول نبتة حيّة بحديقتك.":"Finish your first focus session successfully, and your first living plant appears in your garden.",
  "اجمع 10 نبتات حيّة بحديقتك.":"Collect 10 living plants in your garden.",
  "اجمع 50 نبتة حيّة بحديقتك.":"Collect 50 living plants in your garden.",
@@ -3412,7 +3567,17 @@ const ACH = [
   { id:"persist", ic:"💪", n:"مئة محاولة",     t:s=>s.total>=100,
     d:"جرّب 100 جلسة تركيز، نجحت أو ذبلت." },
   { id:"perfect", ic:"🎯", n:"معدّل مثالي",    t:s=>s.total>=20 && s.rate===100,
-    d:"أنهِ 20 جلسة تركيز على الأقل بمعدّل نجاح 100% — بدون ولا نبتة ذابلة." }
+    d:"أنهِ 20 جلسة تركيز على الأقل بمعدّل نجاح 100% — بدون ولا نبتة ذابلة." },
+  { id:"g1",     ic:"🤝", n:"أول جلسة جماعية",  t:s=>s.gDone>=1,
+    d:"أكمل أول جلسة جماعية ونبتتك حيّة لين آخر الوقت." },
+  { id:"g10",    ic:"👥", n:"عشر جلسات جماعية", t:s=>s.gDone>=10,
+    d:"أكمل 10 جلسات جماعية ونبتتك حيّة بكل وحدة منها." },
+  { id:"ghost",  ic:"🧭", n:"قائد المجموعة",    t:s=>s.gHost>=1,
+    d:"أنشئ جلسة جماعية بنفسك، وأكملها ونبتتك حيّة." },
+  { id:"gclean", ic:"🌳", n:"ولا واحد ذبل",     t:s=>s.gClean>=1,
+    d:"أكمل جلسة جماعية ما ذبلت فيها ولا نبتة من نباتات المشاركين." },
+  { id:"gfull",  ic:"🎉", n:"فريق كامل",        t:s=>s.gFull>=1,
+    d:"أكمل جلسة جماعية فيها 8 أشخاص (العدد الكامل) ونبتتك حيّة." }
 ];
 
 function computeStats(){
@@ -3455,6 +3620,10 @@ function computeStats(){
     daysUsed:usedDays.size, allWeekdays:usedWeekdays.size>=7, allHours:usedHours.size>=24,
     rate: ps.length?Math.round(live.length/ps.length*100):0,
     bestHour: Math.max.apply(null,byHour)>0?bestHour:null,
+    gDone:  live.filter(p=>p.group).length,
+    gHost:  live.filter(p=>p.group&&p.group.host).length,
+    gClean: live.filter(p=>p.group&&p.group.allAlive&&p.group.size>=2).length,
+    gFull:  live.filter(p=>p.group&&p.group.size>=8).length,
     dawn: live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=4&&h<7;}),
     owl:  live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=0&&h<4;})
   };
@@ -3982,8 +4151,8 @@ function openBadge(id){
     '<p class="meta">'+desc+'</p>'+
     '<div class="kv"><div><span>'+TR("الاستحقاق")+'</span><b style="color:'+(on?"var(--viridian)":"var(--brick)")+'">'+
       (on
-        ? TR("تم")
-        : '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--brick);margin-inline-end:6px;vertical-align:middle"></span>'+TR("لا لم يتم الاستحقاق"))
+        ? TR("تم الاستحقاق")
+        : '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--brick);margin-inline-end:6px;vertical-align:middle"></span>'+TR("لم يتم الاستحقاق"))
       +'</b></div></div>';
   el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
 }
@@ -4038,6 +4207,309 @@ function renderGallery(){
 }
 
 /* ─── التنقّل والسمة ────────────────────────────────────────── */
+/* ═══ الرئيسية: شاشة الدخول الأولى — تظهر أول ما تفتح الرابط دايماً، مسجّل كنت أو لا ═══ */
+function showLanding(){
+  document.body.classList.add("landing");
+  $$(".view").forEach(v=>v.classList.toggle("on", v.id==="view-home"));
+}
+function leaveLanding(){ document.body.classList.remove("landing"); }
+/* نفس منطق الدخول التلقائي: لو عندك جلسة محفوظة (سحابية أو محلية) يكمّل فيها مباشرة،
+   ولو ما فيه شي يرجع false عشان الزر يفتح نموذج الدخول. */
+function enterApp(){
+  TOK = readTok();
+  if(TOK && cloudReady()){
+    const u = cloudUser();
+    CURRENT = u; DB = normalize(readStore());
+    $("#userInitial").textContent = initialOf(u.name);
+    bootApp();
+    setSync("");
+    (async ()=>{
+      try{
+        const remote = await cloudPull();
+        if(remote){ DB = mergeFarms(remote, DB); writeStore(); renderAll(); }
+        await cloudPush(DB); setSync("ok");
+      }catch(e){ setSync("err"); }
+    })();
+    return true;
+  }
+  const u = ACC.stay ? ACC.users.find(x=>x.id===ACC.stay) : null;
+  if(u){
+    CURRENT=u; DB=normalize(readStore());
+    $("#userInitial").textContent=initialOf(u.name);
+    bootApp();
+    return true;
+  }
+  return false;
+}
+$("#homeLogin").onclick = ()=>{
+  leaveLanding();
+  if(!enterApp()){ showGate(); switchTab("login"); }
+};
+$("#homeSignup").onclick = ()=>{
+  leaveLanding();
+  showGate(); switchTab("signup");
+};
+
+/* ═══ الجلسة الجماعية (٢–٨ أشخاص) ═══
+   كل شي يمر عبر دوال آمنة بسوبابيس (group_sessions.sql). نسحب حالة الغرفة كل ٤ ثوانٍ
+   والسحب نفسه نبضة حضور؛ والتطبيق بالخلفية ما ننبض، فلو طوّل الغياب بالوضع الصارم تذبل النبتة. */
+const GROUP_KEY = "hasad.group";
+const G_DUR   = [25,45,60,90,120];
+const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" }, { ms:300000, n:"٥ دقائق" } ];
+const G_CAT   = { study:"مذاكرة", work:"عمل" };
+let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false,
+          mode:"home", err:"", form:{ cat:"study", dur:25, max:8, strict:true, grace:60000 } };
+
+const gMyId  = () => TOK && TOK.uid;
+const gCanUse= () => !!(CURRENT && CURRENT.cloud && TOK && cloudReady());
+async function gRpc(fn, body){ await ensureToken(); return sbFetch("/rest/v1/rpc/"+fn, { method:"POST", body:body||{} }, true); }
+function gErrMsg(e){
+  const m = String((e&&e.message)||e||"");
+  if(/NO_ROOM/.test(m))  return "ما لقينا جلسة بهالرمز. تأكد منه.";
+  if(/STARTED/.test(m))  return "الجلسة بدأت خلاص، ما تقدر تنضم الحين.";
+  if(/FULL/.test(m))     return "الجلسة ممتلئة.";
+  if(/NEED_TWO/.test(m)) return "لازم شخصين على الأقل عشان تبدأ.";
+  if(/NOT_HOST/.test(m)) return "اللي أنشأ الجلسة هو اللي يبدأها.";
+  if(/group_|PGRST202|Could not find|HTTP 404/.test(m)) return "الجلسات الجماعية ما تفعّلت بقاعدة البيانات بعد.";
+  return "صار خطأ بالاتصال. جرّب مرة ثانية.";
+}
+function gSave(){ try{ G.code?localStorage.setItem(GROUP_KEY,G.code):localStorage.removeItem(GROUP_KEY); }catch(e){} }
+const gNow       = () => Date.now()+G.off;
+const gTotalMs   = () => G.room ? G.room.duration_min*60000 : 0;
+const gElapsedMs = () => { const r=G.room; return (r&&r.status==="running"&&r.started_at) ? Math.max(0,gNow()-Date.parse(r.started_at)) : 0; };
+const gIsDone    = () => !!(G.room && G.room.status==="running" && gElapsedMs()>=gTotalMs());
+const gMe        = () => G.room ? G.room.members.find(m=>m.user_id===gMyId()) : null;
+function gClock(){
+  const r=G.room; if(!r) return "00:00";
+  const left = r.status==="running" ? Math.max(0,gTotalMs()-gElapsedMs()) : gTotalMs();
+  const s=Math.ceil(left/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
+  return (h ? h+":"+fmt2(m) : fmt2(m))+":"+fmt2(x);
+}
+function gStopTimers(){ clearInterval(G.poll); clearInterval(G.tick); G.poll=G.tick=null; }
+function gStartTimers(){
+  gStopTimers();
+  G.poll = setInterval(gRefresh, 4000);
+  G.tick = setInterval(()=>{
+    if(!G.room) return;
+    const t=$("#gTimer"); if(t) t.textContent=gClock();
+    if(!G.done && gIsDone()){ G.done=true; gRecordMine(); renderGroup(); }
+  }, 1000);
+}
+function gClear(note){
+  gStopTimers();
+  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; gSave();
+  renderGroup();
+  if(note) toast(note,"👥");
+}
+async function gRefresh(){
+  if(!G.code || G.busy || document.hidden) return;      /* بالخلفية ما ننبض: الغياب ينحسب */
+  try{
+    const r = await gRpc("group_state", { p_code:G.code });
+    if(!r){ gClear(TR("الجلسة انتهت أو ألغاها المنشئ.")); return; }
+    G.off  = Date.parse(r.now) - Date.now();
+    G.room = r;
+    if(!gMe()){ gClear(TR("طلعت من الجلسة.")); return; }
+    G.done = gIsDone();
+    gRecordMine();
+    renderGroup();
+  }catch(e){ /* انقطاع عابر — المحاولة الجاية تلحق */ }
+}
+/* نسجّل نبتتي بالمزرعة مرة وحدة: لو ذبلت/انسحبت، أو لو خلص الوقت وهي حيّة */
+function gRecordMine(){
+  const r=G.room, me=gMe(); if(!r||!me||r.status!=="running"||!r.started_at) return;
+  const id = "g-"+r.code+"-"+Date.parse(r.started_at);
+  if(DB.plants.some(p=>p.id===id)) return;
+  const dead = me.state!=="alive";
+  if(!dead && !gIsDone()) return;
+  const mins = dead ? Math.max(.2, Math.min(gElapsedMs(),gTotalMs())/60000) : r.duration_min;
+  const p = { id, species: SPECIES[me.species]?me.species:"basil", tagId:r.category,
+              minutes: Math.round(mins*10)/10, startedAt:Date.parse(r.started_at), endedAt:Date.now(),
+              survived: !dead,
+              group: { size:r.members.length, host:r.host===gMyId(),
+                       allAlive: !dead && r.members.every(m=>m.state==="alive") } };
+  DB.plants.push(p); writeStore();
+  if(dead) toast(TR("ذبلت نبتتك بالجلسة الجماعية."),"🥀");
+  else     toast(TR("خلصت الجلسة الجماعية! نبتتك دخلت المزرعة."),"🤝");
+  checkAch();
+  if(CURRENT && CURRENT.cloud) pushNow(true);
+}
+async function gCreate(){
+  if(sess){ toast(TR("خلّص جلستك الفردية أول."),"⏱️"); return; }
+  const f=G.form; G.busy=true; G.err=""; renderGroup();
+  try{
+    const code = await gRpc("group_create", { p_category:f.cat, p_strict:f.strict, p_grace_ms:f.grace,
+      p_duration:f.dur, p_max:f.max, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:DB.seed });
+    G.busy=false; G.code=String(code); G.room=null; G.done=false; gSave();
+    gStartTimers(); await gRefresh();
+  }catch(e){ G.busy=false; G.err=gErrMsg(e); renderGroup(); }
+}
+async function gJoin(raw){
+  if(sess){ toast(TR("خلّص جلستك الفردية أول."),"⏱️"); return; }
+  const code = String(raw||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(code.length<6){ G.err="الرمز ٦ خانات."; renderGroup(); return; }
+  G.busy=true; G.err=""; renderGroup();
+  try{
+    const c = await gRpc("group_join", { p_code:code, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:DB.seed });
+    G.busy=false; G.code=String(c); G.room=null; G.done=false; gSave();
+    gStartTimers(); await gRefresh();
+  }catch(e){ G.busy=false; G.err=gErrMsg(e); renderGroup(); }
+}
+async function gStart(){
+  try{ await gRpc("group_start", { p_code:G.code }); toast(TR("بدأت الجلسة. بالتوفيق للجميع!"),"🌱"); await gRefresh(); }
+  catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
+}
+async function gLeave(){
+  const r=G.room, me=gMe();
+  const running = r && r.status==="running" && !gIsDone();
+  if(running && me && me.state==="alive" && !confirm(TR("متأكد؟ لو انسحبت الحين تذبل نبتتك."))) return;
+  try{
+    await gRpc("group_leave", { p_code:G.code });
+    if(running){ const s=await gRpc("group_state",{ p_code:G.code }); if(s){ G.room=s; gRecordMine(); } }
+  }catch(e){}
+  gClear();
+}
+async function gShare(){
+  const code=G.code; if(!code) return;
+  const text = TR("انضم لجلستي الجماعية بحصاد الإنتاجية. الرمز: ")+code;
+  try{ if(navigator.share){ await navigator.share({ text, url:siteURL() }); return; } }catch(e){ return; }
+  try{ await navigator.clipboard.writeText(code); toast(TR("نسخت الرمز."),"📋"); }
+  catch(e){ toast(TR("الرمز: ")+code,"📋"); }
+}
+function gResume(){
+  if(!gCanUse()) return;
+  let c=null; try{ c=localStorage.getItem(GROUP_KEY); }catch(e){}
+  if(!c) return;
+  G.code=c; G.room=null; G.done=false; gStartTimers(); gRefresh();
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(!G.code || !G.room) return;
+  if(document.hidden){ G.hiddenAt=Date.now(); return; }
+  const away = G.hiddenAt ? Date.now()-G.hiddenAt : 0; G.hiddenAt=null;
+  const r=G.room, me=gMe();
+  if(r.status==="running" && r.strict && me && me.state==="alive" && !gIsDone() && away>r.grace_ms){
+    toast(TR("غبت أطول من المهلة، فذبلت نبتتك."),"🥀");
+    gRpc("group_wither", { p_code:r.code }).catch(()=>{}).then(gRefresh);
+  } else gRefresh();
+});
+
+function gChips(act, items, cur){
+  return '<div class="chips">'+items.map(it=>
+    '<button class="chip" type="button" data-act="'+act+'" data-v="'+it.v+'" aria-pressed="'+(String(it.v)===String(cur))+'">'+it.n+'</button>'
+  ).join("")+'</div>';
+}
+function renderGroup(){
+  const box=$("#groupBody"); if(!box) return;
+  if(!gCanUse()){
+    if(G.code){ gStopTimers(); G.code=null; G.room=null; }
+    box.innerHTML='<section class="panel"><h3>'+TR("تحتاج حساب")+'</h3><p class="g-note" style="text-align:start;margin:0">'+
+      TR("الجلسات الجماعية للحسابات المسجّلة، عشان يطلع اسمك وجامعتك لربعك. سجّل دخولك وتقدر تنشئ جلسة أو تنضم.")+'</p></section>';
+    return;
+  }
+  const errHtml = G.err ? '<p class="g-note" style="color:var(--brick)">'+TR(G.err)+'</p>' : "";
+  if(!G.code){
+    if(G.mode==="create"){
+      const f=G.form;
+      box.innerHTML='<section class="panel"><h3>'+TR("إنشاء جلسة")+'</h3>'+
+        '<span class="g-label">'+TR("نوع الجلسة")+'</span>'+
+        gChips("cat",[{v:"study",n:TR("مذاكرة")},{v:"work",n:TR("عمل")}],f.cat)+
+        '<span class="g-label">'+TR("مدة الجلسة")+'</span>'+
+        gChips("dur",G_DUR.map(d=>({v:d,n:hhmm(d)})),f.dur)+
+        '<span class="g-label">'+TR("أقصى عدد")+'</span>'+
+        gChips("max",[2,3,4,5,6,7,8].map(n=>({v:n,n:String(n)})),f.max)+
+        '<div class="switch-row" style="margin-top:14px"><div class="txt"><strong>'+TR("وضع الذبول")+'</strong><span style="font-size:12.5px;color:var(--ink-2)">'+
+          (f.strict?TR("اللي يطلع من التطبيق أطول من المهلة تذبل نبتته."):TR("مريح: ما فيه ذبول، النباتات تكبر لين آخر الوقت."))+'</span></div>'+
+          '<button class="switch" type="button" role="switch" data-act="strict" aria-checked="'+f.strict+'" aria-label="'+escAttr(TR("وضع الذبول"))+'"></button></div>'+
+        (f.strict ? '<span class="g-label">'+TR("مهلة الغياب")+'</span>'+gChips("grace",G_GRACE.map(g=>({v:g.ms,n:TR(g.n)})),f.grace) : "")+
+        errHtml+
+        '<div class="g-row"><button class="btn btn-primary" type="button" data-act="create"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("أنشئ الجلسة"))+'</button>'+
+        '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
+      return;
+    }
+    if(G.mode==="join"){
+      box.innerHTML='<section class="panel"><h3>'+TR("انضمام لجلسة")+'</h3>'+
+        '<span class="g-label">'+TR("اكتب الرمز اللي أرسله لك صاحبك")+'</span>'+
+        '<input class="g-input" id="gCodeIn" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123">'+
+        errHtml+
+        '<div class="g-row"><button class="btn btn-primary" type="button" data-act="join"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("انضم"))+'</button>'+
+        '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
+      const inp=$("#gCodeIn"); if(inp){ inp.onkeydown=e=>{ if(e.key==="Enter") gJoin(inp.value); }; setTimeout(()=>inp.focus(),40); }
+      return;
+    }
+    box.innerHTML='<div class="g-choice">'+
+      '<button class="btn btn-primary" type="button" data-act="mode" data-v="create"><span style="font-size:24px">➕</span>'+TR("إنشاء جلسة")+'</button>'+
+      '<button class="btn btn-quiet" type="button" data-act="mode" data-v="join"><span style="font-size:24px">🔑</span>'+TR("انضمام لجلسة")+'</button></div>'+
+      '<p class="g-note">'+TR("لكل شخص نبتته من البذرة اللي مختارها. تنحسب الجلسة بمزرعتك وساعاتك وجامعتك.")+'</p>';
+    return;
+  }
+  const r=G.room;
+  if(!r){ box.innerHTML='<p class="g-note">'+TR("جاري تحميل الجلسة…")+'</p>'; return; }
+  const me=gMe(), running=r.status==="running", done=gIsDone(), host=r.host===gMyId();
+  const graceTxt = (G_GRACE.find(g=>g.ms===r.grace_ms)||{n:Math.round(r.grace_ms/1000)+" ث"}).n;
+  const meta='<div class="g-meta"><span>'+TR(G_CAT[r.category]||"مذاكرة")+'</span><span>'+hhmm(r.duration_min)+'</span>'+
+    '<span>'+(r.strict?TR("ذبول بعد ")+TR(graceTxt):TR("بدون ذبول"))+'</span><span>'+r.members.length+" / "+r.max_members+'</span></div>';
+  let head;
+  if(!running) head='<section class="panel"><h3>'+TR("رمز الجلسة")+'</h3><div class="g-codebox"><div class="g-code">'+r.code+'</div>'+
+    '<button class="btn btn-quiet" type="button" data-act="share" style="flex:none;padding:9px 14px;font-size:14px">'+TR("شارك")+'</button></div>'+meta+'</section>';
+  else head='<section class="panel"><div class="g-timer" id="gTimer">'+gClock()+'</div>'+meta+'</section>';
+  const minsNow = running ? Math.min(gElapsedMs(),gTotalMs())/60000 : 0;
+  const cards = r.members.map((m,i)=>{
+    const u=findUni(m.uni), dead=m.state!=="alive";
+    const st = !running ? '<div class="g-state" style="color:var(--ink-3)">'+TR("جاهز")+'</div>'
+      : m.state==="left" ? '<div class="g-state" style="color:var(--brick)">'+TR("انسحب")+'</div>'
+      : dead ? '<div class="g-state" style="color:var(--brick)">'+TR("ذبلت")+'</div>'
+      : done ? '<div class="g-state" style="color:var(--viridian)">'+TR("نجح")+' ✅</div>'
+      : '<div class="g-state" style="color:var(--viridian)">'+TR("يركّز")+'</div>';
+    return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&running?" dead":"")+'"><div data-gcv="'+i+'"></div>'+
+      '<div class="g-name">'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?' <span title="'+escAttr(TR("المنشئ"))+'">👑</span>':"")+'</div>'+
+      '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div>'+st+'</div>';
+  });
+  if(!running) for(let k=r.members.length;k<r.max_members;k++) cards.push('<div class="g-member g-empty">'+TR("مكان فاضي")+'</div>');
+  let foot;
+  if(done){
+    const mine=me&&me.state==="alive";
+    foot='<p class="g-note"><b>'+TR("خلصت الجلسة")+' 🎉</b><br>'+(mine?TR("نبتتك نجحت ودخلت مزرعتك."):TR("نبتتك ذبلت هالمرة، المرة الجاية أقوى."))+'</p>'+
+      '<div class="g-row"><button class="btn btn-primary" type="button" data-act="back">'+TR("رجوع")+'</button></div>';
+  } else if(running){
+    foot='<p class="g-note">'+(r.strict?TR("خلّ التطبيق مفتوح. لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك."):TR("وضع مريح: ركّز براحتك."))+'</p>'+
+      '<div class="g-row"><button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
+  } else if(host){
+    const can=r.members.length>=2;
+    foot='<p class="g-note">'+(can?TR("كل شي جاهز؟ ابدأ الجلسة للجميع."):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
+      '<div class="g-row"><button class="btn btn-primary" type="button" data-act="start"'+(can?"":" disabled")+'>'+TR("ابدأ الجلسة")+'</button>'+
+      '<button class="btn btn-quiet" type="button" data-act="leave">'+TR("إلغاء الجلسة")+'</button></div>';
+  } else {
+    foot='<p class="g-note">'+TR("بانتظار المنشئ يبدأ الجلسة…")+'</p>'+
+      '<div class="g-row"><button class="btn btn-quiet" type="button" data-act="leave">'+TR("مغادرة")+'</button></div>';
+  }
+  box.innerHTML = head+'<div class="g-members">'+cards.join("")+'</div>'+foot;
+  r.members.forEach((m,i)=>{
+    const holder=box.querySelector('[data-gcv="'+i+'"]'); if(!holder) return;
+    const cv=document.createElement("canvas"); holder.appendChild(cv);
+    paint(cv,96,112,{ species:SPECIES[m.species]?m.species:"basil", minutes:Math.max(.4,minsNow),
+      withered: running && m.state!=="alive", seedStr:r.code+m.user_id, glow:false });
+  });
+}
+$("#groupBody").addEventListener("click", e=>{
+  const b=e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  const v=b.dataset.v, f=G.form;
+  switch(b.dataset.act){
+    case "mode":   G.mode=v; G.err=""; break;
+    case "cat":    f.cat=v; break;
+    case "dur":    f.dur=+v; break;
+    case "max":    f.max=+v; break;
+    case "strict": f.strict=!f.strict; break;
+    case "grace":  f.grace=+v; break;
+    case "create": return gCreate();
+    case "join":   return gJoin(($("#gCodeIn")||{}).value);
+    case "start":  return gStart();
+    case "leave":  return gLeave();
+    case "share":  return gShare();
+    case "back":   return gClear();
+    default: return;
+  }
+  renderGroup();
+});
+
 function go(name){
   $$(".view").forEach(v=>v.classList.toggle("on", v.id==="view-"+name));
   $$(".nav-btn").forEach(b=>{
@@ -4047,6 +4519,8 @@ function go(name){
   if(name==="stats")  renderStats();
   if(name==="seeds")  renderGallery();
   if(name==="uni")    renderUniBoard();
+  if(name==="group")  renderGroup();
+  if(name==="home")   window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"});
   if(name==="plant"){ setTimeout(sizeHero,20); window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"}); }
 }
 $$(".nav-btn").forEach(b=>b.onclick=()=>go(b.dataset.go));
@@ -4117,10 +4591,14 @@ function renderAll(){
   if($("#view-garden").classList.contains("on")) renderGarden();
   if($("#view-stats").classList.contains("on"))  renderStats();
   if($("#view-seeds").classList.contains("on"))  renderGallery();
+  if($("#view-group").classList.contains("on"))  renderGroup();
 }
 function bootApp(){
+  leaveLanding();
   applyTheme(); renderSetup(); sizeHero(); paintClock(0); restore();
+  gResume();
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ lastDraw=0; drawHero(); });
+  go("plant");
 }
 
 /* موقع دقيق (مدينتك الفعلية) صامت بالكامل — بدون أي نافذة إذن.
@@ -4610,29 +5088,8 @@ function exportBackup(){
     })();
     return;
   }
-  TOK = readTok();
-  if(TOK && cloudReady()){                       /* حساب سحابي محفوظ */
-    const u = cloudUser();
-    CURRENT = u; DB = normalize(readStore());
-    $("#userInitial").textContent = initialOf(u.name);
-    bootApp();                                   /* نشتغل فوراً، والمزامنة تلحق */
-    setSync("");
-    (async ()=>{
-      try{
-        const remote = await cloudPull();
-        if(remote){ DB = mergeFarms(remote, DB); writeStore(); renderAll(); }
-        await cloudPush(DB); setSync("ok");
-      }catch(e){ setSync("err"); }
-    })();
-    return;
-  }
-  const u = ACC.stay ? ACC.users.find(x=>x.id===ACC.stay) : null;
-  if(u){
-    CURRENT=u; DB=normalize(readStore());
-    $("#userInitial").textContent=initialOf(u.name);
-    bootApp();
-  } else showGate();
-  resolveSiteLocation();      /* يتزامن مع مدينتك بالضبط لو سمحت، بلا ما يعطّل أي شي لو رفضت */
+  showLanding();                /* أول ما تفتح الرابط، دايماً — مسجّل كنت أو لا */
+  resolveSiteLocation();        /* يتزامن مع مدينتك بالضبط لو سمحت، بلا ما يعطّل أي شي لو رفضت */
 })();
 
 /* ═══ تشغيل اللغة: بعد ما كل شيء صار مُعرَّفاً ═══ */
