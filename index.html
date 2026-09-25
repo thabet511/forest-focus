@@ -4293,7 +4293,8 @@ function gErrMsg(e){
   if(/NEED_TWO/.test(m)) return "لازم شخصين على الأقل عشان تبدأ.";
   if(/NOT_HOST/.test(m)) return "اللي أنشأ الجلسة هو اللي يبدأها.";
   if(/group_|PGRST202|Could not find|HTTP 404/.test(m)) return "الجلسات الجماعية ما تفعّلت بقاعدة البيانات بعد.";
-  return "صار خطأ بالاتصال. جرّب مرة ثانية.";
+  console.error("[group]", e);
+  return "صار خطأ بالاتصال. جرّب مرة ثانية."+(m?" ("+m.slice(0,120)+")":"");
 }
 function gSave(){ try{ G.code?localStorage.setItem(GROUP_KEY,G.code):localStorage.removeItem(GROUP_KEY); }catch(e){} }
 const gNow       = () => Date.now()+G.off;
