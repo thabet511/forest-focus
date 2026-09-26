@@ -73,12 +73,12 @@
 
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%; overflow-x:hidden}
 body{
   font-family:var(--sans); font-weight:400; color:var(--ink);
   background:radial-gradient(120% 80% at 50% 0%, var(--field) 0%, var(--field-edge) 100%) fixed;
   min-height:100vh; min-height:100dvh; line-height:1.6;
-  -webkit-font-smoothing:antialiased;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
 }
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 :focus-visible{outline:2.5px solid var(--viridian);outline-offset:2px;border-radius:6px}
@@ -334,17 +334,33 @@ body.landing .nav{display:none}
 body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-direction:column;justify-content:center;padding-bottom:24px}
 /* ── الرئيسية ── */
 .brand{cursor:pointer}
+.home-sky{
+  border-radius:var(--r-l); overflow:hidden; margin:0 0 4px;
+  background:var(--paper-2); border:1px solid var(--line); box-shadow:var(--shadow-1);
+}
+.home-sky canvas{display:block; width:100%}
 .home-hero{text-align:center;padding:26px 8px 6px}
 .home-mark{font-size:44px;line-height:1;margin-bottom:8px}
 .home-hero h2{font-family:var(--kufi);font-size:28px;font-weight:600;margin:0}
 .home-tag{margin:8px 0 0;font-size:16px;font-weight:600;color:var(--viridian)}
 .home-lead{margin:10px auto 0;max-width:40ch;font-size:14px;line-height:1.75;color:var(--ink-2)}
-.home-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
-@media (max-width:420px){ .home-grid{grid-template-columns:1fr} }
-.home-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:14px;box-shadow:var(--shadow-1)}
+.home-slider{margin-top:20px; overflow:hidden; border-radius:var(--r-m); touch-action:pan-y}
+.home-slider .home-card{
+  flex:0 0 100%; width:100%; box-sizing:border-box; direction:rtl;
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);
+  padding:16px;box-shadow:var(--shadow-1);
+}
+.home-track{display:flex; position:relative;
+  transition:transform .65s cubic-bezier(.22,.68,.30,1)}
 .home-card b{display:block;font-size:14.5px;margin-bottom:5px}
 .home-card span{font-size:13px;line-height:1.65;color:var(--ink-2)}
+.home-dots{display:flex;justify-content:center;gap:7px;margin-top:12px}
+.home-dot{width:7px;height:7px;padding:0;border:none;border-radius:50%;background:var(--line);
+  transition:background .25s,transform .25s,width .25s}
+.home-dot[aria-current="true"]{background:var(--viridian);width:18px;border-radius:5px}
+@media (prefers-reduced-motion: reduce){ .home-track{transition:none} }
 .home-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.home-foot{margin:26px 0 10px;text-align:center;font-size:12.5px;color:var(--ink-3)}
 /* ── الجلسة الجماعية ── */
 .g-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .g-choice .btn{padding:16px 10px;flex-direction:column;gap:6px;font-size:15px}
@@ -355,6 +371,7 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .g-members{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:10px;margin-top:14px}
 .g-member{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:8px 6px 10px;text-align:center;min-width:0}
 .g-member.me{border-color:var(--viridian);box-shadow:0 0 0 2px var(--viridian-soft)}
+.g-member.focused{border-color:var(--ochre);box-shadow:0 0 0 2px var(--ochre-soft)}
 .g-member.dead{opacity:.78}
 .g-member canvas{display:block;margin:0 auto}
 .g-name{font-size:13px;font-weight:600;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -437,6 +454,14 @@ body.gated{overflow:hidden}
   background:var(--paper-2);border:1px solid var(--line);color:var(--ink);
 }
 .fld input:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
+.pwwrap{position:relative}
+.pwwrap input{padding-inline-end:44px}
+.pwEye{
+  position:absolute; top:50%; transform:translateY(-50%); inset-inline-end:6px;
+  width:32px; height:32px; border-radius:8px; display:grid; place-items:center;
+  background:transparent; color:var(--ink-3); font-size:16px; line-height:1;
+}
+.pwEye:hover{background:var(--paper-2); color:var(--ink)}
 .accrow{
   display:flex;align-items:center;gap:11px;width:100%;text-align:start;
   padding:11px 12px;border:1px solid var(--line);border-radius:13px;
@@ -598,22 +623,27 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
 
   <!-- ══ ٠) الرئيسية: تعريف مختصر بالتطبيق ══ -->
   <main class="view" id="view-home">
+    <section class="home-sky" id="homeSky"></section>
     <section class="home-hero">
       <div class="home-mark" aria-hidden="true">🌱</div>
       <h2>حصاد الإنتاجية</h2>
       <p class="home-tag">ازرع تركيزك، واحصد إنتاجيتك.</p>
       <p class="home-lead">كل دقيقة تركّز فيها تكبّر نبتة. خلّك مركّز وتصير شجرة، وتطلع من التطبيق بالوضع الصارم وتذبل.</p>
     </section>
-    <div class="home-grid">
-      <div class="home-card"><b>🌿 ازرع بتركيزك</b><span>اختر بذرتك وابدأ العدّاد، والنبتة تكبر مع كل دقيقة لين تصير شجرة.</span></div>
-      <div class="home-card"><b>🌳 مزرعتك تكبر</b><span>كل جلسة ناجحة تنضاف لمزرعتك، وتشوف ساعاتك وأيامك وإنجازاتك بالأرقام.</span></div>
-      <div class="home-card"><b>👥 ركّز مع ربعك</b><span>جلسة جماعية من ٢ إلى ٨ أشخاص، لكل واحد نبتته، مذاكرة أو عمل.</span></div>
-      <div class="home-card"><b>🎓 نافس بجامعتك</b><span>دقائقك تنحسب لجامعتك بترتيب الجامعات السعودية.</span></div>
+    <div class="home-slider" id="homeSlider">
+      <div class="home-track" id="homeTrack">
+        <div class="home-card"><b>🌿 ازرع بتركيزك</b><span>اختر بذرتك وابدأ العدّاد، والنبتة تكبر مع كل دقيقة لين تصير شجرة.</span></div>
+        <div class="home-card"><b>🌳 مزرعتك تكبر</b><span>كل جلسة ناجحة تنضاف لمزرعتك، وتشوف ساعاتك وأيامك وإنجازاتك بالأرقام.</span></div>
+        <div class="home-card"><b>👥 ركّز مع ربعك</b><span>جلسة جماعية من ٢ إلى ٨ أشخاص، لكل واحد نبتته، مذاكرة أو عمل.</span></div>
+        <div class="home-card"><b>🎓 نافس بجامعتك</b><span>دقائقك تنحسب لجامعتك بترتيب الجامعات السعودية.</span></div>
+      </div>
+      <div class="home-dots" id="homeDots"></div>
     </div>
     <div class="home-actions">
       <button class="btn btn-primary" id="homeLogin" type="button">سجّل دخولك</button>
       <button class="btn btn-quiet" id="homeSignup" type="button">إنشاء حساب</button>
     </div>
+    <p class="home-foot">صنع بحب من حصاد الإنتاجية 🤍🍃</p>
   </main>
 
   <!-- ══ ١) النبتة ══ -->
@@ -807,7 +837,8 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
       <label class="fld"><span>الإيميل</span>
         <input id="cEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
       <label class="fld"><span>كلمة السر</span>
-        <input id="cPass" type="password" autocomplete="current-password" placeholder="كلمة السر" dir="ltr"></label>
+        <div class="pwwrap"><input id="cPass" type="password" autocomplete="current-password" placeholder="كلمة السر" dir="ltr">
+        <button type="button" class="pwEye" data-topw="cPass" aria-label="عرض كلمة السر">👁</button></div></label>
       <button class="btn btn-primary" id="cInBtn" style="width:100%">دخول</button>
       <label class="chkrow" style="margin-top:12px"><input type="checkbox" id="stayCloud" checked> خلّني داخل على هذا الجهاز</label>
       <p class="gswap">ما عندك حساب؟ <button type="button" id="goSignup">سجّل جديد</button></p>
@@ -828,7 +859,8 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
       </div>
       <div id="rstStep2" hidden>
         <label class="fld"><span>كلمة السر الجديدة</span>
-          <input id="rPass" type="password" autocomplete="new-password" dir="ltr" placeholder="٨+ خانات: حرف كبير وصغير ورقم"></label>
+          <div class="pwwrap"><input id="rPass" type="password" autocomplete="new-password" dir="ltr" placeholder="٨+ خانات: حرف كبير وصغير ورقم">
+          <button type="button" class="pwEye" data-topw="rPass" aria-label="عرض كلمة السر">👁</button></div></label>
         <button class="btn btn-primary" id="rSet" style="width:100%">عيّن كلمة السر وادخل</button>
       </div>
       <p class="gswap"><button type="button" id="rBack">رجوع</button></p>
@@ -840,7 +872,8 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
       <label class="fld"><span>الإيميل <i>*</i></span>
         <input id="sEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
       <label class="fld"><span>كلمة السر <i>*</i></span>
-        <input id="sPass" type="password" autocomplete="new-password" placeholder="٨+ خانات: حرف كبير وصغير ورقم" dir="ltr"></label>
+        <div class="pwwrap"><input id="sPass" type="password" autocomplete="new-password" placeholder="٨+ خانات: حرف كبير وصغير ورقم" dir="ltr">
+        <button type="button" class="pwEye" data-topw="sPass" aria-label="عرض كلمة السر">👁</button></div></label>
       <label class="fld"><span>المنطقة <i>*</i></span>
         <select id="sRegion"></select></label>
       <label class="fld"><span>الجامعة <i>*</i></span>
@@ -4232,8 +4265,92 @@ function renderGallery(){
 function showLanding(){
   document.body.classList.add("landing");
   $$(".view").forEach(v=>v.classList.toggle("on", v.id==="view-home"));
+  startLandingSky();
+  startHomeSlider();
 }
-function leaveLanding(){ document.body.classList.remove("landing"); }
+function leaveLanding(){ document.body.classList.remove("landing"); stopLandingSky(); stopHomeSlider(); }
+/* نخلة حيّة فوق الصفحة الرئيسية، بنفس دالة الرسم ونفس حلقة الحركة اللي تستخدمها بوابة الدخول —
+   شمس وقمر بموقعهم الفعلي حسب وقتك الحقيقي، تشرق وتغرب وسعف النخلة يتمايل مع الريح */
+let landRaf=0, landLast=0, landCost=6;
+function paintLandingSky(){
+  const box=$("#homeSky"); if(!box) return;
+  let cv=box.querySelector("canvas");
+  if(!cv){ cv=document.createElement("canvas"); box.appendChild(cv); }
+  const w=Math.max(240, box.clientWidth||360);
+  const h=Math.round(Math.min(260, w*0.6));
+  const t=performance.now();
+  drawScene(fitCanvas(cv,w,h),{ w, h, species:"palm", minutes:PHASE1*4.2, seedStr:"home-landing-palm",
+    glow:true, sway: reduceMotion?0:windAt(t)*1.25, tms:t, mdate:new Date() });
+}
+function landLoop(){
+  if(!landRaf) return;
+  if(!document.body.classList.contains("landing") || document.hidden){ landRaf=0; return; }
+  const now=performance.now();
+  const gap = reduceMotion ? 4000 : Math.max(8, landCost*2);
+  if(now-landLast>gap){
+    landLast=now;
+    const t0=performance.now(); paintLandingSky();
+    landCost = landCost*.82 + (performance.now()-t0)*.18;
+  }
+  landRaf=requestAnimationFrame(landLoop);
+}
+function startLandingSky(){
+  paintLandingSky();
+  if(!landRaf && !reduceMotion){ landLast=0; landRaf=requestAnimationFrame(landLoop); }
+}
+function stopLandingSky(){ landRaf=0; }
+/* سلايدات شرح الفكرة: كرت واحد بالشاشة، تتحرك لحالها بسلاسة — وتقدر تسحبها بإصبعك بعد */
+let homeSlideN=0, homeSlideI=0, homeSlideTimer=null, homeSlideWired=false;
+function homeSlideBuild(){
+  const track=$("#homeTrack"), dotsBox=$("#homeDots"); if(!track||!dotsBox) return;
+  homeSlideN = track.children.length;
+  dotsBox.innerHTML="";
+  for(let i=0;i<homeSlideN;i++){
+    const d=document.createElement("button");
+    d.type="button"; d.className="home-dot"; d.setAttribute("aria-label",TR("سلايد ")+(i+1));
+    d.onclick=()=>{ homeSlideGo(i); homeSlideRestart(); };
+    dotsBox.appendChild(d);
+  }
+  homeSlideRender();
+  if(!homeSlideWired){ homeSlideWire(); homeSlideWired=true; }
+}
+/* نحرّك الشريط بمقدار الإزاحة الفعلية اللي حسبها المتصفّح لبطاقة الهدف —
+   نفس الطريقة تشتغل صح مهما كان اتجاه الصفحة (RTL) أو عرض الشاشة، بدون حسابات نسبة مئوية تتكسّر أحياناً */
+function homeSlideRender(){
+  const track=$("#homeTrack"); if(!track) return;
+  const card=track.children[homeSlideI]; if(!card) return;
+  track.style.transform = "translateX("+(-card.offsetLeft)+"px)";
+  $$("#homeDots .home-dot").forEach((d,i)=>d.setAttribute("aria-current", i===homeSlideI));
+}
+function homeSlideGo(i){ homeSlideI = (i+homeSlideN)%homeSlideN; homeSlideRender(); }
+function homeSlideNext(){ homeSlideGo(homeSlideI+1); }
+function homeSlideRestart(){
+  clearInterval(homeSlideTimer);
+  if(reduceMotion) return;
+  homeSlideTimer=setInterval(homeSlideNext, 5000);
+}
+function startHomeSlider(){
+  if(!$("#homeTrack")) return;
+  if(!homeSlideN) homeSlideBuild(); else homeSlideRender();
+  homeSlideRestart();
+}
+function stopHomeSlider(){ clearInterval(homeSlideTimer); homeSlideTimer=null; }
+/* سحب بالإصبع أو الفأرة: يمين/يسار ينقل سلايد، وأي تفاعل يدوي يعيد ضبط المؤقّت */
+function homeSlideWire(){
+  const slider=$("#homeSlider"); if(!slider) return;
+  let x0=null, active=false;
+  slider.addEventListener("pointerdown", e=>{
+    if(e.target.closest(".home-dot")) return;
+    x0=e.clientX; active=true;
+  });
+  const finish=(x)=>{
+    if(!active||x0==null) return; active=false;
+    const dx=x-x0; x0=null;
+    if(Math.abs(dx)>36){ homeSlideGo(homeSlideI + (dx<0?-1:1)); homeSlideRestart(); }
+  };
+  slider.addEventListener("pointerup", e=>finish(e.clientX));
+  slider.addEventListener("pointercancel", ()=>{ active=false; x0=null; });
+}
 /* نفس منطق الدخول التلقائي: لو عندك جلسة محفوظة (سحابية أو محلية) يكمّل فيها مباشرة،
    ولو ما فيه شي يرجع false عشان الزر يفتح نموذج الدخول. */
 function enterApp(){
@@ -4276,8 +4393,8 @@ $("#homeSignup").onclick = ()=>{
    والسحب نفسه نبضة حضور؛ والتطبيق بالخلفية ما ننبض، فلو طوّل الغياب بالوضع الصارم تذبل النبتة. */
 const GROUP_KEY = "hasad.group";
 const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" }, { ms:300000, n:"٥ دقائق" } ];
-let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false,
-          mode:"home", err:"", form:{ cat:null, max:8, grace:60000, species:null } };
+let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false, focus:null,
+          mode:"home", err:"", form:{ cat:null, max:8, grace:60000, species:null, strict:true } };
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
 function gCatName(id){ const t=DB.tags.find(x=>x.id===id); return t ? TR(t.n) : (id||TR("تركيز")); }
 
@@ -4327,7 +4444,7 @@ function gStartTimers(){
 }
 function gClear(note){
   gStopTimers();
-  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; gEndedAt=0; gSave();
+  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; G.focus=null; gEndedAt=0; gSave();
   renderGroup();
   if(note) toast(note,"👥");
 }
@@ -4385,6 +4502,7 @@ async function gCreate(){
     G.busy=false; G.code=String(code); G.room=null; G.done=false; gFails=0; gSave();
     renderGroup();                       /* نطلع من شاشة "لحظة…" فوراً */
     gStartTimers(); await gRefresh();
+    if(f.strict===false) gRpc("group_set_wither", { p_code:G.code, p_strict:false, p_grace_ms:f.grace }).then(gRefresh).catch(()=>{});
   }catch(e){ G.busy=false; G.err=gErrMsg(e); renderGroup(); }
 }
 async function gJoin(raw){
@@ -4397,6 +4515,7 @@ async function gJoin(raw){
     G.busy=false; G.code=String(c); G.room=null; G.done=false; gFails=0; gSave();
     renderGroup();
     gStartTimers(); await gRefresh();
+    gRpc("group_set_wither", { p_code:G.code, p_strict:!!G.form.strict, p_grace_ms:G.form.grace }).then(gRefresh).catch(()=>{});
   }catch(e){ G.busy=false; G.err=gErrMsg(e); renderGroup(); }
 }
 async function gStart(){
@@ -4423,9 +4542,11 @@ async function gLeave(){
   }catch(e){}
   gClear();
 }
-async function gSetStrict(v){
-  try{ await gRpc("group_set_strict", { p_code:G.code, p_strict:v });
-       toast(TR(v?"شغّلت الذبول على نبتتك.":"طفّيت الذبول على نبتتك."), v?"🌿":"🛡️");
+async function gSetWither(v){
+  const strict = v!=="off";
+  const grace  = strict ? +v : ((G.room&&G.room.grace_ms)||60000);
+  try{ await gRpc("group_set_wither", { p_code:G.code, p_strict:strict, p_grace_ms:grace });
+       toast(TR(strict?"حدّثت مدة الذبول عندك.":"طفّيت الذبول على نبتتك."), strict?"🌿":"🛡️");
        await gRefresh(); }
   catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
 }
@@ -4447,12 +4568,19 @@ document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ G.hiddenAt=Date.now(); return; }
   const away = G.hiddenAt ? Date.now()-G.hiddenAt : 0; G.hiddenAt=null;
   const r=G.room, me=gMe();
-  if(r.status==="running" && me && me.strict!==false && me.state==="alive" && !gIsDone() && away>r.grace_ms){
+  if(r.status==="running" && me && me.strict!==false && me.state==="alive" && !gIsDone() && away>((me&&me.grace_ms)||r.grace_ms)){
     toast(TR("غبت أطول من المهلة، فذبلت نبتتك."),"🥀");
     gRpc("group_wither", { p_code:r.code }).catch(()=>{}).then(gRefresh);
   } else gRefresh();
 });
 
+function gWitherChips(strict, grace, act){
+  const sel = strict ? String(grace) : "off";
+  const opts = [{v:"off",n:"مطفي"}].concat(G_GRACE.map(g=>({v:String(g.ms),n:g.n})));
+  return '<div class="chips">'+opts.map(o=>
+    '<button class="chip" type="button" data-act="'+act+'" data-v="'+o.v+'" aria-pressed="'+(o.v===sel)+'">'+
+    (o.v==="off"?"🛡️ ":"🌿 ")+TR(o.n)+'</button>').join("")+'</div>';
+}
 function gSeedChips(cur){
   const guest = !!(CURRENT && CURRENT.guest);
   const list  = guest ? GUEST_SEEDS : SP_ORDER;
@@ -4492,8 +4620,10 @@ function renderGroupInner(box){
         '<div class="chips" id="gTagChips"></div>'+
         '<span class="g-label">'+TR("نبتتك بهالجلسة")+'</span>'+
         gSeedChips(f.species||DB.seed)+
+        '<span class="g-label">'+TR("ذبول نبتتك لو طلعت من التطبيق")+'</span>'+
+        gWitherChips(f.strict, f.grace, "wither")+
         '<p class="g-note" style="text-align:start;margin:14px 0 0">'+
-          TR("الجلسة مفتوحة بلا مدة — تبدأ لما تمتلي (٨ أشخاص) أو لما تضغط ابدأ بنفسك. وكل واحد يتحكم بذبول نبتته من داخل الجلسة.")+'</p>'+
+          TR("الجلسة مفتوحة بلا مدة — تبدأ لما تمتلي (٨ أشخاص) أو لما تضغط ابدأ بنفسك. وكل واحد يحدد الذبول عنده بنفسه، وتقدر تغيّره أي وقت من داخل الجلسة.")+'</p>'+
         errHtml+
         '<div class="g-row"><button class="btn btn-primary" type="button" data-act="create"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("أنشئ الجلسة"))+'</button>'+
         '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
@@ -4524,6 +4654,8 @@ function renderGroupInner(box){
         '<input class="g-input" id="gCodeIn" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123">'+
         '<span class="g-label">'+TR("نبتتك بهالجلسة")+'</span>'+
         gSeedChips(G.form.species||DB.seed)+
+        '<span class="g-label">'+TR("ذبول نبتتك لو طلعت من التطبيق")+'</span>'+
+        gWitherChips(G.form.strict, G.form.grace, "wither")+
         errHtml+
         '<div class="g-row"><button class="btn btn-primary" type="button" data-act="join"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("انضم"))+'</button>'+
         '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
@@ -4545,16 +4677,22 @@ function renderGroupInner(box){
     return;
   }
   const me=gMe(), ended=gEnded(), running=r.status==="running" && !ended, done=gIsDone()||ended, host=r.host===gMyId();
-  const graceTxt = (G_GRACE.find(g=>g.ms===r.grace_ms)||{n:Math.round(r.grace_ms/1000)+" ث"}).n;
+  const focusId = (G.focus && r.members.some(m=>m.user_id===G.focus)) ? G.focus : gMyId();
+  const fm = r.members.find(m=>m.user_id===focusId) || me;
+  const viewingOther = fm && focusId!==gMyId();
   const meta='<div class="g-meta"><span>'+gCatName(r.category)+'</span>'+
     (gOpen()?'<span>'+TR("مفتوحة")+'</span>':'<span>'+hhmm(r.duration_min)+'</span>')+
-    '<span>'+TR("ذبول بعد ")+TR(graceTxt)+'</span>'+
     '<span>'+r.members.length+" / "+r.max_members+'</span>'+
     (r.locked?'<span>🔒 '+TR("الدخول مقفول")+'</span>':"")+'</div>';
   let head;
   if(!running && !ended) head='<section class="panel"><h3>'+TR("رمز الجلسة")+'</h3><div class="g-codebox"><div class="g-code">'+r.code+'</div>'+
     '<button class="btn btn-quiet" type="button" data-act="share" style="flex:none;padding:9px 14px;font-size:14px">'+TR("شارك")+'</button></div>'+meta+'</section>';
-  else head='<section class="panel"><div id="gSky" style="margin:-2px 0 8px"></div>'+
+  else head='<section class="panel">'+
+    (viewingOther?'<div class="g-row" style="margin:0 0 8px;justify-content:space-between;align-items:center">'+
+        '<span class="g-label" style="margin:0">🌱 '+TR("نبتة")+' '+escAttr(fm.name||TR("مزارع"))+'</span>'+
+        '<button class="btn btn-quiet" type="button" data-act="focus" data-v="'+escAttr(gMyId())+'" style="padding:7px 13px;font-size:13px">'+TR("رجوع لنبتتك")+'</button></div>'
+      :'')+
+    '<div id="gSky" style="margin:-2px 0 8px"></div>'+
     '<div class="g-timer" id="gTimer">'+gClock()+'</div>'+meta+'</section>';
   const minsNow = (running||ended) ? (gOpen()?gElapsedMs()/60000:Math.min(gElapsedMs(),gTotalMs())/60000) : 0;
   const cards = r.members.map((m,i)=>{
@@ -4564,7 +4702,9 @@ function renderGroupInner(box){
       : dead ? '<div class="g-state" style="color:var(--brick)">'+TR("ذبلت")+'</div>'
       : done ? '<div class="g-state" style="color:var(--viridian)">'+TR("نجح")+' ✅</div>'
       : '<div class="g-state" style="color:var(--viridian)">'+TR("يركّز")+'</div>';
-    return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&(running||ended)?" dead":"")+'"><div data-gcv="'+i+'"></div>'+
+    const clickable = running||ended;
+    return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&(running||ended)?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+
+      (clickable?'" data-act="focus" data-v="'+escAttr(m.user_id)+'" style="cursor:pointer':'')+'"><div data-gcv="'+i+'"></div>'+
       '<div class="g-name">'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?' <span title="'+escAttr(TR("المنشئ"))+'">👑</span>':"")+'</div>'+
       '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div>'+st+'</div>';
   });
@@ -4584,14 +4724,11 @@ function renderGroupInner(box){
     foot='<p class="g-note"><b>'+TR("خلصت الجلسة")+' 🎉</b><br>'+(mine?TR("نبتتك نجحت ودخلت مزرعتك."):TR("نبتتك ذبلت هالمرة، المرة الجاية أقوى."))+'</p>'+
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="back">'+TR("رجوع")+'</button></div>';
   } else if(running){
-    const myStrict = !(me && me.strict===false);
+    const myStrict = !(me && me.strict===false), myGrace = (me&&me.grace_ms)||r.grace_ms;
     foot='<span class="g-label">'+TR("ذبول نبتتك لو طلعت من التطبيق")+'</span>'+
-      '<div class="chips">'+
-      '<button class="chip" type="button" data-act="mystrict" data-v="1" aria-pressed="'+myStrict+'">🌿 '+TR("يذبل")+'</button>'+
-      '<button class="chip" type="button" data-act="mystrict" data-v="0" aria-pressed="'+(!myStrict)+'">🛡️ '+TR("ما يذبل")+'</button>'+
-      '</div>'+
+      gWitherChips(myStrict, myGrace, "mywither")+
       '<p class="g-note" style="margin-top:8px">'+(myStrict
-        ? TR("لو غبت أطول من ")+TR(graceTxt)+TR(" تذبل نبتتك.")
+        ? TR("لو غبت أطول من ")+TR((G_GRACE.find(g=>g.ms===myGrace)||{n:Math.round(myGrace/1000)+" ث"}).n)+TR(" تذبل نبتتك.")
         : TR("نبتتك محمية — ما تذبل حتى لو طلعت من التطبيق."))+'</p>'+
       '<div class="g-row">'+
       (host?'<button class="btn btn-primary" type="button" data-act="endall">'+TR("إنهاء الجلسة للجميع")+'</button>':"")+
@@ -4613,9 +4750,9 @@ function renderGroupInner(box){
     const cv=document.createElement("canvas"); skyBox.appendChild(cv);
     const sw=Math.max(220, skyBox.clientWidth||box.clientWidth||300);
     const sh=Math.round(Math.min(230, sw*0.46));
-    paint(cv,sw,sh,{ species:(me&&SPECIES[me.species])?me.species:"basil",
-      minutes:Math.max(.4,minsNow), seedStr:r.code+"-sky", glow:true,
-      withered: !!(me && me.state!=="alive"),
+    paint(cv,sw,sh,{ species:(fm&&SPECIES[fm.species])?fm.species:"basil",
+      minutes:Math.max(.4,minsNow), seedStr:r.code+"-"+focusId, glow:true,
+      withered: !!(fm && fm.state!=="alive"),
       tms:performance.now(), mdate:new Date() });
   }
   r.members.forEach((m,i)=>{
@@ -4625,15 +4762,26 @@ function renderGroupInner(box){
       withered: running && m.state!=="alive", seedStr:r.code+m.user_id, glow:false });
   });
 }
+document.addEventListener("click", e=>{
+  const b=e.target.closest(".pwEye"); if(!b) return;
+  const inp=document.getElementById(b.dataset.topw); if(!inp) return;
+  const show = inp.type==="password";
+  inp.type = show?"text":"password";
+  b.textContent = show?"🙈":"👁";
+  b.setAttribute("aria-label", TR(show?"إخفاء كلمة السر":"عرض كلمة السر"));
+});
 $("#groupBody").addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b || b.disabled) return;
   const v=b.dataset.v, f=G.form;
   switch(b.dataset.act){
     case "mode":   G.mode=v; G.err=""; break;
+    case "focus":  G.focus=(v===gMyId())?null:v; break;
     case "species":
       if(G.mode==="join"){ const ci=$("#gCodeIn"); if(ci) G.form.code=ci.value; }
       f.species=v; break;
-    case "mystrict": return gSetStrict(v==="1");
+    case "wither":
+      if(v==="off"){ f.strict=false; } else { f.strict=true; f.grace=+v; } break;
+    case "mywither": return gSetWither(v);
     case "cat":    f.cat=v; break;
     case "dur":    f.dur=+v; break;
     case "max":    f.max=+v; break;
@@ -4717,6 +4865,7 @@ $("#resetBtn").onclick=()=>{
 let rz; function onResize(){ clearTimeout(rz); rz=setTimeout(()=>{
   sizeHero(); if($("#view-garden").classList.contains("on")) renderGarden();
   if(gate.classList.contains("on")) drawGateScene();   /* بوابة الدخول ما كانت تتزامن مع تغيّر حجم الشاشة */
+  if(document.body.classList.contains("landing")){ paintLandingSky(); homeSlideRender(); }
 },160); }
 window.addEventListener("resize",onResize);
 window.addEventListener("orientationchange",onResize);   /* بعض الأجهزة القديمة ما تُطلق resize فوراً بعد الدوران */
@@ -5049,9 +5198,11 @@ function openAccountEdit(){
         '<label class="fld"><span>'+TR("الإيميل")+'</span>'+
           '<input id="eEmail" type="email" inputmode="email" autocomplete="email" dir="ltr" value="'+escAttr(CURRENT.email||"")+'"></label>'+
         '<label class="fld"><span>'+TR("كلمة سر جديدة")+'</span>'+
-          '<input id="ePass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية، أو ٨+ خانات: حرف كبير وصغير ورقم"))+'"></label>'+
+          '<div class="pwwrap"><input id="ePass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية، أو ٨+ خانات: حرف كبير وصغير ورقم"))+'">'+
+          '<button type="button" class="pwEye" data-topw="ePass" aria-label="عرض كلمة السر">👁</button></div></label>'+
         '<label class="fld"><span>'+TR("كلمة السر الحالية")+'</span>'+
-          '<input id="eCur" type="password" autocomplete="current-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية إذا ما تبي تغيّرها"))+'"></label>'+
+          '<div class="pwwrap"><input id="eCur" type="password" autocomplete="current-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية إذا ما تبي تغيّرها"))+'">'+
+          '<button type="button" class="pwEye" data-topw="eCur" aria-label="عرض كلمة السر">👁</button></div></label>'+
         '<p class="gswap" style="margin:-4px 0 4px"><button type="button" id="eForgot">'+TR("نسيتها؟")+'</button></p>'
       : '')+
     '<div class="row-actions">'+
