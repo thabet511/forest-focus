@@ -386,19 +386,40 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .g-timer{font-family:var(--kufi);font-size:40px;font-weight:600;text-align:center;direction:ltr;font-variant-numeric:tabular-nums}
 .g-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
 .g-note{text-align:center;font-size:13px;color:var(--ink-2);margin:10px 0 0;line-height:1.6}
-/* ── المحادثة بالجلسة الجماعية ── */
-.g-chat{border-top:0.5px solid var(--line);margin-top:12px;padding-top:10px}
-.g-chat-hdr{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
-.g-chat-msgs{max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+/* ── المحادثة العائمة بالجلسة الجماعية — ثابتة يمين الشاشة دايماً ── */
+.g-chat-fab{position:fixed; right:16px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:45}
+.g-chat-btn{
+  width:52px; height:52px; border-radius:50%; background:var(--viridian); color:#fff;
+  font-size:22px; display:grid; place-items:center; box-shadow:var(--shadow-1);
+  border:none; cursor:pointer; position:relative;
+}
+.g-chat-dot{
+  position:absolute; top:2px; left:2px; width:11px; height:11px; border-radius:50%;
+  background:var(--brick); border:2px solid var(--paper);
+}
+.g-chat-panel{
+  position:absolute; bottom:62px; right:0; width:min(320px, calc(100vw - 32px));
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--r-m);
+  box-shadow:var(--shadow-1); display:flex; flex-direction:column; overflow:hidden;
+}
+.g-chat-hdr{display:flex;align-items:center;gap:7px;padding:10px 12px;font-size:13px;font-weight:600;
+  color:var(--ink-2); border-bottom:0.5px solid var(--line)}
+.g-chat-hdr span{flex:1}
+.g-chat-x{font-size:14px;color:var(--ink-3);padding:2px 4px}
+.g-chat-msgs{max-height:260px;min-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px 12px}
 .g-chat-msg{font-size:12.5px;line-height:1.5}
 .g-chat-who{font-size:10.5px;font-weight:600;color:var(--viridian);margin-bottom:2px}
 .g-chat-msg.g-chat-mine .g-chat-who{color:var(--ochre)}
 .g-chat-txt{display:inline-block;max-width:94%;background:var(--paper-2);border-radius:10px;padding:5px 10px}
 .g-chat-msg.g-chat-mine{text-align:left}
 .g-chat-msg.g-chat-mine .g-chat-txt{background:var(--viridian-soft)}
-.g-chat-form{display:flex;gap:7px;align-items:center}
+.g-chat-sys{text-align:center;font-size:11.5px;color:var(--ink-3);padding:3px 4px}
+.g-chat-sys b{color:var(--ink-2);font-weight:600}
+.g-chat-sys.g-chat-badge{color:var(--ochre);font-weight:600}
+.g-chat-form{display:flex;gap:7px;align-items:center;padding:9px 10px;border-top:0.5px solid var(--line)}
 .g-chat-inp{flex:1;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:13px;font-family:inherit;color:var(--ink);direction:rtl}
 .g-chat-inp:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
+[dir="ltr"] .g-chat-inp{direction:ltr}
 .g-input{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:22px;letter-spacing:.3em;text-align:center;text-transform:uppercase;direction:ltr;padding:12px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--paper);color:var(--ink)}
 .g-input:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
 .g-label{display:block;font-size:12.5px;color:var(--ink-2);margin:14px 0 7px}
@@ -793,6 +814,23 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     </div>
     <div id="groupBody"></div>
   </main>
+</div>
+
+<!-- شات عائم للجلسة الجماعية — ثابت يمين الشاشة دايماً، عربي أو إنجليزي -->
+<div id="gChatFab" class="g-chat-fab" hidden>
+  <button id="gChatToggle" class="g-chat-btn" type="button" aria-label="المحادثة">
+    💬<span id="gChatDot" class="g-chat-dot" hidden></span>
+  </button>
+  <div id="gChatPanel" class="g-chat-panel" hidden>
+    <div class="g-chat-hdr">💬 <span id="gChatCount"></span>
+      <button id="gChatClose" class="g-chat-x" type="button" aria-label="إغلاق">✕</button>
+    </div>
+    <div class="g-chat-msgs" id="gChatMsgs"></div>
+    <div class="g-chat-form">
+      <input class="g-chat-inp" id="gChatInp" type="text" placeholder="اكتب رسالة…" maxlength="200" autocomplete="off">
+      <button class="btn btn-primary" id="gChatSend" type="button" style="padding:8px 14px;font-size:13px">إرسال</button>
+    </div>
+  </div>
 </div>
 
 <nav class="nav" aria-label="التنقل">
@@ -1474,6 +1512,14 @@ const DICT = {
  "آخر تأكيد: ما فيه رجعة.":"Last confirmation: there's no going back.",
  "هذا يمسح نسخة هذا الجهاز فقط. المزرعة تبقى على السحابة وترجع لك أول ما تسجّل دخول. أكمل؟":"This erases this device's copy only. The farm stays in the cloud and comes back when you log in. Continue?",
  "مزارع":"Farmer",
+ "المحادثة":"Chat",
+ "إرسال":"Send",
+ "إغلاق":"Close",
+ "اكتب رسالة…":"Type a message…",
+ "لا رسائل بعد":"No messages yet",
+ "رسالة":"message",
+ "وصل":"reached",
+ "حصل على شارة:":"earned a badge:",
  "؟":"?",
  "افتح":"Open",
  "انسخ الرابط والمفتاح.":"Copy the URL and the key.",
@@ -3609,9 +3655,9 @@ const ACH = [
     d:"ركّز 365 يوم متتالية بدون ما تفوّت يوم." },
   { id:"clean",  ic:"🛡️", n:"١٠ بلا ذبول",    t:s=>s.cleanRun>=10,
     d:"أنهِ 10 جلسات متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم." },
-  { id:"clean25", ic:"🧿", n:"٢٥ بلا ذبول",    t:s=>s.cleanRun>=25,
+  { id:"clean25", ic:"🥈", n:"٢٥ بلا ذبول",    t:s=>s.cleanRun>=25,
     d:"أنهِ 25 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم." },
-  { id:"clean50", ic:"⚜️", n:"٥٠ بلا ذبول",    t:s=>s.cleanRun>=50,
+  { id:"clean50", ic:"🥇", n:"٥٠ بلا ذبول",    t:s=>s.cleanRun>=50,
     d:"أنهِ 50 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم." },
   { id:"dawn",   ic:"🌄", n:"قبل الفجر",       t:s=>s.dawn,
     d:"ابدأ جلسة تركيز تنتهي بنجاح بين الساعة 4 و7 صباحاً." },
@@ -4019,6 +4065,7 @@ function checkAch(){
   const s=computeStats(); const fresh=[];
   ACH.forEach(a=>{ if(!DB.ach.includes(a.id)&&a.t(s)){ DB.ach.push(a.id); fresh.push(a); } });
   if(fresh.length){ writeStore(); setTimeout(()=>toast(TR("إنجاز: ")+fresh.map(f=>TR(f.n)).join(" · "),fresh[0].ic),1600); }
+  return fresh;
 }
 
 /* ─── الإعداد ───────────────────────────────────────────────── */
@@ -4409,7 +4456,7 @@ const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" 
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false, focus:null,
           mode:"home", err:"", form:{ cat:null, max:8, grace:60000, species:null, strict:true },
           lp:null, lo:0,           /* إيقاف مؤقت محلي: lp=وقت الإيقاف، lo=مجموع ms المتوقفة */
-          chatMsgs:[], chatPoll:null };  /* المحادثة: رسايل محلية ومؤقت الجلب */
+          chatMsgs:[], chatPoll:null, myTier:null, chatUnread:0 };  /* المحادثة + تتبّع رتبتي */
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
 function gCatName(id){ const t=DB.tags.find(x=>x.id===id); return t ? TR(t.n) : (id||TR("تركيز")); }
 
@@ -4457,16 +4504,19 @@ function gStartTimers(){
     if(!G.room) return;
     const t=$("#gTimer"); if(t && !G.lp) t.textContent=gClock();
     if(!G.done && (gIsDone()||gEnded())){ G.done=true; gRecordMine(); renderGroup(); }
+    gCheckMyTier();
   }, 1000);
   gStartChatPoll();
+  gSyncChatFab();
 }
 function gClear(note){
   gStopTimers();
   if(G.chatPoll){ clearInterval(G.chatPoll); G.chatPoll=null; }
   G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; G.focus=null; gEndedAt=0;
-  G.lp=null; G.lo=0; G.chatMsgs=[];
+  G.lp=null; G.lo=0; G.chatMsgs=[]; G.myTier=null; G.chatUnread=0;
   gSave();
   renderGroup();
+  gSyncChatFab();
   if(note) toast(note,"👥");
 }
 /* ─── إيقاف مؤقت محلي للجلسة الجماعية ─────────────────── */
@@ -4478,11 +4528,31 @@ function gLocalResume(){
   if(!G.lp) return;
   G.lo+=gNow()-G.lp; G.lp=null; renderGroup();
 }
+/* ─── تحديثات النمو التلقائية بالشات: كل عضو يعلن عن نفسه لما يوصل رتبة جديدة ─── */
+const TIER_ICONS = {"بذرة":"🌰","برعم":"🌱","شتلة":"🌿","نبتة":"🪴","شجيرة":"🌳",
+                     "شجرة صغيرة":"🌲","شجرة كبيرة":"🌴","شجرة عظيمة":"🎋","شجرة أسطورية":"✨"};
+function gCheckMyTier(){
+  const r=G.room, me=gMe();
+  if(!r || r.status!=="running" || !me || me.state!=="alive" || G.lp) return;
+  const mins = gOpen() ? gElapsedMs()/60000 : Math.min(gElapsedMs(),gTotalMs())/60000;
+  const tier = tierOf(mins);
+  if(G.myTier===null){ G.myTier=tier; return; }     /* أول قراءة: نسجّلها بصمت بلا إعلان */
+  if(tier>G.myTier){
+    G.myTier=tier;
+    const name=TIERS[tier].n;
+    gAnnounce("grow", TR("وصل ")+TR(name), TIER_ICONS[name]||"🌿");
+  }
+}
 /* ─── شات الجلسة الجماعية ──────────────────────────────── */
 async function gSendChat(text){
   if(!text||!G.code) return;
-  try{ await gRpc("group_chat",{ p_code:G.code, p_text:text }); gFetchChat(); }
+  try{ await gRpc("group_chat",{ p_code:G.code, p_text:text, p_kind:"msg", p_icon:"" }); gFetchChat(); }
   catch(e){ toast(TR("ما قدرنا نرسل الرسالة"),"⚠️"); }
+}
+async function gAnnounce(kind, text, icon){
+  if(!G.code) return;
+  try{ await gRpc("group_chat",{ p_code:G.code, p_text:text, p_kind:kind, p_icon:icon||"" }); gFetchChat(); }
+  catch(e){}
 }
 async function gFetchChat(){
   if(!G.code) return;
@@ -4491,10 +4561,12 @@ async function gFetchChat(){
     if(Array.isArray(d)){
       const prev=G.chatMsgs.length;
       G.chatMsgs=d;
-      if(d.length>prev){ /* رسائل جديدة — اسكرول للآخر */
+      if(d.length>prev){
+        const panelOpen = !$("#gChatPanel").hidden;
+        if(!panelOpen){ G.chatUnread += (d.length-prev); gUpdateChatDot(); }
         setTimeout(()=>{ const b=$("#gChatMsgs"); if(b) b.scrollTop=b.scrollHeight; },60);
       }
-      const box=$("#gChatMsgs"); if(box) renderChatMsgs();
+      renderChatMsgs();
     }
   }catch(e){}
 }
@@ -4502,18 +4574,51 @@ function renderChatMsgs(){
   const box=$("#gChatMsgs"); if(!box) return;
   const myId=gMyId();
   box.innerHTML=G.chatMsgs.map(m=>{
+    if(m.kind && m.kind!=="msg"){
+      return '<div class="g-chat-sys'+(m.kind==="badge"?" g-chat-badge":"")+'">'
+        +(m.ic||"")+' <b>'+escAttr(m.n||TR("مزارع"))+'</b> '+escAttr(m.t)+'</div>';
+    }
     const mine=m.uid===myId;
     return '<div class="g-chat-msg'+(mine?" g-chat-mine":"")+'">'
       +'<div class="g-chat-who">'+escAttr(m.n||TR("مزارع"))+'</div>'
       +'<div class="g-chat-txt">'+escAttr(m.t)+'</div></div>';
   }).join("")||'<div style="text-align:center;color:var(--ink-3);font-size:12px;padding:8px">'+TR("لا رسائل بعد")+'</div>';
   box.scrollTop=box.scrollHeight;
+  const cnt=$("#gChatCount"); if(cnt) cnt.textContent=TR("المحادثة")+" ("+G.chatMsgs.length+")";
 }
 function gStartChatPoll(){
   if(G.chatPoll) return;
   gFetchChat();
   G.chatPoll=setInterval(gFetchChat,3000);
 }
+function gUpdateChatDot(){
+  const dot=$("#gChatDot"); if(!dot) return;
+  dot.hidden = !G.chatUnread;
+}
+/* ─── الودجت العائم: يظهر طول ما انت داخل غرفة (منتظر أو شغّال) ─── */
+function gSyncChatFab(){
+  const fab=$("#gChatFab"); if(!fab) return;
+  fab.hidden = !G.code;
+}
+function gOpenChatPanel(open){
+  const panel=$("#gChatPanel"); if(!panel) return;
+  panel.hidden = !open;
+  if(open){ G.chatUnread=0; gUpdateChatDot(); renderChatMsgs();
+    setTimeout(()=>{ const inp=$("#gChatInp"); if(inp) inp.focus(); },50); }
+}
+$("#gChatToggle").onclick=()=>gOpenChatPanel($("#gChatPanel").hidden);
+$("#gChatClose").onclick=()=>gOpenChatPanel(false);
+$("#gChatSend").onclick=()=>{
+  const inp=$("#gChatInp"); if(!inp||!inp.value.trim()) return;
+  const txt=inp.value.trim(); inp.value=""; gSendChat(txt);
+};
+$("#gChatInp").addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    const txt=e.target.value.trim(); if(!txt) return;
+    e.target.value=""; gSendChat(txt);
+  }
+});
 let gFails = 0;
 async function gRefresh(){
   if(!G.code || G.busy || document.hidden) return;      /* بالخلفية ما ننبض: الغياب ينحسب */
@@ -4556,7 +4661,8 @@ function gRecordMine(){
   DB.plants.push(p); writeStore();
   if(dead) toast(TR("ذبلت نبتتك بالجلسة الجماعية."),"🥀");
   else     toast(TR("خلصت الجلسة الجماعية! نبتتك دخلت المزرعة."),"🤝");
-  checkAch();
+  const fresh = checkAch();
+  if(fresh.length && G.code) fresh.forEach(a=>gAnnounce("badge", TR("حصل على شارة:")+" "+TR(a.n), a.ic));
   if(CURRENT && CURRENT.cloud) pushNow(true);
 }
 async function gCreate(){
@@ -4663,6 +4769,7 @@ function gChips(act, items, cur){
 }
 function renderGroup(){
   const box=$("#groupBody"); if(!box) return;
+  gSyncChatFab();
   try{ renderGroupInner(box); }
   catch(e){
     box.innerHTML='<section class="panel"><p class="g-note" style="color:var(--brick);margin:0">'+
@@ -4801,25 +4908,7 @@ function renderGroupInner(box){
       (host?'<button class="btn btn-primary" type="button" data-act="endall">'+TR("إنهاء الجلسة للجميع")+'</button>':"")+
       (host?'<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>':"")+
       '<button class="btn btn-quiet" type="button" data-act="gpause" style="'+(G.lp?"color:var(--viridian);border-color:var(--viridian)":"")+'">'+pauseLbl+'</button>'+
-      '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>'+
-      /* ─── شات ─── */
-      '<div class="g-chat">'+
-        '<div class="g-chat-hdr">💬 '+TR("المحادثة")+
-          '<span style="font-size:11px;color:var(--ink-3);font-weight:400">'+G.chatMsgs.length+' '+TR("رسالة")+'</span>'+
-        '</div>'+
-        '<div class="g-chat-msgs" id="gChatMsgs">'+
-          (G.chatMsgs.length ? G.chatMsgs.map(m=>{
-            const mine=m.uid===gMyId();
-            return '<div class="g-chat-msg'+(mine?" g-chat-mine":"")+'">'
-              +'<div class="g-chat-who">'+escAttr(m.n||TR("مزارع"))+'</div>'
-              +'<div class="g-chat-txt">'+escAttr(m.t)+'</div></div>';
-          }).join("") : '<div style="text-align:center;color:var(--ink-3);font-size:12px;padding:8px">'+TR("لا رسائل بعد")+'</div>')
-        +'</div>'+
-        '<div class="g-chat-form">'+
-          '<input class="g-chat-inp" id="gChatInp" type="text" placeholder="'+TR("اكتب رسالة…")+'" maxlength="200" autocomplete="off">'+
-          '<button class="btn btn-primary" type="button" data-act="gchatsend" style="padding:8px 14px;font-size:13px">'+TR("إرسال")+'</button>'+
-        '</div>'+
-      '</div>';
+      '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
   } else if(host){
     const can=r.members.length>=2;
     foot='<p class="g-note">'+(can?TR("كل شي جاهز؟ ابدأ الجلسة، أو انتظرها تبدأ لحالها لما تمتلي (٨ أشخاص)."):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
@@ -4856,14 +4945,6 @@ document.addEventListener("click", e=>{
   b.textContent = show?"🙈":"👁";
   b.setAttribute("aria-label", TR(show?"إخفاء كلمة السر":"عرض كلمة السر"));
 });
-/* إرسال الشات بـ Enter */
-$("#groupBody").addEventListener("keydown", e=>{
-  if(e.key==="Enter" && e.target.id==="gChatInp" && !e.shiftKey){
-    e.preventDefault();
-    const txt=e.target.value.trim(); if(!txt) return;
-    e.target.value=""; gSendChat(txt);
-  }
-});
 $("#groupBody").addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b || b.disabled) return;
   const v=b.dataset.v, f=G.form;
@@ -4890,11 +4971,6 @@ $("#groupBody").addEventListener("click", e=>{
     case "endall": return gEnd();
     case "back":   return gClear();
     case "gpause": return G.lp ? gLocalResume() : gLocalPause();
-    case "gchatsend":{
-      const inp=$("#gChatInp"); if(!inp||!inp.value.trim()) return;
-      const txt=inp.value.trim(); inp.value="";
-      return gSendChat(txt);
-    }
     default: return;
   }
   renderGroup();
