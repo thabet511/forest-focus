@@ -386,6 +386,19 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .g-timer{font-family:var(--kufi);font-size:40px;font-weight:600;text-align:center;direction:ltr;font-variant-numeric:tabular-nums}
 .g-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
 .g-note{text-align:center;font-size:13px;color:var(--ink-2);margin:10px 0 0;line-height:1.6}
+/* ── المحادثة بالجلسة الجماعية ── */
+.g-chat{border-top:0.5px solid var(--line);margin-top:12px;padding-top:10px}
+.g-chat-hdr{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.g-chat-msgs{max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.g-chat-msg{font-size:12.5px;line-height:1.5}
+.g-chat-who{font-size:10.5px;font-weight:600;color:var(--viridian);margin-bottom:2px}
+.g-chat-msg.g-chat-mine .g-chat-who{color:var(--ochre)}
+.g-chat-txt{display:inline-block;max-width:94%;background:var(--paper-2);border-radius:10px;padding:5px 10px}
+.g-chat-msg.g-chat-mine{text-align:left}
+.g-chat-msg.g-chat-mine .g-chat-txt{background:var(--viridian-soft)}
+.g-chat-form{display:flex;gap:7px;align-items:center}
+.g-chat-inp{flex:1;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:13px;font-family:inherit;color:var(--ink);direction:rtl}
+.g-chat-inp:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
 .g-input{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:22px;letter-spacing:.3em;text-align:center;text-transform:uppercase;direction:ltr;padding:12px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--paper);color:var(--ink)}
 .g-input:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
 .g-label{display:block;font-size:12.5px;color:var(--ink-2);margin:14px 0 7px}
@@ -4161,7 +4174,7 @@ function renderStats(){
     ["accent", s.alive, TR("نبتة حيّة")],
     ["accent", hhmm(s.minutes), TR("مجموع التركيز")],
     ["", hhmm(s.longest||0), TR("أطول جلسة")],
-    ["ochre", s.streak, TR("أيام متتالية")],
+    ["ochre", (s.streak>0 ? s.streak+" 🔥" : (s.streak||0)), TR("أيام متتالية")],
     ["brick", s.dead, TR("ذبلت")],
     ["", s.rate+"%", TR("نسبة النجاة")],
     ["accent", s.longest?TR(tierName(s.longest)):"—", TR("أكبر نبتة")],
@@ -4394,7 +4407,9 @@ $("#homeSignup").onclick = ()=>{
 const GROUP_KEY = "hasad.group";
 const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" }, { ms:300000, n:"٥ دقائق" } ];
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false, focus:null,
-          mode:"home", err:"", form:{ cat:null, max:8, grace:60000, species:null, strict:true } };
+          mode:"home", err:"", form:{ cat:null, max:8, grace:60000, species:null, strict:true },
+          lp:null, lo:0,           /* إيقاف مؤقت محلي: lp=وقت الإيقاف، lo=مجموع ms المتوقفة */
+          chatMsgs:[], chatPoll:null };  /* المحادثة: رسايل محلية ومؤقت الجلب */
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
 function gCatName(id){ const t=DB.tags.find(x=>x.id===id); return t ? TR(t.n) : (id||TR("تركيز")); }
 
@@ -4421,7 +4436,9 @@ let gEndedAt = 0;                     /* نجمّد العدّاد عند لحظ
 const gElapsedMs = () => { const r=G.room;
   if(!r||!r.started_at||(r.status!=="running"&&r.status!=="ended")) return 0;
   const end = (r.status==="ended" && gEndedAt) ? gEndedAt : gNow();
-  return Math.max(0, end-Date.parse(r.started_at)); };
+  const raw = Math.max(0, end-Date.parse(r.started_at));
+  const pausedMs = G.lo + (G.lp ? (gNow()-G.lp) : 0);
+  return Math.max(0, raw-pausedMs); };
 const gIsDone    = () => { const r=G.room; if(!r||r.status!=="running") return r?r.status==="ended":false;
                            return gOpen() ? false : gElapsedMs()>=gTotalMs(); };
 const gEnded     = () => !!(G.room && G.room.status==="ended");
@@ -4438,15 +4455,64 @@ function gStartTimers(){
   G.poll = setInterval(gRefresh, 4000);
   G.tick = setInterval(()=>{
     if(!G.room) return;
-    const t=$("#gTimer"); if(t) t.textContent=gClock();
+    const t=$("#gTimer"); if(t && !G.lp) t.textContent=gClock();
     if(!G.done && (gIsDone()||gEnded())){ G.done=true; gRecordMine(); renderGroup(); }
   }, 1000);
+  gStartChatPoll();
 }
 function gClear(note){
   gStopTimers();
-  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; G.focus=null; gEndedAt=0; gSave();
+  if(G.chatPoll){ clearInterval(G.chatPoll); G.chatPoll=null; }
+  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; G.focus=null; gEndedAt=0;
+  G.lp=null; G.lo=0; G.chatMsgs=[];
+  gSave();
   renderGroup();
   if(note) toast(note,"👥");
+}
+/* ─── إيقاف مؤقت محلي للجلسة الجماعية ─────────────────── */
+function gLocalPause(){
+  if(G.lp||!G.room||G.room.status!=="running") return;
+  G.lp=gNow(); renderGroup();
+}
+function gLocalResume(){
+  if(!G.lp) return;
+  G.lo+=gNow()-G.lp; G.lp=null; renderGroup();
+}
+/* ─── شات الجلسة الجماعية ──────────────────────────────── */
+async function gSendChat(text){
+  if(!text||!G.code) return;
+  try{ await gRpc("group_chat",{ p_code:G.code, p_text:text }); gFetchChat(); }
+  catch(e){ toast(TR("ما قدرنا نرسل الرسالة"),"⚠️"); }
+}
+async function gFetchChat(){
+  if(!G.code) return;
+  try{
+    const d=await gRpc("group_get_chat",{ p_code:G.code });
+    if(Array.isArray(d)){
+      const prev=G.chatMsgs.length;
+      G.chatMsgs=d;
+      if(d.length>prev){ /* رسائل جديدة — اسكرول للآخر */
+        setTimeout(()=>{ const b=$("#gChatMsgs"); if(b) b.scrollTop=b.scrollHeight; },60);
+      }
+      const box=$("#gChatMsgs"); if(box) renderChatMsgs();
+    }
+  }catch(e){}
+}
+function renderChatMsgs(){
+  const box=$("#gChatMsgs"); if(!box) return;
+  const myId=gMyId();
+  box.innerHTML=G.chatMsgs.map(m=>{
+    const mine=m.uid===myId;
+    return '<div class="g-chat-msg'+(mine?" g-chat-mine":"")+'">'
+      +'<div class="g-chat-who">'+escAttr(m.n||TR("مزارع"))+'</div>'
+      +'<div class="g-chat-txt">'+escAttr(m.t)+'</div></div>';
+  }).join("")||'<div style="text-align:center;color:var(--ink-3);font-size:12px;padding:8px">'+TR("لا رسائل بعد")+'</div>';
+  box.scrollTop=box.scrollHeight;
+}
+function gStartChatPoll(){
+  if(G.chatPoll) return;
+  gFetchChat();
+  G.chatPoll=setInterval(gFetchChat,3000);
 }
 let gFails = 0;
 async function gRefresh(){
@@ -4725,6 +4791,7 @@ function renderGroupInner(box){
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="back">'+TR("رجوع")+'</button></div>';
   } else if(running){
     const myStrict = !(me && me.strict===false), myGrace = (me&&me.grace_ms)||r.grace_ms;
+    const pauseLbl = G.lp ? TR("استئناف ▶") : TR("إيقاف مؤقت ⏸");
     foot='<span class="g-label">'+TR("ذبول نبتتك لو طلعت من التطبيق")+'</span>'+
       gWitherChips(myStrict, myGrace, "mywither")+
       '<p class="g-note" style="margin-top:8px">'+(myStrict
@@ -4733,7 +4800,26 @@ function renderGroupInner(box){
       '<div class="g-row">'+
       (host?'<button class="btn btn-primary" type="button" data-act="endall">'+TR("إنهاء الجلسة للجميع")+'</button>':"")+
       (host?'<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>':"")+
-      '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
+      '<button class="btn btn-quiet" type="button" data-act="gpause" style="'+(G.lp?"color:var(--viridian);border-color:var(--viridian)":"")+'">'+pauseLbl+'</button>'+
+      '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>'+
+      /* ─── شات ─── */
+      '<div class="g-chat">'+
+        '<div class="g-chat-hdr">💬 '+TR("المحادثة")+
+          '<span style="font-size:11px;color:var(--ink-3);font-weight:400">'+G.chatMsgs.length+' '+TR("رسالة")+'</span>'+
+        '</div>'+
+        '<div class="g-chat-msgs" id="gChatMsgs">'+
+          (G.chatMsgs.length ? G.chatMsgs.map(m=>{
+            const mine=m.uid===gMyId();
+            return '<div class="g-chat-msg'+(mine?" g-chat-mine":"")+'">'
+              +'<div class="g-chat-who">'+escAttr(m.n||TR("مزارع"))+'</div>'
+              +'<div class="g-chat-txt">'+escAttr(m.t)+'</div></div>';
+          }).join("") : '<div style="text-align:center;color:var(--ink-3);font-size:12px;padding:8px">'+TR("لا رسائل بعد")+'</div>')
+        +'</div>'+
+        '<div class="g-chat-form">'+
+          '<input class="g-chat-inp" id="gChatInp" type="text" placeholder="'+TR("اكتب رسالة…")+'" maxlength="200" autocomplete="off">'+
+          '<button class="btn btn-primary" type="button" data-act="gchatsend" style="padding:8px 14px;font-size:13px">'+TR("إرسال")+'</button>'+
+        '</div>'+
+      '</div>';
   } else if(host){
     const can=r.members.length>=2;
     foot='<p class="g-note">'+(can?TR("كل شي جاهز؟ ابدأ الجلسة، أو انتظرها تبدأ لحالها لما تمتلي (٨ أشخاص)."):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
@@ -4770,6 +4856,14 @@ document.addEventListener("click", e=>{
   b.textContent = show?"🙈":"👁";
   b.setAttribute("aria-label", TR(show?"إخفاء كلمة السر":"عرض كلمة السر"));
 });
+/* إرسال الشات بـ Enter */
+$("#groupBody").addEventListener("keydown", e=>{
+  if(e.key==="Enter" && e.target.id==="gChatInp" && !e.shiftKey){
+    e.preventDefault();
+    const txt=e.target.value.trim(); if(!txt) return;
+    e.target.value=""; gSendChat(txt);
+  }
+});
 $("#groupBody").addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b || b.disabled) return;
   const v=b.dataset.v, f=G.form;
@@ -4795,6 +4889,12 @@ $("#groupBody").addEventListener("click", e=>{
     case "lock":   return gLock(v==="1");
     case "endall": return gEnd();
     case "back":   return gClear();
+    case "gpause": return G.lp ? gLocalResume() : gLocalPause();
+    case "gchatsend":{
+      const inp=$("#gChatInp"); if(!inp||!inp.value.trim()) return;
+      const txt=inp.value.trim(); inp.value="";
+      return gSendChat(txt);
+    }
     default: return;
   }
   renderGroup();
