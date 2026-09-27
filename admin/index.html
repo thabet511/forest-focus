@@ -232,8 +232,9 @@ async function loadDashboard(){
     renderTable();
   }catch(e){
     if(/NOT_AUTH|JWT/.test(e.message)){ doLogout(); return; }
-    el("tblBody").innerHTML = '<tr><td colspan="5" class="empty">'+
-      (/NOT_ADMIN/.test(e.message) ? "هذا الحساب ما عنده صلاحية المدير." : "صار خطأ بجلب البيانات.")+'</td></tr>';
+    const shown = /NOT_ADMIN/.test(e.message) ? "هذا الحساب ما عنده صلاحية المدير."
+                : "صار خطأ بجلب البيانات: " + esc(e.message);
+    el("tblBody").innerHTML = '<tr><td colspan="5" class="empty">'+shown+'</td></tr>';
   }
 }
 
