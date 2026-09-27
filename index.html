@@ -121,7 +121,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 .icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 .icon-btn svg{width:18px;height:18px}
-#friendsBtn{font-size:17px}
+#friendsBtn{font-size:17px;position:relative}
 
 /* ── قوس الدفيئة ─────────────────────────────────────── */
 .stage{
@@ -482,7 +482,7 @@ body.gated{overflow:hidden}
 .gsub{margin:5px 0 16px;text-align:center;font-size:13.5px;color:var(--ink-2)}
 .gtabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--paper-2);
   border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
-.gtab{padding:9px;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink-3);font-family:var(--kufi)}
+.gtab{padding:9px;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink-3);font-family:var(--kufi);position:relative}
 .gtab[aria-selected="true"]{background:var(--viridian);color:#fff}
 .fld{display:block;margin-bottom:12px}
 .fld span{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
@@ -649,7 +649,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
   <header class="topbar">
     <div class="topbar-side topbar-right">
       <button class="icon-btn avatar" id="userBtn" aria-label="حسابي"><span id="userInitial">·</span></button>
-      <button class="icon-btn" id="friendsBtn" aria-label="الأصدقاء">👥</button>
+      <button class="icon-btn" id="friendsBtn" aria-label="الأصدقاء">👥<span id="friendsBtnDot" class="g-chat-dot" hidden></span></button>
     </div>
     <h1 class="brand">حصاد<em>الإنتاجية</em><span>.</span></h1>
     <div class="topbar-side topbar-left">
@@ -1533,6 +1533,27 @@ const DICT = {
  "انضاف لأصدقائك.":"Added to your friends.",
  "ما لقينا حد باسم المستخدم هذا.":"No one found with that username.",
  "ما تقدر تضيف نفسك.":"You can't add yourself.",
+ "ابحث باسم المستخدم":"Search by username",
+ "بحث":"Search",
+ "أصدقاؤك":"Your friends",
+ "الدعوات":"Invitations",
+ "دعوات واردة":"Incoming invites",
+ "دعوات مُرسلة":"Sent invites",
+ "اكتب حرفين على الأقل.":"Type at least 2 characters.",
+ "جارٍ البحث…":"Searching…",
+ "ما فيه نتائج.":"No results.",
+ "إرسال دعوة":"Send invite",
+ "صرتوا أصدقاء!":"You're friends now!",
+ "انبعثت الدعوة.":"Invite sent.",
+ "انتوا أصدقاء خلاص.":"You're already friends.",
+ "عندك دعوة مُرسلة له خلاص.":"You already have a pending invite to them.",
+ "قبول":"Accept",
+ "رفض":"Decline",
+ "إلغاء":"Cancel",
+ "ما فيه دعوات واردة.":"No incoming invites.",
+ "ما فيه دعوات مُرسلة.":"No sent invites.",
+ "ما قدرنا نجيب الدعوات.":"Couldn't load invites.",
+ "صار خطأ بالبحث.":"Search failed.",
  "لسه ما ضفت أصدقاء.":"You haven't added any friends yet.",
  "ما قدرنا نجيب الأصدقاء.":"Couldn't load your friends.",
  "إزالة":"Remove",
@@ -5410,40 +5431,83 @@ function openFriendsSheet(){
     el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
     return;
   }
+  const searchBox = (n)=>
+    '<div style="display:flex;gap:8px;margin-bottom:12px">'+
+      '<input id="fsInput'+n+'" type="text" dir="ltr" maxlength="20" placeholder="'+TR("ابحث باسم المستخدم")+'" autocomplete="off" style="flex:1">'+
+      '<button class="btn btn-quiet" id="fsBtn'+n+'" type="button" style="padding:0 14px" aria-label="'+TR("بحث")+'">🔍</button>'+
+    '</div>'+
+    '<div id="fsResults'+n+'"></div>';
   el.sheetBody.innerHTML=
     '<h3 style="margin:0 0 3px">'+TR("الأصدقاء")+'</h3>'+
-    '<p class="gsub" style="text-align:start;margin:0 0 14px">'+TR("أضف صديقك باسم مستخدمه.")+'</p>'+
-    '<p class="gerr" id="frErr"></p>'+
-    '<div style="display:flex;gap:8px;margin-bottom:16px">'+
-      '<input id="frInput" type="text" dir="ltr" maxlength="20" placeholder="'+TR("اسم مستخدم صديقك")+'" autocomplete="off" style="flex:1">'+
-      '<button class="btn btn-primary" id="frAdd" style="padding:0 16px;white-space:nowrap">'+TR("إضافة")+'</button>'+
+    '<div class="gtabs" role="tablist" id="frTabs">'+
+      '<button class="gtab" id="ftFriends" type="button" role="tab" aria-selected="true">'+TR("الأصدقاء")+'</button>'+
+      '<button class="gtab" id="ftInvites" type="button" role="tab" aria-selected="false">'+TR("الدعوات")+'<span id="frInviteBadge" class="g-chat-dot" hidden></span></button>'+
     '</div>'+
-    '<div id="frList" class="g-joined"></div>'+
+    '<p class="gerr" id="frErr"></p>'+
+    '<div id="fpFriends">'+
+      searchBox(1)+
+      '<p class="g-label" style="margin-top:14px">'+TR("أصدقاؤك")+'</p>'+
+      '<div id="frList" class="g-joined"></div>'+
+    '</div>'+
+    '<div id="fpInvites" hidden>'+
+      searchBox(2)+
+      '<p class="g-label" style="margin-top:14px">'+TR("دعوات واردة")+'</p>'+
+      '<div id="frIncoming" class="g-joined"></div>'+
+      '<p class="g-label">'+TR("دعوات مُرسلة")+'</p>'+
+      '<div id="frOutgoing" class="g-joined"></div>'+
+    '</div>'+
     '<div class="row-actions"><button class="btn btn-quiet" id="frBack">'+TR("رجوع")+'</button></div>';
+
   $("#frBack").onclick=openAccountSheet;
-  $("#frAdd").onclick=addFriendNow;
-  $("#frInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addFriendNow(); } });
+  function switchFriendsTab(which){
+    $("#ftFriends").setAttribute("aria-selected", String(which==="friends"));
+    $("#ftInvites").setAttribute("aria-selected", String(which==="invites"));
+    $("#fpFriends").hidden = which!=="friends";
+    $("#fpInvites").hidden = which!=="invites";
+    $("#frErr").textContent="";
+  }
+  $("#ftFriends").onclick=()=>switchFriendsTab("friends");
+  $("#ftInvites").onclick=()=>switchFriendsTab("invites");
+  wireFriendSearch(1); wireFriendSearch(2);
+
   el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
   refreshFriendsList();
+  refreshInvites();
 }
-async function addFriendNow(){
-  const inp=$("#frInput"), err=$("#frErr"); if(!inp) return;
-  const val=(inp.value||"").trim();
-  err.textContent="";
-  if(!val) return;
-  const btn=$("#frAdd"); if(btn) btn.disabled=true;
+function wireFriendSearch(n){
+  const inp=$("#fsInput"+n), btn=$("#fsBtn"+n);
+  const run=()=>doFriendSearch(n);
+  btn.onclick=run;
+  inp.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); run(); } });
+}
+async function doFriendSearch(n){
+  const inp=$("#fsInput"+n), res=$("#fsResults"+n);
+  const q=(inp.value||"").trim();
+  if(q.length<2){ res.innerHTML='<p class="g-note">'+TR("اكتب حرفين على الأقل.")+'</p>'; return; }
+  res.innerHTML='<p class="g-note">'+TR("جارٍ البحث…")+'</p>';
   try{
-    await gRpc("add_friend",{ p_username: val });
-    inp.value="";
-    toast(TR("انضاف لأصدقائك."),"🤝");
-    refreshFriendsList();
+    const rows=await gRpc("search_usernames",{ p_query:q });
+    if(!Array.isArray(rows)||!rows.length){ res.innerHTML='<p class="g-note">'+TR("ما فيه نتائج.")+'</p>'; return; }
+    res.innerHTML=rows.map(u=>
+      '<div class="g-jrow"><b>'+escAttr(u.name||u.username)+'</b>'+
+      '<span>@'+escAttr(u.username)+' · <button type="button" class="frInvite" data-uname="'+escAttr(u.username)+'">'+TR("إرسال دعوة")+'</button></span></div>'
+    ).join("");
+    $$(".frInvite",res).forEach(b=>b.onclick=()=>sendInviteNow(b.dataset.uname));
+  }catch(e){ res.innerHTML='<p class="gerr">'+TR("صار خطأ بالبحث.")+'</p>'; }
+}
+async function sendInviteNow(username){
+  try{
+    const r = await gRpc("send_friend_request",{ p_username: username });
+    if(r==="accepted"){ toast(TR("صرتوا أصدقاء!"),"🤝"); refreshFriendsList(); }
+    else toast(TR("انبعثت الدعوة."),"📨");
+    refreshInvites();
   }catch(e){
     const m=String((e&&e.message)||e||"");
-    if(/NOT_FOUND/.test(m)) err.textContent=TR("ما لقينا حد باسم المستخدم هذا.");
-    else if(/SELF/.test(m))  err.textContent=TR("ما تقدر تضيف نفسك.");
-    else err.textContent=TR("صار خطأ، جرّب مرة ثانية.");
+    if(/SELF/.test(m)) toast(TR("ما تقدر تضيف نفسك."),"⚠️");
+    else if(/ALREADY_FRIENDS/.test(m)) toast(TR("انتوا أصدقاء خلاص."),"🤝");
+    else if(/ALREADY_SENT/.test(m)) toast(TR("عندك دعوة مُرسلة له خلاص."),"📨");
+    else toast(TR("صار خطأ، جرّب مرة ثانية."),"⚠️");
   }
-  if(btn) btn.disabled=false;
 }
 async function refreshFriendsList(){
   const box=$("#frList"); if(!box) return;
@@ -5464,6 +5528,44 @@ async function refreshFriendsList(){
 async function removeFriendNow(fid){
   try{ await gRpc("remove_friend",{ p_friend_id: fid }); refreshFriendsList(); toast(TR("انحذف من أصدقائك."),"👋"); }
   catch(e){ toast(TR("ما قدرنا نحذفه."),"⚠️"); }
+}
+async function refreshInvites(){
+  const inBox=$("#frIncoming"), outBox=$("#frOutgoing"); if(!inBox||!outBox) return;
+  inBox.innerHTML='<p class="g-note">'+TR("جارٍ التحميل…")+'</p>'; outBox.innerHTML="";
+  try{
+    const [incoming, outgoing] = await Promise.all([
+      gRpc("list_incoming_requests",{}), gRpc("list_outgoing_requests",{})
+    ]);
+    const inN = Array.isArray(incoming)?incoming.length:0;
+    updateFriendsBadge(inN);
+    inBox.innerHTML = inN ? incoming.map(u=>
+      '<div class="g-jrow"><b>'+escAttr(u.name||u.username)+'</b>'+
+      '<span>@'+escAttr(u.username)+' · '+
+        '<button type="button" class="frAccept" data-uid="'+escAttr(u.user_id)+'" style="color:var(--viridian)">'+TR("قبول")+'</button> · '+
+        '<button type="button" class="frDecline" data-uid="'+escAttr(u.user_id)+'" style="color:var(--brick)">'+TR("رفض")+'</button></span></div>'
+    ).join("") : '<p class="g-note">'+TR("ما فيه دعوات واردة.")+'</p>';
+    const outN = Array.isArray(outgoing)?outgoing.length:0;
+    outBox.innerHTML = outN ? outgoing.map(u=>
+      '<div class="g-jrow"><b>'+escAttr(u.name||u.username)+'</b>'+
+      '<span>@'+escAttr(u.username)+' · '+
+        '<button type="button" class="frCancel" data-uid="'+escAttr(u.user_id)+'" style="color:var(--brick)">'+TR("إلغاء")+'</button></span></div>'
+    ).join("") : '<p class="g-note">'+TR("ما فيه دعوات مُرسلة.")+'</p>';
+    $$(".frAccept",inBox).forEach(b=>b.onclick=()=>acceptInvite(b.dataset.uid));
+    $$(".frDecline",inBox).forEach(b=>b.onclick=()=>declineInvite(b.dataset.uid));
+    $$(".frCancel",outBox).forEach(b=>b.onclick=()=>declineInvite(b.dataset.uid));
+  }catch(e){ inBox.innerHTML='<p class="gerr">'+TR("ما قدرنا نجيب الدعوات.")+'</p>'; }
+}
+async function acceptInvite(uid){
+  try{ await gRpc("accept_friend_request",{ p_from_id: uid }); toast(TR("صرتوا أصدقاء!"),"🤝"); refreshFriendsList(); refreshInvites(); }
+  catch(e){ toast(TR("صار خطأ، جرّب مرة ثانية."),"⚠️"); }
+}
+async function declineInvite(uid){
+  try{ await gRpc("decline_friend_request",{ p_other_id: uid }); refreshInvites(); }
+  catch(e){ toast(TR("صار خطأ، جرّب مرة ثانية."),"⚠️"); }
+}
+function updateFriendsBadge(n){
+  const b=$("#frInviteBadge"); if(b) b.hidden=!n;
+  const fb=$("#friendsBtnDot"); if(fb) fb.hidden=!n;
 }
 /* ════════════ تعديل بيانات الحساب ════════════ */
 async function cloudUpdateUser(body){
