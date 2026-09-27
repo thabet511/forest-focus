@@ -890,8 +890,8 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     </details>
 
     <div id="paneLogin">
-      <label class="fld"><span>الإيميل</span>
-        <input id="cEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
+      <label class="fld"><span>الإيميل أو اسم المستخدم</span>
+        <input id="cEmail" type="text" inputmode="email" autocomplete="username" placeholder="you@mail.com أو username" dir="ltr"></label>
       <label class="fld"><span>كلمة السر</span>
         <div class="pwwrap"><input id="cPass" type="password" autocomplete="current-password" placeholder="كلمة السر" dir="ltr">
         <button type="button" class="pwEye" data-topw="cPass" aria-label="عرض كلمة السر">👁</button></div></label>
@@ -925,6 +925,8 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     <div id="paneSignup" hidden>
       <label class="fld"><span>الاسم <i>*</i></span>
         <input id="sName" maxlength="20" autocomplete="name" placeholder="مثلاً: عبدالله"></label>
+      <label class="fld"><span>اسم المستخدم <i>*</i></span>
+        <input id="sUser" type="text" dir="ltr" maxlength="20" autocomplete="off" placeholder="username"></label>
       <label class="fld"><span>الإيميل <i>*</i></span>
         <input id="sEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.com" dir="ltr"></label>
       <label class="fld"><span>كلمة السر <i>*</i></span>
@@ -1554,6 +1556,10 @@ const DICT = {
  "ما فيه دعوات مُرسلة.":"No sent invites.",
  "ما قدرنا نجيب الدعوات.":"Couldn't load invites.",
  "صار خطأ بالبحث.":"Search failed.",
+ "اكتب إيميلك أو اسم المستخدم.":"Enter your email or username.",
+ "ما لقينا حساب بهالاسم أو الإيميل.":"No account found with that username or email.",
+ "اسم المستخدم لازم ٣ خانات على الأقل.":"Username must be at least 3 characters.",
+ "اسم المستخدم: حروف، أرقام، أو _ . بس.":"Username: letters, numbers, or _ . only.",
  "لسه ما ضفت أصدقاء.":"You haven't added any friends yet.",
  "ما قدرنا نجيب الأصدقاء.":"Couldn't load your friends.",
  "إزالة":"Remove",
@@ -3384,7 +3390,8 @@ function saveSession(js){
           uid: js.user ? js.user.id : (TOK&&TOK.uid), email: js.user ? js.user.email : (TOK&&TOK.email),
           name:   (md && md.name)   || (TOK&&TOK.name)   || null,
           region: (md && md.region) || (TOK&&TOK.region) || null,
-          uni:    (md && md.uni)    || (TOK&&TOK.uni)    || null };
+          uni:    (md && md.uni)    || (TOK&&TOK.uni)    || null,
+          username: (md && md.username) || (TOK&&TOK.username) || null };
   writeTok(TOK); return true;
 }
 async function ensureToken(){
@@ -3393,8 +3400,11 @@ async function ensureToken(){
   const js = await sbFetch("/auth/v1/token?grant_type=refresh_token", { method:"POST", body:{ refresh_token:TOK.refresh } });
   if(!saveSession(js)) throw new Error(TR("انتهت الجلسة"));
 }
-const cloudSignUp = (email,password,name,region,uni) => sbFetch("/auth/v1/signup", { method:"POST", body:{ email, password, data:{ name, region, uni } } });
+const cloudSignUp = (email,password,name,region,uni,username) => sbFetch("/auth/v1/signup", { method:"POST", body:{ email, password, data:{ name, region, uni, username } } });
 const cloudSignIn = (email,password) => sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } });
+/* استدعاءات عامة قبل تسجيل الدخول — بدون جلسة، بمفتاح anon بس */
+const checkUsernameAvailable = (username) => sbFetch("/rest/v1/rpc/username_available", { method:"POST", body:{ p_username:username } });
+const emailForUsername = (username) => sbFetch("/rest/v1/rpc/email_for_username", { method:"POST", body:{ p_username:username } });
 
 /* ── الرجوع من رابط الإيميل: الجلسة تجي في عنوان الصفحة ── */
 function hashParams(){
@@ -3420,6 +3430,7 @@ async function recoveryFromHash(){
     TOK.name  =(u.user_metadata && u.user_metadata.name)  ||null;
     TOK.region=(u.user_metadata && u.user_metadata.region)||null;
     TOK.uni   =(u.user_metadata && u.user_metadata.uni)   ||null;
+    TOK.username=(u.user_metadata && u.user_metadata.username)||null;
     writeTok(TOK); return true;
   }catch(e){ TOK=null; writeTok(null); return false; }
 }
@@ -5287,8 +5298,15 @@ async function afterCloudAuth(stay){
   ACC.last = u.id; ACC.stay = null; writeAcc();
   gate.classList.remove("on"); document.body.classList.remove("gated");
   $("#userInitial").textContent = initialOf(u.name);
+  claimReservedUsername();
   bootApp();
   toast(TR("أهلاً ")+u.name+TR("، مزرعتك جاهزة."),"🌿");
+}
+/* اسم المستخدم يُختار وقت التسجيل ويُحفظ بالـ metadata، ويُثبَّت فعلياً أول ما تصير عندنا جلسة حقيقية */
+async function claimReservedUsername(){
+  if(!TOK || !TOK.username || MYUSERNAME===TOK.username) return;
+  try{ await gRpc("set_username",{ p_username: TOK.username }); MYUSERNAME = TOK.username; }
+  catch(e){ /* لو أخذه غيره بالسباق النادر، يقدر يختار واحد جديد لاحقاً من شاشة التعديل */ }
 }
 function busy(btn,on,label){
   btn.disabled = on;
@@ -5299,12 +5317,18 @@ function busy(btn,on,label){
 /* ── تسجيل الدخول ── */
 async function doLogin(){
   if(!cloudReady()){ msg(TR("الاتصال بالسيرفر مو مضبوط.")); $("#cloudSetup").open=true; return; }
-  const email=($("#cEmail").value||"").trim(), pass=$("#cPass").value||"";
-  if(!email){ msg(TR("اكتب إيميلك.")); $("#cEmail").focus(); return; }
-  if(!/.+@.+\..+/.test(email)){ msg(TR("الإيميل غير صحيح.")); $("#cEmail").focus(); return; }
+  const idRaw=($("#cEmail").value||"").trim(), pass=$("#cPass").value||"";
+  if(!idRaw){ msg(TR("اكتب إيميلك أو اسم المستخدم.")); $("#cEmail").focus(); return; }
   if(!pass){ msg(TR("اكتب كلمة السر.")); $("#cPass").focus(); return; }
   const btn=$("#cInBtn"); busy(btn,true); msg("","");
   try{
+    let email = idRaw;
+    if(!/.+@.+\..+/.test(idRaw)){
+      /* مو شكل إيميل — نعتبره اسم مستخدم ونجيب إيميله أول */
+      const found = await emailForUsername(idRaw);
+      if(!found){ msg(TR("ما لقينا حساب بهالاسم أو الإيميل.")); return; }
+      email = found;
+    }
     const js = await cloudSignIn(email,pass);
     if(!saveSession(js)){ msg(TR("ما قدرنا نفتح الجلسة. جرّب مرة ثانية.")); return; }
     $("#cPass").value="";
@@ -5313,15 +5337,18 @@ async function doLogin(){
   finally{ busy(btn,false,TR("دخول")); }
 }
 
-/* ── تسجيل جديد: الحقول الثلاثة إجبارية، وبعد النجاح يروح لصفحة الدخول ── */
+/* ── تسجيل جديد: الحقول إجبارية (بما فيها اسم المستخدم)، وبعد النجاح يروح لصفحة الدخول ── */
 async function doSignup(){
   if(!cloudReady()){ msg(TR("الاتصال بالسيرفر مو مضبوط.")); $("#cloudSetup").open=true; return; }
   const name=($("#sName").value||"").trim();
+  const username=($("#sUser").value||"").trim();
   const email=($("#sEmail").value||"").trim();
   const pass=$("#sPass").value||"";
   const region=($("#sRegion")?$("#sRegion").value:"");
   const uni=($("#sUni")?$("#sUni").value:"");
   if(!name){ msg(TR("اكتب اسمك.")); $("#sName").focus(); return; }
+  if(username.length<3){ msg(TR("اسم المستخدم لازم ٣ خانات على الأقل.")); $("#sUser").focus(); return; }
+  if(!/^[A-Za-z0-9_.]+$/.test(username)){ msg(TR("اسم المستخدم: حروف، أرقام، أو _ . بس.")); $("#sUser").focus(); return; }
   if(!email){ msg(TR("اكتب إيميلك.")); $("#sEmail").focus(); return; }
   if(!/.+@.+\..+/.test(email)){ msg(TR("الإيميل غير صحيح.")); $("#sEmail").focus(); return; }
   if(!pass){ msg(TR("اكتب كلمة السر.")); $("#sPass").focus(); return; }
@@ -5330,9 +5357,11 @@ async function doSignup(){
   if(!uni){ msg(TR("اختر جامعتك، أو طالب مدرسة.")); $("#sUni").focus(); return; }
   const btn=$("#cUpBtn"); busy(btn,true); msg("","");
   try{
-    await cloudSignUp(email,pass,name,region,uni);
+    const avail = await checkUsernameAvailable(username);
+    if(!avail){ msg(TR("هذا اسم المستخدم مأخوذ، جرّب غيره.")); $("#sUser").focus(); return; }
+    await cloudSignUp(email,pass,name,region,uni,username);
     TOK=null; writeTok(null);                 /* ما ندخله على طول — يسجّل دخوله بنفسه */
-    $("#sName").value=""; $("#sEmail").value=""; $("#sPass").value="";
+    $("#sName").value=""; $("#sUser").value=""; $("#sEmail").value=""; $("#sPass").value="";
     $("#cEmail").value=email; $("#cPass").value="";
     switchTab("login", true);
     msg("", TR("تم تسجيلك بنجاح! سجّل دخولك الآن."));
@@ -5344,7 +5373,8 @@ $("#cInBtn").onclick = doLogin;
 $("#cUpBtn").onclick = doSignup;
 $("#cEmail").onkeydown = e=>{ if(e.key==="Enter") $("#cPass").focus(); };
 $("#cPass").onkeydown  = e=>{ if(e.key==="Enter") doLogin(); };
-$("#sName").onkeydown  = e=>{ if(e.key==="Enter") $("#sEmail").focus(); };
+$("#sName").onkeydown  = e=>{ if(e.key==="Enter") $("#sUser").focus(); };
+$("#sUser").onkeydown  = e=>{ if(e.key==="Enter") $("#sEmail").focus(); };
 $("#sEmail").onkeydown = e=>{ if(e.key==="Enter") $("#sPass").focus(); };
 $("#sPass").onkeydown  = e=>{ if(e.key==="Enter") doSignup(); };
 fillRegionSelect("#sRegion");
