@@ -99,11 +99,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 
 /* ── الشريط العلوي ────────────────────────────────────── */
-.topbar{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 0 10px}
-.brand{font-family:var(--kufi);font-size:19px;font-weight:600;margin:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 0 10px}
+.topbar-side{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.topbar-side.topbar-left{justify-content:flex-end}
+.topbar-side.topbar-right{justify-content:flex-start}
+.brand{font-family:var(--kufi);font-size:19px;font-weight:600;margin:0;flex:none;white-space:nowrap}
 .brand span{color:var(--viridian)}
 .brand em{font-style:normal;font-size:11px;font-weight:500;opacity:.55;margin-inline-start:5px;letter-spacing:.2px}
-.spacer{flex:1}
 .pill{
   display:inline-flex;align-items:center;gap:6px;
   background:var(--ochre-soft); color:var(--ochre);
@@ -119,6 +121,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 .icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 .icon-btn svg{width:18px;height:18px}
+#friendsBtn{font-size:17px}
 
 /* ── قوس الدفيئة ─────────────────────────────────────── */
 .stage{
@@ -642,17 +645,17 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
 <div class="app">
 
   <header class="topbar">
-    <h1 class="brand">حصاد<em>الإنتاجية</em><span>.</span></h1>
-    <div class="spacer"></div>
-    <div class="pill" id="hoursPill" title="مجموع ساعات تركيزك">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3.2 2"/></svg>
-      <span id="hoursVal">0</span>
+    <div class="topbar-side topbar-right">
+      <button class="icon-btn avatar" id="userBtn" aria-label="حسابي"><span id="userInitial">·</span></button>
+      <button class="icon-btn" id="friendsBtn" aria-label="الأصدقاء">👥</button>
     </div>
-    <button class="icon-btn avatar" id="userBtn" aria-label="حسابي"><span id="userInitial">·</span></button>
-    <button class="icon-btn" id="langBtn" aria-label="Language">EN</button>
-    <button class="icon-btn" id="themeBtn" aria-label="تبديل النهار والليل">
-      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></svg>
-    </button>
+    <h1 class="brand">حصاد<em>الإنتاجية</em><span>.</span></h1>
+    <div class="topbar-side topbar-left">
+      <button class="icon-btn" id="langBtn" aria-label="Language">EN</button>
+      <button class="icon-btn" id="themeBtn" aria-label="تبديل النهار والليل">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></svg>
+      </button>
+    </div>
   </header>
 
   <!-- ══ ٠) الرئيسية: تعريف مختصر بالتطبيق ══ -->
@@ -1489,7 +1492,7 @@ const DICT = {
  "تزامنت، وجت ":"Synced — ",
  " نبتة من جهاز ثاني.":" plants arrived from another device.",
  "ما قدرت أزامن الآن: ":"Couldn't sync right now: ",
- "حساب سحابي":"Cloud account",
+ "حساب شخصي":"Personal account",
  "حساب محلي":"Local account",
  "الحساب أُنشئ":"Created",
  "آخر مزامنة":"Last sync",
@@ -1512,6 +1515,26 @@ const DICT = {
  "آخر تأكيد: ما فيه رجعة.":"Last confirmation: there's no going back.",
  "هذا يمسح نسخة هذا الجهاز فقط. المزرعة تبقى على السحابة وترجع لك أول ما تسجّل دخول. أكمل؟":"This erases this device's copy only. The farm stays in the cloud and comes back when you log in. Continue?",
  "مزارع":"Farmer",
+ "اليوزرنيم":"Username",
+ "حفظ":"Save",
+ "لازم ٣ خانات على الأقل.":"Must be at least 3 characters.",
+ "حروف، أرقام، أو _ . بس.":"Letters, numbers, or _ . only.",
+ "صار يوزرنيمك: ":"Your username is now: ",
+ "هذا اليوزرنيم مأخوذ، جرّب غيره.":"That username is taken, try another.",
+ "صار خطأ، جرّب مرة ثانية.":"Something went wrong, try again.",
+ "الأصدقاء":"Friends",
+ "اليوزرنيم والأصدقاء يحتاجون حساب شخصي (بإيميل) عشان يقدر غيرك يلقاك.":"Usernames and friends need a personal account (with email) so others can find you.",
+ "أضف صديقك بيوزرنيمه.":"Add your friend by their username.",
+ "يوزرنيم صديقك":"Your friend's username",
+ "إضافة":"Add",
+ "انضاف لأصدقائك.":"Added to your friends.",
+ "ما لقينا حد بهاليوزرنيم.":"No one found with that username.",
+ "ما تقدر تضيف نفسك.":"You can't add yourself.",
+ "لسه ما ضفت أصدقاء.":"You haven't added any friends yet.",
+ "ما قدرنا نجيب الأصدقاء.":"Couldn't load your friends.",
+ "إزالة":"Remove",
+ "انحذف من أصدقائك.":"Removed from your friends.",
+ "ما قدرنا نحذفه.":"Couldn't remove them.",
  "المحادثة":"Chat",
  "إرسال":"Send",
  "إغلاق":"Close",
@@ -3492,7 +3515,7 @@ async function renderUniBoard(){
 
 const ACC_KEY = "hasad.accounts";
 const userKey = id => "hasad.user." + id;
-let memFallback = null, accMem = null, CURRENT = null, guestMem = null;
+let memFallback = null, accMem = null, CURRENT = null, guestMem = null, MYUSERNAME = null;
 
 function readAcc(){
   try{ const r=localStorage.getItem(ACC_KEY); return r?JSON.parse(r):{users:[],last:null,stay:null,migrated:false}; }
@@ -3603,7 +3626,7 @@ const el = {
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
   setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
   seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
-  hours:$("#hoursVal"), toast:$("#toast"), toastTxt:$("#toastTxt"), toastIc:$("#toastIc"),
+  toast:$("#toast"), toastTxt:$("#toastTxt"), toastIc:$("#toastIc"),
   sheet:$("#sheet"), sheetBg:$("#sheetBg"), sheetBody:$("#sheetBody"),
   garden:$("#gardenBody"), gardenSub:$("#gardenSub"),
   statCards:$("#statCards"), week:$("#weekChart"), weekTotal:$("#weekTotal"),
@@ -4123,8 +4146,6 @@ function renderSetup(){
   });
   $("#strictSwitch").setAttribute("aria-checked", !!DB.strict);
   $("#gracePanel").style.display = DB.strict?"":"none";
-  const s=computeStats();
-  el.hours.textContent = Math.floor(s.minutes/60) + TR(" ساعة");
 }
 function previewSeed(){
   if(sess) return;
@@ -5307,7 +5328,8 @@ fillUniSelect("", "#sUni");
 $("#sRegion").onchange = ()=>fillUniSelect($("#sRegion").value, "#sUni");
 
 /* ورقة الحساب */
-$("#userBtn").onclick=()=>openAccountSheet();
+$("#userBtn").onclick=()=>{ if(!CURRENT) return showGate(); openAccountSheet(); };
+$("#friendsBtn").onclick=()=>{ if(!CURRENT) return showGate(); openFriendsSheet(); };
 function openAccountSheet(){
   if(!CURRENT) return;
   if(CURRENT.guest) return openGuestSheet();
@@ -5319,13 +5341,23 @@ function openAccountSheet(){
       '<p class="meta">'+s.alive+TR(' نبتة · ')+hhmm(s.minutes)+TR(' تركيز</p></span></div>')+
     '<div class="kv">'+
       (CURRENT.cloud
-        ? TR('<div><span>النوع</span><b>حساب سحابي <i class="syncdot ')+syncState+'" id="syncDot"></i></b></div>'+
+        ? TR('<div><span>النوع</span><b>حساب شخصي <i class="syncdot ')+syncState+'" id="syncDot"></i></b></div>'+
           TR('<div><span>الإيميل</span><b style="direction:ltr">')+CURRENT.email+'</b></div>'+
           TR('<div><span>آخر مزامنة</span><b>')+(lastSync?prettyDate(lastSync):TR("لسه"))+'</b></div>'
         : TR('<div><span>النوع</span><b>حساب محلي</b></div>')+
           TR('<div><span>الحساب أُنشئ</span><b>')+prettyDate(CURRENT.created)+'</b></div>'+
           TR('<div><span>الرمز السري</span><b>')+(CURRENT.pin?TR("مفعّل"):TR("بدون"))+'</b></div>')+
     '</div>'+
+    (CURRENT.cloud
+      ? '<div class="fld" style="margin-top:14px">'+
+          '<span>'+TR("اليوزرنيم")+'</span>'+
+          '<div style="display:flex;gap:8px">'+
+            '<input id="unInput" type="text" dir="ltr" maxlength="20" placeholder="username" value="'+escAttr(MYUSERNAME||"")+'" style="flex:1">'+
+            '<button class="btn btn-quiet" id="unSave" style="padding:0 14px;white-space:nowrap">'+TR("حفظ")+'</button>'+
+          '</div>'+
+          '<p class="gerr" id="unErr" style="margin:6px 0 0"></p>'+
+        '</div>'
+      : '')+
     '<div class="row-actions">'+
       TR('<button class="btn btn-quiet" id="acEdit">تعديل بيانات الحساب</button>')+
       (CURRENT.cloud?'':'<button class="btn btn-quiet" id="acPin">'+(CURRENT.pin?TR("غيّر الرمز السري"):TR("حطّ رمز سري"))+'</button>')+
@@ -5338,7 +5370,107 @@ function openAccountSheet(){
   $("#acOut").onclick=()=>leaveAccount(true);
   $("#acDel").onclick=deleteAccount;
   $("#acEdit").onclick=openAccountEdit;
+  if(CURRENT.cloud){
+    $("#unSave").onclick=saveUsername;
+    $("#unInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); saveUsername(); } });
+    if(MYUSERNAME===null) refreshMyUsername();
+  }
   el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
+}
+async function refreshMyUsername(){
+  try{
+    const u=await gRpc("my_username",{});
+    MYUSERNAME = u || "";
+    const inp=$("#unInput"); if(inp && !inp.value) inp.value=MYUSERNAME;
+  }catch(e){}
+}
+async function saveUsername(){
+  const inp=$("#unInput"), err=$("#unErr"); if(!inp) return;
+  const val=(inp.value||"").trim();
+  err.textContent="";
+  if(val.length<3){ err.textContent=TR("لازم ٣ خانات على الأقل."); return; }
+  if(!/^[A-Za-z0-9_.]+$/.test(val)){ err.textContent=TR("حروف، أرقام، أو _ . بس."); return; }
+  const btn=$("#unSave"); if(btn) btn.disabled=true;
+  try{
+    await gRpc("set_username",{ p_username: val });
+    MYUSERNAME = val;
+    toast(TR("صار يوزرنيمك: ")+val,"🏷️");
+  }catch(e){
+    const m=String((e&&e.message)||e||"");
+    if(/TAKEN/.test(m)) err.textContent=TR("هذا اليوزرنيم مأخوذ، جرّب غيره.");
+    else if(/TOO_SHORT/.test(m)) err.textContent=TR("لازم ٣ خانات على الأقل.");
+    else if(/BAD_FORMAT/.test(m)) err.textContent=TR("حروف، أرقام، أو _ . بس.");
+    else err.textContent=TR("صار خطأ، جرّب مرة ثانية.");
+  }
+  if(btn) btn.disabled=false;
+}
+/* ════════════ الأصدقاء ════════════ */
+function openFriendsSheet(){
+  if(!CURRENT) return;
+  if(!CURRENT.cloud){
+    el.sheetBody.innerHTML=
+      '<h3 style="margin:0 0 3px">'+TR("الأصدقاء")+'</h3>'+
+      '<p class="gsub" style="text-align:start;margin:0 0 14px">'+
+        TR("اليوزرنيم والأصدقاء يحتاجون حساب شخصي (بإيميل) عشان يقدر غيرك يلقاك.")+'</p>'+
+      '<div class="row-actions"><button class="btn btn-quiet" id="frBack2">'+TR("رجوع")+'</button></div>';
+    $("#frBack2").onclick=()=>{ closeSheet(); };
+    el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
+    return;
+  }
+  el.sheetBody.innerHTML=
+    '<h3 style="margin:0 0 3px">'+TR("الأصدقاء")+'</h3>'+
+    '<p class="gsub" style="text-align:start;margin:0 0 14px">'+TR("أضف صديقك بيوزرنيمه.")+'</p>'+
+    '<p class="gerr" id="frErr"></p>'+
+    '<div style="display:flex;gap:8px;margin-bottom:16px">'+
+      '<input id="frInput" type="text" dir="ltr" maxlength="20" placeholder="'+TR("يوزرنيم صديقك")+'" autocomplete="off" style="flex:1">'+
+      '<button class="btn btn-primary" id="frAdd" style="padding:0 16px;white-space:nowrap">'+TR("إضافة")+'</button>'+
+    '</div>'+
+    '<div id="frList" class="g-joined"></div>'+
+    '<div class="row-actions"><button class="btn btn-quiet" id="frBack">'+TR("رجوع")+'</button></div>';
+  $("#frBack").onclick=openAccountSheet;
+  $("#frAdd").onclick=addFriendNow;
+  $("#frInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addFriendNow(); } });
+  el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
+  refreshFriendsList();
+}
+async function addFriendNow(){
+  const inp=$("#frInput"), err=$("#frErr"); if(!inp) return;
+  const val=(inp.value||"").trim();
+  err.textContent="";
+  if(!val) return;
+  const btn=$("#frAdd"); if(btn) btn.disabled=true;
+  try{
+    await gRpc("add_friend",{ p_username: val });
+    inp.value="";
+    toast(TR("انضاف لأصدقائك."),"🤝");
+    refreshFriendsList();
+  }catch(e){
+    const m=String((e&&e.message)||e||"");
+    if(/NOT_FOUND/.test(m)) err.textContent=TR("ما لقينا حد بهاليوزرنيم.");
+    else if(/SELF/.test(m))  err.textContent=TR("ما تقدر تضيف نفسك.");
+    else err.textContent=TR("صار خطأ، جرّب مرة ثانية.");
+  }
+  if(btn) btn.disabled=false;
+}
+async function refreshFriendsList(){
+  const box=$("#frList"); if(!box) return;
+  box.innerHTML='<p class="g-note">'+TR("جارٍ التحميل…")+'</p>';
+  try{
+    const rows=await gRpc("list_friends",{});
+    if(!Array.isArray(rows)||!rows.length){
+      box.innerHTML='<p class="g-note">'+TR("لسه ما ضفت أصدقاء.")+'</p>';
+      return;
+    }
+    box.innerHTML=rows.map(f=>
+      '<div class="g-jrow"><b>'+escAttr(f.name||f.username)+'</b>'+
+      '<span>@'+escAttr(f.username)+' · <button type="button" class="frRemove" data-fid="'+escAttr(f.user_id)+'" style="color:var(--brick)">'+TR("إزالة")+'</button></span></div>'
+    ).join("");
+    $$(".frRemove",box).forEach(b=>b.onclick=()=>removeFriendNow(b.dataset.fid));
+  }catch(e){ box.innerHTML='<p class="gerr">'+TR("ما قدرنا نجيب الأصدقاء.")+'</p>'; }
+}
+async function removeFriendNow(fid){
+  try{ await gRpc("remove_friend",{ p_friend_id: fid }); refreshFriendsList(); toast(TR("انحذف من أصدقائك."),"👋"); }
+  catch(e){ toast(TR("ما قدرنا نحذفه."),"⚠️"); }
 }
 /* ════════════ تعديل بيانات الحساب ════════════ */
 async function cloudUpdateUser(body){
@@ -5502,7 +5634,7 @@ async function leaveAccount(clearStay){
   closeSheet();
   setSync("off");
   if(clearStay){ ACC.stay=null; writeAcc(); }
-  CURRENT=null; DB=normalize(null);
+  CURRENT=null; DB=normalize(null); MYUSERNAME=null;
   $("#userInitial").textContent="·";
   showGate();
 }
