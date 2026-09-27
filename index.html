@@ -1519,7 +1519,7 @@ const DICT = {
  "لا رسائل بعد":"No messages yet",
  "رسالة":"message",
  "وصل":"reached",
- "حصل على شارة:":"earned a badge:",
+ "حصل على شارة: ":"earned a badge: ",
  "؟":"?",
  "افتح":"Open",
  "انسخ الرابط والمفتاح.":"Copy the URL and the key.",
@@ -4540,7 +4540,7 @@ function gCheckMyTier(){
   if(tier>G.myTier){
     G.myTier=tier;
     const name=TIERS[tier].n;
-    gAnnounce("grow", TR("وصل ")+TR(name), TIER_ICONS[name]||"🌿");
+    gAnnounce("grow", name, TIER_ICONS[name]||"🌿");   /* نرسل الاسم الخام بالعربي — كل عضو يترجمه بلغته وقت العرض */
   }
 }
 /* ─── شات الجلسة الجماعية ──────────────────────────────── */
@@ -4575,8 +4575,11 @@ function renderChatMsgs(){
   const myId=gMyId();
   box.innerHTML=G.chatMsgs.map(m=>{
     if(m.kind && m.kind!=="msg"){
+      const sentence = m.kind==="badge" ? TR("حصل على شارة: ")+TR(m.t)
+                      : m.kind==="grow"  ? TR("وصل ")+TR(m.t)
+                      : escAttr(m.t);
       return '<div class="g-chat-sys'+(m.kind==="badge"?" g-chat-badge":"")+'">'
-        +(m.ic||"")+' <b>'+escAttr(m.n||TR("مزارع"))+'</b> '+escAttr(m.t)+'</div>';
+        +(m.ic||"")+' <b>'+escAttr(m.n||TR("مزارع"))+'</b> '+escAttr(sentence)+'</div>';
     }
     const mine=m.uid===myId;
     return '<div class="g-chat-msg'+(mine?" g-chat-mine":"")+'">'
@@ -4662,7 +4665,7 @@ function gRecordMine(){
   if(dead) toast(TR("ذبلت نبتتك بالجلسة الجماعية."),"🥀");
   else     toast(TR("خلصت الجلسة الجماعية! نبتتك دخلت المزرعة."),"🤝");
   const fresh = checkAch();
-  if(fresh.length && G.code) fresh.forEach(a=>gAnnounce("badge", TR("حصل على شارة:")+" "+TR(a.n), a.ic));
+  if(fresh.length && G.code) fresh.forEach(a=>gAnnounce("badge", a.n, a.ic));
   if(CURRENT && CURRENT.cloud) pushNow(true);
 }
 async function gCreate(){
