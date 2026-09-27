@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة تحكم حصاد الإنتاجية</title>
+<style>
+:root{
+  --field:#DFE8D6; --field-edge:#CEDAC2;
+  --paper:#FBFAF3; --paper-2:#F3F0E3; --paper-3:#EAE7D8;
+  --line:#C4CFB8; --ink:#19251E; --ink-2:#4F5E54; --ink-3:#7E8C7A;
+  --viridian:#2A7052; --viridian-deep:#1C5540; --viridian-soft:#D9E9D8; --viridian-lift:#3C8A66;
+  --ochre:#B8761E; --ochre-soft:#F4E6C9;
+  --brick:#A8412E; --brick-soft:#F4DFD9;
+  --shadow-1:0 1px 0 rgba(25,37,30,.045), 0 1px 3px -1px rgba(25,37,30,.10), 0 4px 10px -4px rgba(25,37,30,.13);
+  --r-s:10px; --r-m:16px; --r-l:22px;
+  --sans:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --kufi:"IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --field:#0E1613; --field-edge:#080D0B;
+    --paper:#18211E; --paper-2:#1F2B27; --paper-3:#26332F;
+    --line:#31403A; --ink:#EAF1E7; --ink-2:#9EAEA4; --ink-3:#78887E;
+    --viridian:#5CB283; --viridian-deep:#43926A; --viridian-soft:#1B2D25; --viridian-lift:#6FC495;
+    --ochre:#E0A64A; --ochre-soft:#2E2718;
+    --brick:#D2695A; --brick-soft:#2E1C18;
+    --shadow-1:0 1px 0 rgba(0,0,0,.24), 0 2px 8px -2px rgba(0,0,0,.52);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{
+  font-family:var(--sans); color:var(--ink); min-height:100vh; min-height:100dvh;
+  background:radial-gradient(120% 80% at 50% 0%, var(--field) 0%, var(--field-edge) 100%) fixed;
+  padding:calc(20px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+  line-height:1.6;
+}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-family:var(--kufi);font-size:20px;font-weight:700;margin:0 0 4px}
+.sub{color:var(--ink-2);font-size:13.5px;margin:0 0 22px}
+
+/* ── تسجيل الدخول ── */
+.login-card{
+  max-width:380px;margin:8vh auto 0;background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--r-l);padding:28px 24px;box-shadow:var(--shadow-1);
+}
+.login-card h1{text-align:center;margin-bottom:2px}
+.login-card .sub{text-align:center;margin-bottom:22px}
+.fld{display:block;margin-bottom:14px}
+.fld span{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
+.fld input{
+  width:100%;padding:12px 13px;border-radius:11px;font:inherit;font-size:15px;
+  background:var(--paper-2);border:1px solid var(--line);color:var(--ink);
+}
+.fld input:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:12px 18px;border-radius:12px;font:inherit;font-weight:600;font-size:14.5px;
+  border:1px solid transparent;cursor:pointer;transition:filter .15s,transform .1s;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--viridian);color:#fff;width:100%}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-quiet{background:var(--paper-2);border-color:var(--line);color:var(--ink-2)}
+.btn:disabled{opacity:.55;cursor:default}
+.err{color:var(--brick);font-size:13px;margin:-4px 0 12px;min-height:0}
+
+/* ── الهيدر بعد الدخول ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px}
+.topbar .btn-quiet{padding:9px 15px;font-size:13px}
+
+/* ── ملخّص ── */
+.stats-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.stat-box{
+  flex:1;min-width:120px;background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--r-m);padding:12px 14px;box-shadow:var(--shadow-1);
+}
+.stat-box .v{font-family:var(--kufi);font-size:22px;font-weight:700;color:var(--viridian-deep)}
+.stat-box .k{font-size:12px;color:var(--ink-3);margin-top:2px}
+
+/* ── البحث ── */
+.search-row{margin-bottom:14px}
+.search-row input{
+  width:100%;padding:11px 14px;border-radius:11px;font:inherit;font-size:14px;
+  background:var(--paper);border:1px solid var(--line);color:var(--ink);
+}
+.search-row input:focus{outline:none;border-color:var(--viridian);box-shadow:0 0 0 3px var(--viridian-soft)}
+
+/* ── الجدول ── */
+.tbl-wrap{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);
+  overflow:auto;box-shadow:var(--shadow-1);
+}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:600px}
+thead th{
+  position:sticky;top:0;background:var(--paper-2);color:var(--ink-2);
+  font-size:11.5px;font-weight:600;text-align:right;padding:11px 13px;
+  border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none;
+}
+thead th:hover{color:var(--ink)}
+thead th .arrow{opacity:.4;font-size:10px;margin-inline-start:3px}
+thead th.sorted .arrow{opacity:1;color:var(--viridian)}
+tbody td{padding:10px 13px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--paper-2)}
+td.hours{font-family:var(--kufi);font-weight:700;color:var(--viridian-deep);font-variant-numeric:tabular-nums}
+td.email{direction:ltr;text-align:right;color:var(--ink-2);font-size:12.5px}
+td.username{direction:ltr;text-align:right;color:var(--ink-2)}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-3)}
+.loading{padding:40px 20px;text-align:center;color:var(--ink-3)}
+
+@media (max-width:560px){
+  .stats-row{gap:8px}
+  .stat-box{min-width:96px;padding:10px 12px}
+  .stat-box .v{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- شاشة الدخول -->
+  <div id="loginView" class="login-card">
+    <h1>🌱 لوحة تحكم حصاد الإنتاجية</h1>
+    <p class="sub">للمدير فقط</p>
+    <p class="err" id="loginErr"></p>
+    <label class="fld"><span>الإيميل</span>
+      <input id="admEmail" type="email" dir="ltr" autocomplete="email" placeholder="you@mail.com"></label>
+    <label class="fld"><span>كلمة السر</span>
+      <input id="admPass" type="password" dir="ltr" autocomplete="current-password" placeholder="كلمة السر"></label>
+    <button class="btn btn-primary" id="admLoginBtn">دخول</button>
+  </div>
+
+  <!-- الشاشة الرئيسية -->
+  <div id="mainView" style="display:none">
+    <div class="topbar">
+      <div>
+        <h1 style="margin:0">🌱 لوحة تحكم حصاد الإنتاجية</h1>
+        <p class="sub" style="margin:2px 0 0">كل المستخدمين وساعاتهم</p>
+      </div>
+      <button class="btn btn-quiet" id="admLogoutBtn">تسجيل خروج</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="v" id="statCount">—</div><div class="k">عدد المستخدمين</div></div>
+      <div class="stat-box"><div class="v" id="statHours">—</div><div class="k">إجمالي الساعات</div></div>
+      <div class="stat-box"><div class="v" id="statAvg">—</div><div class="k">متوسط الساعات</div></div>
+    </div>
+
+    <div class="search-row">
+      <input id="searchBox" type="text" placeholder="ابحث بالاسم، اسم المستخدم، أو الإيميل…">
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="name">الاسم <span class="arrow">▾</span></th>
+            <th data-key="username">اسم المستخدم <span class="arrow">▾</span></th>
+            <th data-key="email">الإيميل <span class="arrow">▾</span></th>
+            <th data-key="uni">الجامعة <span class="arrow">▾</span></th>
+            <th data-key="total_hours" class="sorted">الساعات <span class="arrow">▾</span></th>
+          </tr>
+        </thead>
+        <tbody id="tblBody">
+          <tr><td colspan="5" class="loading">جارٍ التحميل…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CLOUD = {
+  url: "https://ykybuccyhrkgzimmiweh.supabase.co",
+  key: "sb_publishable_CP-iOMK4Yo5Y49adH_ObIg_sK6okXLy"
+};
+const TOK_KEY = "hasad.admin.tok";
+let TOK = null;
+let ROWS = [];
+let sortKey = "total_hours", sortDir = -1;
+
+function readTok(){ try{ return JSON.parse(localStorage.getItem(TOK_KEY)||"null"); }catch(e){ return null; } }
+function writeTok(t){ try{ t?localStorage.setItem(TOK_KEY,JSON.stringify(t)):localStorage.removeItem(TOK_KEY); }catch(e){} }
+
+async function sbFetch(path, opts, useAuth){
+  const headers = Object.assign({ "apikey":CLOUD.key, "Content-Type":"application/json" }, opts.headers||{});
+  if(useAuth && TOK) headers["Authorization"] = "Bearer " + TOK.access;
+  const r = await fetch(CLOUD.url.replace(/\/+$/,"") + path,
+    { method:opts.method||"GET", headers, body:opts.body?JSON.stringify(opts.body):undefined });
+  const txt = await r.text();
+  let js = null; try{ js = txt?JSON.parse(txt):null; }catch(e){}
+  if(!r.ok){ throw new Error((js&&(js.error_description||js.msg||js.message||js.error))||("HTTP "+r.status)); }
+  return js;
+}
+
+function el(id){ return document.getElementById(id); }
+
+async function doLogin(){
+  const email=(el("admEmail").value||"").trim(), pass=el("admPass").value||"";
+  el("loginErr").textContent="";
+  if(!email||!pass){ el("loginErr").textContent="اكتب الإيميل وكلمة السر."; return; }
+  const btn=el("admLoginBtn"); btn.disabled=true; btn.textContent="لحظة…";
+  try{
+    const js = await sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password:pass } });
+    TOK = { access: js.access_token, refresh: js.refresh_token };
+    writeTok(TOK);
+    await loadDashboard();
+  }catch(e){
+    el("loginErr").textContent = /NOT_ADMIN/.test(e.message) ? "هذا الحساب ما عنده صلاحية المدير." : "بيانات الدخول غلط.";
+  }
+  btn.disabled=false; btn.textContent="دخول";
+}
+
+function doLogout(){
+  TOK=null; writeTok(null);
+  el("mainView").style.display="none";
+  el("loginView").style.display="block";
+  el("admPass").value="";
+}
+
+async function loadDashboard(){
+  el("loginView").style.display="none";
+  el("mainView").style.display="block";
+  el("tblBody").innerHTML = '<tr><td colspan="5" class="loading">جارٍ التحميل…</td></tr>';
+  try{
+    const rows = await sbFetch("/rest/v1/rpc/admin_list_users", { method:"POST", body:{} }, true);
+    ROWS = Array.isArray(rows) ? rows : [];
+    renderStats();
+    renderTable();
+  }catch(e){
+    if(/NOT_AUTH|JWT/.test(e.message)){ doLogout(); return; }
+    el("tblBody").innerHTML = '<tr><td colspan="5" class="empty">'+
+      (/NOT_ADMIN/.test(e.message) ? "هذا الحساب ما عنده صلاحية المدير." : "صار خطأ بجلب البيانات.")+'</td></tr>';
+  }
+}
+
+function renderStats(){
+  const n = ROWS.length;
+  const total = ROWS.reduce((a,r)=>a+(+r.total_hours||0),0);
+  el("statCount").textContent = n;
+  el("statHours").textContent = total.toFixed(1);
+  el("statAvg").textContent = n ? (total/n).toFixed(1) : "0";
+}
+
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function renderTable(){
+  const q = (el("searchBox").value||"").trim().toLowerCase();
+  let list = ROWS.filter(r=>{
+    if(!q) return true;
+    return (r.name||"").toLowerCase().includes(q)
+        || (r.username||"").toLowerCase().includes(q)
+        || (r.email||"").toLowerCase().includes(q);
+  });
+  list.sort((a,b)=>{
+    let av=a[sortKey], bv=b[sortKey];
+    if(sortKey==="total_hours"){ av=+av||0; bv=+bv||0; return (av-bv)*sortDir; }
+    av=(av||"").toString(); bv=(bv||"").toString();
+    return av.localeCompare(bv,"ar")*sortDir;
+  });
+  if(!list.length){
+    el("tblBody").innerHTML = '<tr><td colspan="5" class="empty">ما فيه نتائج.</td></tr>';
+    return;
+  }
+  el("tblBody").innerHTML = list.map(r=>
+    '<tr>'+
+      '<td>'+esc(r.name)+'</td>'+
+      '<td class="username">@'+esc(r.username)+'</td>'+
+      '<td class="email">'+esc(r.email)+'</td>'+
+      '<td>'+esc(r.uni)+'</td>'+
+      '<td class="hours">'+(+r.total_hours||0).toFixed(1)+'</td>'+
+    '</tr>'
+  ).join("");
+}
+
+document.querySelectorAll("thead th").forEach(th=>{
+  th.addEventListener("click", ()=>{
+    const key = th.dataset.key;
+    if(sortKey===key) sortDir *= -1; else { sortKey=key; sortDir = key==="total_hours" ? -1 : 1; }
+    document.querySelectorAll("thead th").forEach(t=>t.classList.remove("sorted"));
+    th.classList.add("sorted");
+    th.querySelector(".arrow").textContent = sortDir===1 ? "▴" : "▾";
+    renderTable();
+  });
+});
+el("searchBox").addEventListener("input", renderTable);
+el("admLoginBtn").addEventListener("click", doLogin);
+el("admLogoutBtn").addEventListener("click", doLogout);
+el("admPass").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+el("admEmail").addEventListener("keydown", e=>{ if(e.key==="Enter") el("admPass").focus(); });
+
+/* استئناف الجلسة لو محفوظة */
+(function boot(){
+  TOK = readTok();
+  if(TOK && TOK.access) loadDashboard();
+})();
+</script>
+</body>
+</html>
