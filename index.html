@@ -532,6 +532,8 @@ body.gated{overflow:hidden}
 .gfoot{margin:auto 0 0;padding-top:16px;font-size:11.5px;color:var(--ink-3);text-align:center;line-height:1.6}
 .gtabs.three{grid-template-columns:repeat(3,1fr)}
 .gtabs.three .gtab{font-size:13px;padding:9px 2px}
+.gtabs.four{grid-template-columns:repeat(4,1fr)}
+.gtabs.four .gtab{font-size:11.5px;padding:8px 1px}
 .orline{display:flex;align-items:center;gap:10px;margin:14px 0 12px;color:var(--ink-3);font-size:12px}
 .orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
 .cloudrow{display:flex;gap:8px}
@@ -1515,20 +1517,21 @@ const DICT = {
  "آخر تأكيد: ما فيه رجعة.":"Last confirmation: there's no going back.",
  "هذا يمسح نسخة هذا الجهاز فقط. المزرعة تبقى على السحابة وترجع لك أول ما تسجّل دخول. أكمل؟":"This erases this device's copy only. The farm stays in the cloud and comes back when you log in. Continue?",
  "مزارع":"Farmer",
- "اليوزرنيم":"Username",
+ "اسم المستخدم":"Username",
+ "بيانات شخصية":"Personal info",
  "حفظ":"Save",
  "لازم ٣ خانات على الأقل.":"Must be at least 3 characters.",
  "حروف، أرقام، أو _ . بس.":"Letters, numbers, or _ . only.",
- "صار يوزرنيمك: ":"Your username is now: ",
- "هذا اليوزرنيم مأخوذ، جرّب غيره.":"That username is taken, try another.",
+ "صار اسم المستخدم: ":"Your username is now: ",
+ "هذا اسم المستخدم مأخوذ، جرّب غيره.":"That username is taken, try another.",
  "صار خطأ، جرّب مرة ثانية.":"Something went wrong, try again.",
  "الأصدقاء":"Friends",
- "اليوزرنيم والأصدقاء يحتاجون حساب شخصي (بإيميل) عشان يقدر غيرك يلقاك.":"Usernames and friends need a personal account (with email) so others can find you.",
- "أضف صديقك بيوزرنيمه.":"Add your friend by their username.",
- "يوزرنيم صديقك":"Your friend's username",
+ "اسم المستخدم والأصدقاء يحتاجون حساب شخصي (بإيميل) عشان يقدر غيرك يلقاك.":"Usernames and friends need a personal account (with email) so others can find you.",
+ "أضف صديقك باسم مستخدمه.":"Add your friend by their username.",
+ "اسم مستخدم صديقك":"Your friend's username",
  "إضافة":"Add",
  "انضاف لأصدقائك.":"Added to your friends.",
- "ما لقينا حد بهاليوزرنيم.":"No one found with that username.",
+ "ما لقينا حد باسم المستخدم هذا.":"No one found with that username.",
  "ما تقدر تضيف نفسك.":"You can't add yourself.",
  "لسه ما ضفت أصدقاء.":"You haven't added any friends yet.",
  "ما قدرنا نجيب الأصدقاء.":"Couldn't load your friends.",
@@ -5348,16 +5351,7 @@ function openAccountSheet(){
           TR('<div><span>الحساب أُنشئ</span><b>')+prettyDate(CURRENT.created)+'</b></div>'+
           TR('<div><span>الرمز السري</span><b>')+(CURRENT.pin?TR("مفعّل"):TR("بدون"))+'</b></div>')+
     '</div>'+
-    (CURRENT.cloud
-      ? '<div class="fld" style="margin-top:14px">'+
-          '<span>'+TR("اليوزرنيم")+'</span>'+
-          '<div style="display:flex;gap:8px">'+
-            '<input id="unInput" type="text" dir="ltr" maxlength="20" placeholder="username" value="'+escAttr(MYUSERNAME||"")+'" style="flex:1">'+
-            '<button class="btn btn-quiet" id="unSave" style="padding:0 14px;white-space:nowrap">'+TR("حفظ")+'</button>'+
-          '</div>'+
-          '<p class="gerr" id="unErr" style="margin:6px 0 0"></p>'+
-        '</div>'
-      : '')+
+    '</div>'+
     '<div class="row-actions">'+
       TR('<button class="btn btn-quiet" id="acEdit">تعديل بيانات الحساب</button>')+
       (CURRENT.cloud?'':'<button class="btn btn-quiet" id="acPin">'+(CURRENT.pin?TR("غيّر الرمز السري"):TR("حطّ رمز سري"))+'</button>')+
@@ -5370,37 +5364,36 @@ function openAccountSheet(){
   $("#acOut").onclick=()=>leaveAccount(true);
   $("#acDel").onclick=deleteAccount;
   $("#acEdit").onclick=openAccountEdit;
-  if(CURRENT.cloud){
-    $("#unSave").onclick=saveUsername;
-    $("#unInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); saveUsername(); } });
-    if(MYUSERNAME===null) refreshMyUsername();
-  }
   el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
 }
 async function refreshMyUsername(){
   try{
     const u=await gRpc("my_username",{});
-    MYUSERNAME = u || "";
+    MYUSERNAME = (typeof u==="string") ? u : "";
     const inp=$("#unInput"); if(inp && !inp.value) inp.value=MYUSERNAME;
-  }catch(e){}
+  }catch(e){
+    MYUSERNAME = MYUSERNAME||"";
+    console.error("[username] fetch failed:", e);
+  }
 }
 async function saveUsername(){
-  const inp=$("#unInput"), err=$("#unErr"); if(!inp) return;
+  const inp=$("#unInput"); if(!inp) return;
   const val=(inp.value||"").trim();
-  err.textContent="";
-  if(val.length<3){ err.textContent=TR("لازم ٣ خانات على الأقل."); return; }
-  if(!/^[A-Za-z0-9_.]+$/.test(val)){ err.textContent=TR("حروف، أرقام، أو _ . بس."); return; }
+  emsg("");
+  if(val.length<3){ emsg(TR("لازم ٣ خانات على الأقل.")); return; }
+  if(!/^[A-Za-z0-9_.]+$/.test(val)){ emsg(TR("حروف، أرقام، أو _ . بس.")); return; }
   const btn=$("#unSave"); if(btn) btn.disabled=true;
   try{
     await gRpc("set_username",{ p_username: val });
     MYUSERNAME = val;
-    toast(TR("صار يوزرنيمك: ")+val,"🏷️");
+    closeSheet();
+    toast(TR("صار اسم المستخدم: ")+val,"🏷️");
   }catch(e){
     const m=String((e&&e.message)||e||"");
-    if(/TAKEN/.test(m)) err.textContent=TR("هذا اليوزرنيم مأخوذ، جرّب غيره.");
-    else if(/TOO_SHORT/.test(m)) err.textContent=TR("لازم ٣ خانات على الأقل.");
-    else if(/BAD_FORMAT/.test(m)) err.textContent=TR("حروف، أرقام، أو _ . بس.");
-    else err.textContent=TR("صار خطأ، جرّب مرة ثانية.");
+    if(/TAKEN/.test(m)) emsg(TR("هذا اسم المستخدم مأخوذ، جرّب غيره."));
+    else if(/TOO_SHORT/.test(m)) emsg(TR("لازم ٣ خانات على الأقل."));
+    else if(/BAD_FORMAT/.test(m)) emsg(TR("حروف، أرقام، أو _ . بس."));
+    else emsg(TR("صار خطأ، جرّب مرة ثانية."));
   }
   if(btn) btn.disabled=false;
 }
@@ -5411,7 +5404,7 @@ function openFriendsSheet(){
     el.sheetBody.innerHTML=
       '<h3 style="margin:0 0 3px">'+TR("الأصدقاء")+'</h3>'+
       '<p class="gsub" style="text-align:start;margin:0 0 14px">'+
-        TR("اليوزرنيم والأصدقاء يحتاجون حساب شخصي (بإيميل) عشان يقدر غيرك يلقاك.")+'</p>'+
+        TR("اسم المستخدم والأصدقاء يحتاجون حساب شخصي (بإيميل) عشان يقدر غيرك يلقاك.")+'</p>'+
       '<div class="row-actions"><button class="btn btn-quiet" id="frBack2">'+TR("رجوع")+'</button></div>';
     $("#frBack2").onclick=()=>{ closeSheet(); };
     el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
@@ -5419,10 +5412,10 @@ function openFriendsSheet(){
   }
   el.sheetBody.innerHTML=
     '<h3 style="margin:0 0 3px">'+TR("الأصدقاء")+'</h3>'+
-    '<p class="gsub" style="text-align:start;margin:0 0 14px">'+TR("أضف صديقك بيوزرنيمه.")+'</p>'+
+    '<p class="gsub" style="text-align:start;margin:0 0 14px">'+TR("أضف صديقك باسم مستخدمه.")+'</p>'+
     '<p class="gerr" id="frErr"></p>'+
     '<div style="display:flex;gap:8px;margin-bottom:16px">'+
-      '<input id="frInput" type="text" dir="ltr" maxlength="20" placeholder="'+TR("يوزرنيم صديقك")+'" autocomplete="off" style="flex:1">'+
+      '<input id="frInput" type="text" dir="ltr" maxlength="20" placeholder="'+TR("اسم مستخدم صديقك")+'" autocomplete="off" style="flex:1">'+
       '<button class="btn btn-primary" id="frAdd" style="padding:0 16px;white-space:nowrap">'+TR("إضافة")+'</button>'+
     '</div>'+
     '<div id="frList" class="g-joined"></div>'+
@@ -5446,7 +5439,7 @@ async function addFriendNow(){
     refreshFriendsList();
   }catch(e){
     const m=String((e&&e.message)||e||"");
-    if(/NOT_FOUND/.test(m)) err.textContent=TR("ما لقينا حد بهاليوزرنيم.");
+    if(/NOT_FOUND/.test(m)) err.textContent=TR("ما لقينا حد باسم المستخدم هذا.");
     else if(/SELF/.test(m))  err.textContent=TR("ما تقدر تضيف نفسك.");
     else err.textContent=TR("صار خطأ، جرّب مرة ثانية.");
   }
@@ -5495,39 +5488,84 @@ function openGuestSheet(){
 }
 function openAccountEdit(){
   const cloud = !!CURRENT.cloud;
+  if(!cloud){
+    el.sheetBody.innerHTML =
+      '<h3 style="margin:0 0 3px">'+TR("تعديل بيانات الحساب")+'</h3>'+
+      '<p class="gsub" style="text-align:start;margin:0 0 14px">'+TR("الحساب المحلي ما فيه إيميل ولا كلمة سر.")+'</p>'+
+      '<p class="gok" id="eOk" hidden></p>'+
+      '<p class="gerr" id="eErr"></p>'+
+      '<label class="fld"><span>'+TR("الاسم")+'</span>'+
+        '<input id="eName" type="text" autocomplete="name" value="'+escAttr(CURRENT.name||"")+'"></label>'+
+      '<div class="row-actions">'+
+        '<button class="btn btn-primary" id="eSave">'+TR("حفظ التعديلات")+'</button>'+
+        '<button class="btn btn-quiet" id="eBack">'+TR("رجوع")+'</button>'+
+      '</div>';
+    $("#eBack").onclick = openAccountSheet;
+    $("#eSave").onclick = ()=>saveAccountEdit();
+    const nameIn=$("#eName"); if(nameIn && nameIn.focus) nameIn.focus();
+    return;
+  }
   el.sheetBody.innerHTML =
     '<h3 style="margin:0 0 3px">'+TR("تعديل بيانات الحساب")+'</h3>'+
-    '<p class="gsub" style="text-align:start;margin:0 0 14px">'+
-      TR(cloud ? "غيّر اسمك، إيميلك، أو كلمة سرك." : "الحساب المحلي ما فيه إيميل ولا كلمة سر.")+'</p>'+
+    '<div class="gtabs four" role="tablist" id="eTabs">'+
+      '<button class="gtab" id="etPersonal" type="button" role="tab" aria-selected="true">'+TR("بيانات شخصية")+'</button>'+
+      '<button class="gtab" id="etEmail" type="button" role="tab" aria-selected="false">'+TR("الإيميل")+'</button>'+
+      '<button class="gtab" id="etPass" type="button" role="tab" aria-selected="false">'+TR("كلمة السر")+'</button>'+
+      '<button class="gtab" id="etUser" type="button" role="tab" aria-selected="false">'+TR("اسم المستخدم")+'</button>'+
+    '</div>'+
     '<p class="gok" id="eOk" hidden></p>'+
     '<p class="gerr" id="eErr"></p>'+
-    '<label class="fld"><span>'+TR("الاسم")+'</span>'+
-      '<input id="eName" type="text" autocomplete="name" value="'+escAttr(CURRENT.name||"")+'"></label>'+
-    (cloud
-      ? '<label class="fld"><span>'+TR("المنطقة")+'</span><select id="eRegion"></select></label>'+
-        '<label class="fld"><span>'+TR("الجامعة")+'</span><select id="eUni"></select></label>'+
-        '<label class="fld"><span>'+TR("الإيميل")+'</span>'+
-          '<input id="eEmail" type="email" inputmode="email" autocomplete="email" dir="ltr" value="'+escAttr(CURRENT.email||"")+'"></label>'+
-        '<label class="fld"><span>'+TR("كلمة سر جديدة")+'</span>'+
-          '<div class="pwwrap"><input id="ePass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية، أو ٨+ خانات: حرف كبير وصغير ورقم"))+'">'+
-          '<button type="button" class="pwEye" data-topw="ePass" aria-label="عرض كلمة السر">👁</button></div></label>'+
-        '<label class="fld"><span>'+TR("كلمة السر الحالية")+'</span>'+
-          '<div class="pwwrap"><input id="eCur" type="password" autocomplete="current-password" dir="ltr" placeholder="'+escAttr(TR("اتركها فاضية إذا ما تبي تغيّرها"))+'">'+
-          '<button type="button" class="pwEye" data-topw="eCur" aria-label="عرض كلمة السر">👁</button></div></label>'+
-        '<p class="gswap" style="margin:-4px 0 4px"><button type="button" id="eForgot">'+TR("نسيتها؟")+'</button></p>'
-      : '')+
-    '<div class="row-actions">'+
-      '<button class="btn btn-primary" id="eSave">'+TR("حفظ التعديلات")+'</button>'+
-      '<button class="btn btn-quiet" id="eBack">'+TR("رجوع")+'</button>'+
-    '</div>';
-  if(cloud){
-    fillRegionSelect("#eRegion", CURRENT.region);
-    fillUniSelect(CURRENT.region||"", "#eUni", CURRENT.uni);
-    $("#eRegion").onchange = ()=>fillUniSelect($("#eRegion").value, "#eUni");
+    '<div id="paPersonal">'+
+      '<label class="fld"><span>'+TR("الاسم")+'</span>'+
+        '<input id="eName" type="text" autocomplete="name" value="'+escAttr(CURRENT.name||"")+'"></label>'+
+      '<label class="fld"><span>'+TR("المنطقة")+'</span><select id="eRegion"></select></label>'+
+      '<label class="fld"><span>'+TR("الجامعة")+'</span><select id="eUni"></select></label>'+
+      '<div class="row-actions"><button class="btn btn-primary" id="eSavePersonal">'+TR("حفظ")+'</button></div>'+
+    '</div>'+
+    '<div id="paEmail" hidden>'+
+      '<label class="fld"><span>'+TR("الإيميل")+'</span>'+
+        '<input id="eEmail" type="email" inputmode="email" autocomplete="email" dir="ltr" value="'+escAttr(CURRENT.email||"")+'"></label>'+
+      '<div class="row-actions"><button class="btn btn-primary" id="eSaveEmail">'+TR("حفظ")+'</button></div>'+
+    '</div>'+
+    '<div id="paPass" hidden>'+
+      '<label class="fld"><span>'+TR("كلمة سر جديدة")+'</span>'+
+        '<div class="pwwrap"><input id="ePass" type="password" autocomplete="new-password" dir="ltr" placeholder="'+escAttr(TR("٨+ خانات: حرف كبير وصغير ورقم"))+'">'+
+        '<button type="button" class="pwEye" data-topw="ePass" aria-label="عرض كلمة السر">👁</button></div></label>'+
+      '<label class="fld"><span>'+TR("كلمة السر الحالية")+'</span>'+
+        '<div class="pwwrap"><input id="eCur" type="password" autocomplete="current-password" dir="ltr" placeholder="'+escAttr(TR("اكتب كلمة سرك الحالية"))+'">'+
+        '<button type="button" class="pwEye" data-topw="eCur" aria-label="عرض كلمة السر">👁</button></div></label>'+
+      '<p class="gswap" style="margin:-4px 0 4px"><button type="button" id="eForgot">'+TR("نسيتها؟")+'</button></p>'+
+      '<div class="row-actions"><button class="btn btn-primary" id="eSavePass">'+TR("حفظ")+'</button></div>'+
+    '</div>'+
+    '<div id="paUser" hidden>'+
+      '<label class="fld"><span>'+TR("اسم المستخدم")+'</span>'+
+        '<input id="unInput" type="text" dir="ltr" maxlength="20" placeholder="username" value="'+escAttr(MYUSERNAME||"")+'"></label>'+
+      '<div class="row-actions"><button class="btn btn-primary" id="unSave">'+TR("حفظ")+'</button></div>'+
+    '</div>'+
+    '<div class="row-actions" style="margin-top:4px"><button class="btn btn-quiet" id="eBack">'+TR("رجوع")+'</button></div>';
+
+  fillRegionSelect("#eRegion", CURRENT.region);
+  fillUniSelect(CURRENT.region||"", "#eUni", CURRENT.uni);
+  $("#eRegion").onchange = ()=>fillUniSelect($("#eRegion").value, "#eUni");
+
+  const panes = { etPersonal:"paPersonal", etEmail:"paEmail", etPass:"paPass", etUser:"paUser" };
+  function switchEditTab(which){
+    Object.keys(panes).forEach(tabId=>{
+      $("#"+tabId).setAttribute("aria-selected", String(tabId===which));
+      $("#"+panes[tabId]).hidden = tabId!==which;
+    });
+    emsg("");
   }
+  Object.keys(panes).forEach(tabId=>{ $("#"+tabId).onclick=()=>switchEditTab(tabId); });
+
   $("#eBack").onclick = openAccountSheet;
-  $("#eSave").onclick = saveAccountEdit;
+  $("#eSavePersonal").onclick = ()=>saveAccountEdit("personal");
+  $("#eSaveEmail").onclick    = ()=>saveAccountEdit("email");
+  $("#eSavePass").onclick     = ()=>saveAccountEdit("password");
+  $("#unSave").onclick = saveUsername;
+  $("#unInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); saveUsername(); } });
   const fg=$("#eForgot"); if(fg) fg.onclick = openResetInSheet;
+  if(MYUSERNAME===null) refreshMyUsername();
   const nameIn=$("#eName"); if(nameIn && nameIn.focus) nameIn.focus();
 }
 /* ── استرجاع كلمة السر من داخل ورقة الحساب: نرسل رابطاً ونسكّر الورقة ──
@@ -5562,13 +5600,12 @@ function emsg(err, okText){
   if(e) e.textContent = err||"";
   if(o){ o.textContent = okText||""; o.hidden = !okText; }
 }
-async function saveAccountEdit(){
-  const btn=$("#eSave"); if(btn && btn.disabled) return;
-  const name = ($("#eName").value||"").trim();
-  if(!name){ emsg(TR("الاسم ما يصير فاضي.")); $("#eName").focus(); return; }
-
-  /* حساب محلي: الاسم فقط */
+async function saveAccountEdit(which){
+  /* حساب محلي: الاسم فقط، نفس الزر القديم بدون تبويبات */
   if(!CURRENT.cloud){
+    const btn=$("#eSave"); if(btn && btn.disabled) return;
+    const name = ($("#eName").value||"").trim();
+    if(!name){ emsg(TR("الاسم ما يصير فاضي.")); $("#eName").focus(); return; }
     if(name===CURRENT.name){ emsg(TR("ما غيّرت شي.")); return; }
     const i=ACC.users.findIndex(u=>u.id===CURRENT.id);
     CURRENT.name=name; if(i>=0) ACC.users[i]=CURRENT;
@@ -5576,33 +5613,43 @@ async function saveAccountEdit(){
     closeSheet(); toast(TR("انحفظت بياناتك."),"✅"); return;
   }
 
-  const email = ($("#eEmail").value||"").trim();
-  const pass  = ($("#ePass").value||"");
-  const region = ($("#eRegion") ? $("#eRegion").value : (CURRENT.region||""));
-  const uni    = ($("#eUni")    ? $("#eUni").value    : (CURRENT.uni||""));
-  if(!region){ emsg(TR("اختر منطقتك.")); if($("#eRegion")) $("#eRegion").focus(); return; }
-  if(!uni){ emsg(TR("اختر جامعتك، أو طالب مدرسة.")); if($("#eUni")) $("#eUni").focus(); return; }
-  if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ emsg(TR("الإيميل غير صحيح.")); $("#eEmail").focus(); return; }
-  if(pass && !passStrong(pass)){ emsg(TR(PASS_RULE_MSG)); $("#ePass").focus(); return; }
-  const cur = ($("#eCur") ? $("#eCur").value : "");
-  if(pass && !cur){ emsg(TR("اكتب كلمة السر الحالية.")); $("#eCur").focus(); return; }
+  const btnId = which==="personal" ? "eSavePersonal" : which==="email" ? "eSaveEmail" : "eSavePass";
+  const btn=$("#"+btnId); if(btn && btn.disabled) return;
 
   const body={};
-  const dataChanged = name!==CURRENT.name || region!==(CURRENT.region||"") || uni!==(CURRENT.uni||"");
-  if(dataChanged) body.data = { name:name, region:region||null, uni:uni||null };
-  if(email && email!==CURRENT.email) body.email = email;
-  if(pass)                    body.password = pass;
-  if(!Object.keys(body).length){ emsg(TR("ما غيّرت شي.")); return; }
+  let cur="";
+  if(which==="personal"){
+    const name   = ($("#eName").value||"").trim();
+    const region = $("#eRegion").value;
+    const uni    = $("#eUni").value;
+    if(!name){ emsg(TR("الاسم ما يصير فاضي.")); $("#eName").focus(); return; }
+    if(!region){ emsg(TR("اختر منطقتك.")); $("#eRegion").focus(); return; }
+    if(!uni){ emsg(TR("اختر جامعتك، أو طالب مدرسة.")); $("#eUni").focus(); return; }
+    const changed = name!==CURRENT.name || region!==(CURRENT.region||"") || uni!==(CURRENT.uni||"");
+    if(!changed){ emsg(TR("ما غيّرت شي.")); return; }
+    body.data = { name:name, region:region||null, uni:uni||null };
+  } else if(which==="email"){
+    const email = ($("#eEmail").value||"").trim();
+    if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ emsg(TR("الإيميل غير صحيح.")); $("#eEmail").focus(); return; }
+    if(email===CURRENT.email){ emsg(TR("ما غيّرت شي.")); return; }
+    body.email = email;
+  } else if(which==="password"){
+    const pass = $("#ePass").value||"";
+    cur = $("#eCur").value||"";
+    if(!pass || !passStrong(pass)){ emsg(TR(PASS_RULE_MSG)); $("#ePass").focus(); return; }
+    if(!cur){ emsg(TR("اكتب كلمة السر الحالية.")); $("#eCur").focus(); return; }
+    body.password = pass;
+  }
 
   emsg("", TR("جارٍ الحفظ…"));
-  if(btn){ btn.disabled=true; }
+  if(btn) btn.disabled=true;
   try{
     if(body.password){
       const okCur = await cloudCheckPass(CURRENT.email, cur);
-      if(!okCur){ emsg(TR("كلمة السر الحالية غلط.")); $("#eCur").focus(); return; }
+      if(!okCur){ emsg(TR("كلمة السر الحالية غلط.")); $("#eCur").focus(); if(btn) btn.disabled=false; return; }
     }
     const js = await cloudUpdateUser(body);
-    if(body.data){ TOK.name = name; TOK.region = region||null; TOK.uni = uni||null; }
+    if(body.data){ TOK.name = body.data.name; TOK.region = body.data.region; TOK.uni = body.data.uni; }
     let pending = false;
     if(body.email){
       if(js && js.email === body.email) TOK.email = body.email;
@@ -5613,7 +5660,7 @@ async function saveAccountEdit(){
     $("#userInitial").textContent = initialOf(CURRENT.name);
     closeSheet();
     toast(pending ? TR("أرسلنا رابط تأكيد للإيميل الجديد. افتحه عشان يصير إيميلك.")
-                  : (body.password && !body.data && !body.email ? TR("تغيّرت كلمة السر.") : TR("انحفظت بياناتك.")),
+                  : (which==="password" ? TR("تغيّرت كلمة السر.") : TR("انحفظت بياناتك.")),
           pending ? "📧" : "✅");
   }catch(e){
     emsg(cloudErr(e));
