@@ -62,24 +62,73 @@ body {
 .login-title { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 6px; }
 .login-sub   { font-size: 13px; color: var(--ink-2); margin-bottom: 28px; line-height: 1.55; }
 
-.fld { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.fld label { font-size: 12px; font-weight: 500; color: var(--ink-2); letter-spacing: .02em; }
-.fld input {
+.fld {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.fld label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  letter-spacing: .02em;
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.fld input,
+.password-wrapper input {
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: var(--r);
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 12px 14px;
+  font-size: 15px;
   font-family: var(--font);
   color: var(--ink-1);
   transition: border-color .18s, box-shadow .18s;
+  min-height: 48px;
+  width: 100%;
 }
-.fld input:focus {
+
+.password-wrapper input {
+  padding-right: 48px;
+}
+
+.fld input:focus,
+.password-wrapper input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
-.fld input::placeholder { color: var(--ink-3); }
+
+.fld input::placeholder,
+.password-wrapper input::placeholder {
+  color: var(--ink-3);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px 8px;
+  transition: color .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.password-toggle:hover {
+  color: var(--accent);
+}
 
 .remember-row {
   display: flex;
