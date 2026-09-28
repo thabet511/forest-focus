@@ -87,13 +87,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 ::selection{background:var(--viridian);color:#fff}
 
 .app{
-  max-width:540px; margin:0 auto; min-height:100vh; min-height:100dvh;
+  max-width:580px; margin:0 auto; min-height:100vh; min-height:100dvh;
   display:flex; flex-direction:column;
-  padding:0 16px calc(84px + env(safe-area-inset-bottom));
+  padding:0 10px calc(84px + env(safe-area-inset-bottom));
 }
 @media (min-width:700px){
   .app{
-    max-width:660px; margin:22px auto; min-height:calc(100dvh - 44px);
+    max-width:900px; margin:22px auto; min-height:calc(100dvh - 44px);
     background:var(--paper); border:1px solid var(--line);
     border-radius:28px; box-shadow:var(--shadow-2); overflow:hidden;
     padding:0 20px 92px;
@@ -150,7 +150,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   box-shadow:inset 0 0 0 1px var(--glass), inset 0 26px 40px -30px rgba(255,255,255,.9);
 }
 #plantCanvas{display:block;width:100%;height:auto;position:relative;z-index:1}
-.daypart{
+.daypart{display:none !important;
   position:absolute; z-index:3; inset-block-start:11px; inset-inline-start:13px;
   display:flex; align-items:center; gap:6px; pointer-events:none;
   padding:5px 11px; border-radius:999px;
@@ -333,19 +333,14 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .nav-btn[aria-current="page"]{background:var(--viridian-soft);color:var(--viridian);font-weight:600}
 
 .view{display:none}
-.view.on{display:block;animation:rise .62s cubic-bezier(.16,.84,.24,1) both}
-@keyframes rise{
-  0%{opacity:0;transform:translateY(22px) scale(.975);filter:blur(6px)}
-  60%{opacity:1;filter:blur(0)}
-  100%{opacity:1;transform:none;filter:none}
-}
-/* دخول متتابع للألواح: كل لوح يطلع بعد اللي قبله */
-.view.on .panel,.view.on .stage,.view.on .readout,.view.on .home-card,.view.on .stat{animation:panelIn .7s cubic-bezier(.16,.84,.24,1) both}
-.view.on > :nth-child(1){animation-delay:.04s} .view.on > :nth-child(2){animation-delay:.10s}
-.view.on > :nth-child(3){animation-delay:.16s} .view.on > :nth-child(4){animation-delay:.22s}
-#setupBlock > .panel:nth-child(1){animation-delay:.24s} #setupBlock > .panel:nth-child(2){animation-delay:.30s}
-#setupBlock > .panel:nth-child(3){animation-delay:.36s} #setupBlock > .panel:nth-child(4){animation-delay:.42s}
-@keyframes panelIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.view.on{display:block;animation:rise .28s cubic-bezier(0,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.view.on .panel,.view.on .readout,.view.on .home-card,.view.on .stat{animation:panelIn .28s cubic-bezier(0,.8,.2,1) both}
+.view.on > :nth-child(1){animation-delay:.03s} .view.on > :nth-child(2){animation-delay:.07s}
+.view.on > :nth-child(3){animation-delay:.11s} .view.on > :nth-child(4){animation-delay:.15s}
+#setupBlock > .panel:nth-child(1){animation-delay:.12s} #setupBlock > .panel:nth-child(2){animation-delay:.16s}
+#setupBlock > .panel:nth-child(3){animation-delay:.20s} #setupBlock > .panel:nth-child(4){animation-delay:.24s}
+@keyframes panelIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 .stage{box-shadow:0 30px 60px -34px rgba(10,20,14,.55), var(--shadow-1), inset 0 1px 0 var(--glass)}
 .panel{transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s}
 @media (hover:hover){ .panel:hover{transform:translateY(-2px)} }
@@ -383,29 +378,28 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .lampbtn[aria-pressed="true"]{background:rgba(255,170,80,.30);box-shadow:0 0 22px 4px rgba(255,170,80,.45)}
 .lampbtn:active{transform:scale(.9)}
 .geobtn{margin-top:10px;width:100%;font-size:13.5px}
-/* ── حركة قوية: انتقال اتجاهي بين الصفحات (View Transitions) ── */
+.lampbtn[hidden],.geobtn[hidden],.placebadge[hidden]{display:none !important}
+/* ── انتقالات سلسة بين الصفحات (View Transitions) — بدون ضبابية أو تمدد ── */
 .topbar{view-transition-name:topbar} .nav{view-transition-name:navbar}
-::view-transition-old(root){animation:vtOut .42s cubic-bezier(.5,0,.75,0) both}
-::view-transition-new(root){animation:vtIn .72s cubic-bezier(.16,1,.3,1) both}
-@keyframes vtOut{to{opacity:0;transform:translateX(var(--vtxo,-6%)) scale(.93);filter:blur(10px)}}
-@keyframes vtIn{from{opacity:0;transform:translateX(var(--vtx,8%)) scale(1.05);filter:blur(12px)}}
+::view-transition-old(root){animation:vtOut .20s ease-in both}
+::view-transition-new(root){animation:vtIn .32s cubic-bezier(0,.85,.2,1) both}
+@keyframes vtOut{to{opacity:0;transform:translateY(-5px)}}
+@keyframes vtIn{from{opacity:0;transform:translateY(10px)}}
 html.vt .view.on{animation:none}
-.view.on .stage{animation:stageIn 1s cubic-bezier(.16,1,.3,1) both}
-@keyframes stageIn{from{opacity:0;transform:scale(1.07) translateY(10px);filter:blur(14px)}to{opacity:1;transform:none;filter:none}}
-.nav-btn[aria-current="page"] svg{animation:navPop .55s cubic-bezier(.3,1.7,.5,1)}
-@keyframes navPop{0%{transform:scale(.55) translateY(5px)}100%{transform:none}}
+.view.on .stage{animation:stageIn .38s cubic-bezier(0,.85,.2,1) both}
+@keyframes stageIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.nav-btn[aria-current="page"] svg{animation:navPop .40s cubic-bezier(.2,1.6,.4,1)}
+@keyframes navPop{0%{transform:scale(.68) translateY(2px)}100%{transform:none}}
 .btn,.chip,.nav-btn,.icon-btn{position:relative;overflow:hidden}
 .ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.24;transform:scale(0);
   animation:rip .7s cubic-bezier(.2,.8,.2,1) forwards;pointer-events:none}
 @keyframes rip{to{transform:scale(1);opacity:0}}
-.sheet.on > *{animation:sheetItem .55s cubic-bezier(.16,1,.3,1) both}
-.sheet.on > *:nth-child(2){animation-delay:.05s} .sheet.on > *:nth-child(3){animation-delay:.1s}
-@keyframes sheetItem{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion: reduce){
-  ::view-transition-old(root),::view-transition-new(root),.view.on .stage,.nav-btn[aria-current="page"] svg,.ripple,.sheet.on > *{animation:none}
-}
-@media (prefers-reduced-motion: reduce){
-  .view.on,.view.on .panel,.view.on .stage,.view.on .readout,.view.on .home-card,.view.on .stat{animation:none}
+.sheet.on > *{animation:sheetItem .32s cubic-bezier(0,.85,.2,1) both}
+.sheet.on > *:nth-child(2){animation-delay:.04s} .sheet.on > *:nth-child(3){animation-delay:.08s}
+@keyframes sheetItem{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-old(root),::view-transition-new(root),.view.on,.view.on .panel,.view.on .stage,
+  .view.on .readout,.view.on .home-card,.view.on .stat,.nav-btn[aria-current="page"] svg,.ripple,.sheet.on > *{animation:none}
 }
 body.landing .nav{display:none}
 body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-direction:column;justify-content:center;padding-bottom:24px}
@@ -437,7 +431,10 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .home-dot[aria-current="true"]{background:var(--viridian);width:18px;border-radius:5px}
 @media (prefers-reduced-motion: reduce){ .home-track{transition:none} }
 .home-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
-.home-foot{margin:26px 0 10px;text-align:center;font-size:12.5px;color:var(--ink-3)}
+.home-foot{margin:16px 0 10px;text-align:center;font-size:12.5px;color:var(--ink-3)}
+.home-guest{display:block;background:none;border:none;color:var(--ink-3);font-size:13.5px;font-family:var(--sans);
+  padding:10px 18px;margin:6px auto 0;cursor:pointer;border-radius:12px;transition:color .2s, background .2s}
+.home-guest:hover{color:var(--viridian);background:var(--viridian-soft)}
 /* ── الجلسة الجماعية ── */
 .g-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .g-choice .btn{padding:16px 10px;flex-direction:column;gap:6px;font-size:15px}
@@ -761,9 +758,10 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
       <div class="home-dots" id="homeDots"></div>
     </div>
     <div class="home-actions">
-      <button class="btn btn-primary" id="homeLogin" type="button">سجّل دخولك</button>
-      <button class="btn btn-quiet" id="homeSignup" type="button">إنشاء حساب</button>
+      <button class="btn btn-primary" id="homeSignup" type="button">إنشاء حساب</button>
+      <button class="btn btn-quiet" id="homeLogin" type="button">سجّل دخولك</button>
     </div>
+      <button class="home-guest" id="homeGuest" type="button">أو دخول كضيف</button>
     <p class="home-foot">صنع بحب من حصاد الإنتاجية 🤍🍃</p>
   </main>
 
@@ -800,6 +798,8 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
         <button class="btn btn-quiet geobtn" id="geoBtn" type="button" hidden>📍 حدّد موقعي بدقة</button>
         <span class="g-label" style="margin-top:14px">الوقت في المشهد</span>
         <div class="chips" id="skyChips"></div>
+        <span class="g-label" style="margin-top:14px">الجو في المشهد</span>
+        <div class="chips" id="wxChips"></div>
       </section>
 
       <section class="panel">
@@ -1625,6 +1625,9 @@ const DICT = {
  "جدة":"Jeddah", "ساحل البحر الأحمر":"Red Sea coast",
  "الأحساء":"Al-Ahsa", "الواحة":"The oasis",
  "شاطئ العقير":"Al-Uqair Beach",
+ "شاطئ ينبع":"Yanbu Beach",
+ "الجو في المشهد":"Scene weather", "حقيقي":"Live", "صافي":"Clear", "غائم":"Cloudy", "ممطر":"Rainy", "ضباب":"Foggy",
+ "جو يدوي":"Manual weather",
  "النفود الكبير":"The Great Nafud", "حائل":"Hail",
  "جبال فيفاء":"Fayfa Mountains", "جازان":"Jazan", "أملج":"Umluj",
  "الوقت في المشهد":"Scene time", "متزامن":"Synced", "نهار":"Day", "غروب":"Sunset", "ليل":"Night",
@@ -2155,17 +2158,19 @@ const PLACES = [
   { id:"lawz",      n:"جبل اللوز",     sub:"تبوك",     ll:[28.65,35.30], terr:"mount",   clim:"north", fog:.15,
     hill:["#A08E80","#827166","#675952"], soil:"#8C7868" },
   { id:"jeddah",    n:"جدة",           sub:"ساحل البحر الأحمر", ll:[21.54,39.17], terr:"coast", clim:"coast",
-    hill:["#A7A08E","#3F7F9E","#2E6A88"], soil:"#D9C6A0", sea:["#1D5D7C","#3AA2A6"], mark:"fountain" },
+    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
   { id:"uqair",     n:"شاطئ العقير",   sub:"الأحساء",  ll:[25.65,50.21], terr:"coast", clim:"east",
-    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"], mark:"uqair" },
+    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
+  { id:"yanbu",     n:"شاطئ ينبع",     sub:"ساحل البحر الأحمر", ll:[24.09,38.05], terr:"coast", clim:"coast",
+    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
   { id:"ahsa",      n:"الأحساء",       sub:"الواحة",   ll:[25.38,49.59], terr:"oasis",   clim:"east",
-    hill:["#A89C7C","#5F7A4B","#4A6639"], soil:"#B89C74" },
+    hill:["#A89C7C","#5F7A4B","#4A6639"], soil:"#B89C74", mark:"qarah" },
   { id:"nafud",     n:"النفود الكبير", sub:"حائل",     ll:[28.30,41.50], terr:"dune",    clim:"najd",
     hill:["#DB8F5E","#C77443","#B05E33"], soil:"#C97C4A" },
   { id:"fayfa",     n:"جبال فيفاء",    sub:"جازان",    ll:[17.26,43.12], terr:"mount",   clim:"sw",    fog:.35,
     hill:["#728F6A","#4F7446","#355A30"], soil:"#6B5840", trees:"#1D3D21", terraces:true },
   { id:"umluj",     n:"أملج",          sub:"ساحل البحر الأحمر", ll:[25.02,37.27], terr:"coast", clim:"coast",
-    hill:["#BCAB8C","#1F8A9C","#1F7E93"], soil:"#EFE2C4", sea:["#1A7690","#5CD3C8"] },
+    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
   { id:"tuwaiq",    n:"جبال طويق",     sub:"الرياض",   ll:[24.71,46.68], terr:"escarp",  clim:"najd",
     hill:["#CDAC82","#B39066","#977750"], soil:"#B9996F" }
 ];
@@ -2267,7 +2272,16 @@ async function refreshLiveWeather(force){
   if(typeof updatePlaceBadge==="function") updatePlaceBadge();
   if(typeof lastDraw!=="undefined"){ lastDraw=0; if(typeof drawHero==="function") drawHero(); }
 }
+const WXM_KEY="hasad.wxmode";
+const WX_FIXED={ clear:{cloud:.03,rain:0,snow:0,fog:0,storm:false}, cloudy:{cloud:.85,rain:0,snow:0,fog:.05,storm:false},
+                 rain:{cloud:.88,rain:.62,snow:0,fog:.08,storm:false}, fog:{cloud:.35,rain:0,snow:0,fog:.68,storm:false} };
+function wxMode(){ try{ const m=localStorage.getItem(WXM_KEY); return WX_FIXED[m] ? m : "live"; }catch(e){ return "live"; } }
 function curWx(date){
+  const m=wxMode();
+  if(m!=="live"){                                   /* جو تختاره انت: نثبّته ونخلي الحرارة الحقيقية لو متوفرة */
+    const P0=curPlace(), live=(WX_LIVE && WX_LIVE.pid===P0.id) ? WX_LIVE : null;
+    return Object.assign({ src:"manual", temp: live ? live.temp : null }, WX_FIXED[m]);
+  }
   const P = curPlace();
   if(WX_LIVE && WX_LIVE.pid===P.id && Date.now()-WX_LIVE.at < 60*60000) return WX_LIVE;
   return seasonWx(P, date||new Date());
@@ -2458,16 +2472,21 @@ function mixList(A,B,t){ return A.map((c,i)=> c.indexOf("rgba")===0 ? (t<.5?c:B[
 const SKY_KEY="hasad.skymode", SKY_FIXED={ day:10.5, sunset:18.15, night:22.5 };
 function skyMode(){ try{ const m=localStorage.getItem(SKY_KEY); return SKY_FIXED[m]!=null ? m : "sync"; }catch(e){ return "sync"; } }
 function skyAt(hr){
-  let astro=null;
-  if(hr==null){ const fm=SKY_FIXED[skyMode()]; if(fm!=null) hr=fm; else { astro=solarState(); hr=astro.hour; } }
+  let astro=null, fixedNight=false;
+  if(hr==null){ const sm=skyMode(), fm=SKY_FIXED[sm]; if(fm!=null){ hr=fm; fixedNight = sm==="night"; } else { astro=solarState(); hr=astro.hour; } }
   hr=((hr%24)+24)%24;
   let i=0; for(let k=0;k<SKY_KEYS.length-1;k++) if(hr>=SKY_KEYS[k].h) i=k;
   const A=SKY_KEYS[i], B=SKY_KEYS[Math.min(i+1,SKY_KEYS.length-1)];
   const span=Math.max(.001,B.h-A.h);
   const t=smooth(clamp((hr-A.h)/span,0,1));
-  const disc = t<.5?A.disc:B.disc;
+  let disc = t<.5?A.disc:B.disc;
+  if(astro){                                        /* الفلك الحقيقي يقرر: الشمس طالعة؟ وإلا القمر لو فوق الأفق */
+    if(astro.alt > -.5) disc="sun";
+    else { const ms=moonState(); if(ms.alt>0) disc="moon"; }
+  }
   /* القرص القمري يتبع موقع القمر الحقيقي، لا موقع الشمس تحت الأفق */
-  const pos = (astro && disc==="moon") ? moonState() : astro;
+  let pos = (astro && disc==="moon") ? moonState() : astro;
+  if(fixedNight && disc==="moon"){ const ms=moonState(); if(ms.alt>2){ pos=ms; astro=astro||{alt:ms.alt,az:ms.az}; } }
   return {
     id: t<.5?A.id:B.id,
     n:  t<.5?A.n :B.n,
@@ -2512,9 +2531,15 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
   const pad   = discR*1.25;
   let sx = clamp(w*sunX, pad, w-pad);
   let sy = clamp(gy - (h*.10 + (gy-h*.02)*elev*.92), pad, gy);
-  { /* المشهد قبّة دائرية من فوق: نخلي القرص وهالته القريبة داخلها دايماً */
-    const R=w/2, dx=sx-R, dy=sy-R, d=Math.hypot(dx,dy), maxd=R-discR*2.1;
-    if(sy<R && d>maxd && d>0){ sx=R+dx*maxd/d; sy=R+dy*maxd/d; }
+  { /* زوايا القبّة الفعلية (نقرأ نصف قطرها من الصفحة): القرص وهالته القريبة ما يطلعون منها أبداً */
+    const rc=Math.min(w/2, CUR_DOME||w/2), m=discR*2.2;
+    sx=clamp(sx,m,w-m); sy=Math.max(sy,m);
+    [[rc,rc],[w-rc,rc]].forEach(([ccx,ccy])=>{
+      const inCorner = (ccx<w/2 ? sx<ccx : sx>ccx) && sy<ccy;
+      if(!inCorner) return;
+      const dx=sx-ccx, dy=sy-ccy, d=Math.hypot(dx,dy), maxd=rc-m;
+      if(d>maxd && d>0){ sx=ccx+dx*maxd/d; sy=ccy+dy*maxd/d; }
+    });
   }
   const MPH = moonPhase(mdate||new Date());
   const moonLight = (K.disc==="moon" && elev>.02) ? MPH.illum : 0;     /* نور القمر حسب ليلة الشهر */
@@ -2676,17 +2701,21 @@ function h01(i,seed){ let h=(Math.imul(i|0,374761393)+Math.imul(seed|0,668265263
 function vnoise(x,seed){ const i=Math.floor(x), f=x-i, u=f*f*(3-2*f); const a=h01(i,seed); return a+(h01(i+1,seed)-a)*u; }
 function fbm(x,seed,oct){ let v=0,a=.5,f=1,n=0; for(let k=0;k<oct;k++){ v+=a*vnoise(x*f,seed+k*31); n+=a; f*=2.03; a*=.5; } return v/n; }
 function ridged(x,seed,oct){ let v=0,a=.5,f=1,n=0; for(let k=0;k<oct;k++){ const r=1-Math.abs(2*vnoise(x*f,seed+k*47)-1); v+=a*r*r; n+=a; f*=2.1; a*=.5; } return v/n; }
-const TERR_H = { mount:[.64,.52,.38,.24,.12], dune:[.25,.18,.12,.065], bigdune:[.36,.26,.17,.09], mesa:[.31,.21,.10],
+const TERR_H = { mount:[.64,.52,.38,.24,.12], dune:[.12,.095,.075,.055,.035], bigdune:[.16,.125,.095,.07,.045], mesa:[.31,.21,.10],
                  escarp:[.29,.18,.085], hills:[.21,.15,.09,.05], oasis:[.05,.035,.02], coast:[.045] };
 function pick3(arr,f){ const x=clamp(f,0,1)*2, a=Math.min(1,Math.floor(x)); return mix(arr[a],arr[a+1],x-a); }
 function terrainH(terr,t,i,seed){
   switch(terr){
-    case "mount": { const b=.58*ridged(t*2.1+i*.9,seed,6)+.42*fbm(t*1.2+i*2.3,seed+9,3); return Math.pow(b,1.25); }
+    case "mount": { const tw=t+(fbm(t*2.3+i,seed+5,3)-.5)*.14;       /* تشويه المجال: قمم غير متكررة */
+      const b=.42*Math.pow(ridged(tw*1.7+i*.9,seed,4),1.05)+.58*fbm(tw*1.05+i*2.3,seed+9,4); return Math.min(1.1,b*1.35); }
     case "dune": case "bigdune": {
-      const fq = terr==="bigdune" ? 1.5 : 2.3;
-      const u = t*fq + fbm(t*1.7+i,seed,2)*.8 + i*.37, fr=((u%1)+1)%1;
-      const prof = fr<.72 ? Math.pow(smooth(fr/.72),1.25) : Math.pow(smooth((1-fr)/.28),.9);
-      return .82*prof + .18*fbm(t*5+i,seed+3,2);
+      /* مقطع الكثيب الحقيقي: ظهر محدّب ناعم يصعد للحافة، ثم وجه انزلاق شديد ينتهي بتقعّر عند القاع.
+         كثيبين بمقاسين متراكبين + ضجيج بالارتفاع عشان ما تتكرر ولا تصير أهرامات */
+      const fq = terr==="bigdune" ? .9 : 1.3;                    /* كثبان عريضة ممتدة: صحراء واسعة مو تلال */
+      const u1 = t*fq + fbm(t*1.4+i,seed,2)*.7 + i*.37, fr=((u1%1)+1)%1;
+      const prof = fr<.58 ? Math.pow(Math.sin(fr/.58*Math.PI/2),1.2) : Math.pow(1-(fr-.58)/.42,1.25);
+      const hv = .80 + .30*fbm(t*1.1+i*.5,seed+6,2);
+      return prof*hv + .12*fbm(t*4+i,seed+3,3);
     }
     case "mesa": { const v=fbm(t*2.4+i*1.3,seed,3); const plate=smooth(clamp((v-.44)/.1,0,1));
       return .12 + plate*.8 + fbm(t*22,seed+5,2)*.06; }
@@ -2697,91 +2726,199 @@ function terrainH(terr,t,i,seed){
     default: return .25+fbm(t*2.2+i*1.1,seed,4)*.75;
   }
 }
-function drawTerrain(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
-  const terr = PL.terr || "hills";
-  const H = TERR_H[terr] || TERR_H.hills;
-  const seed = [...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),7)|0;
-  const NL = H.length;
-  const bases = H.map((_,i)=> terr==="coast" ? gy-s*.17 : gy - s*lerp(.08,.004, NL>1?i/(NL-1):1));
-  const litStr = (1-nightF*.82) * (1-clamp(elev,0,1)*.45);          /* الظهر ظلاله قصيرة، والعصر طويلة */
-  const step = 3;
-  for(let i=0;i<NL;i++){
-    const fi = NL>1 ? i/(NL-1) : 0;
-    const base=bases[i], amp=s*H[i];
-    const pts=[]; let top=gy;
-    for(let x=0;x<=w+step;x+=step){ const y=base-terrainH(terr,x/w,i,seed+i*101)*amp; pts.push(y); if(y<top) top=y; }
-    const kh = pick3(K.hills, fi);
-    let col = PL.hill ? mix(pick3(PL.hill, fi), kh, .22+.66*nightF) : kh;
-    col = C(mix(col, K.sky[2], lerp(.52,0,Math.pow(fi,.8))*(1-nightF*.55)));   /* منظور جوّي: البعيد يذوب بالسماء */
-    const path=new Path2D(); path.moveTo(0,gy+2);
-    pts.forEach((y,k)=>path.lineTo(k*step,y)); path.lineTo(w,gy+2); path.closePath();
-    ctx.fillStyle=col; ctx.fill(path);
-    ctx.save(); ctx.clip(path);
-    /* تظليل الوجوه حسب اتجاه الشمس: أقوى تحت القمة مباشرة ويتلاشى نزولاً (مثل الضوء الحقيقي) */
-    if(litStr>.04){
-      const n=pts.length, raw=new Float32Array(n);
-      for(let k=0;k<n;k++){
-        const k0=Math.max(0,k-3), k1=Math.min(n-1,k+3), x=k*step;
-        const m=(pts[k1]-pts[k0])/((k1-k0)*step||1);
-        raw[k] = Math.sign(m)*(Math.sign(sx-x)||1)*clamp(Math.abs(m)*2.2,0,1);
-      }
-      const lg=ctx.createLinearGradient(0,0,(n-1)*step,0);
-      const far = lerp(.45,1,fi);
-      for(let k=0;k<n;k+=2){
-        let v=0,c=0; for(let q=Math.max(0,k-2);q<=Math.min(n-1,k+2);q++){ v+=raw[q]; c++; } v/=c;
-        lg.addColorStop(k/(n-1), v>0 ? "rgba(255,238,205,"+(v*.40*litStr*far).toFixed(3)+")"
-                                     : "rgba(12,9,6,"+(-v*.44*litStr*far).toFixed(3)+")");
-      }
-      ctx.fillStyle=lg;
-      [.28,.6,1.05].forEach((dep,bi)=>{                /* ثلاث أحزمة تتبع خط القمة: تلاشٍ ناعم للأسفل */
-        const band=new Path2D(); band.moveTo(0,pts[0]);
-        pts.forEach((y,k)=>band.lineTo(k*step,y));
-        for(let k=n-1;k>=0;k--) band.lineTo(k*step, Math.min(gy+2, pts[k]+amp*dep));
-        band.closePath();
-        ctx.globalAlpha=[.5,.32,.2][bi]; ctx.fill(band);
-      });
-      ctx.globalAlpha=1;
-    }
-    /* طبقات الصخر الرسوبية: العلا وطويق */
-    if(terr==="mesa" || terr==="escarp"){
-      ctx.strokeStyle="rgba(70,34,16,"+(.16*(1-nightF*.7)).toFixed(3)+")"; ctx.lineWidth=Math.max(1,s*.0018);
-      for(let yy=top+s*.012; yy<gy; yy+=s*(.011+.006*((yy|0)%3))){
-        ctx.beginPath(); for(let x=0;x<=w;x+=12) ctx.lineTo(x, yy+Math.sin(x*.02+yy)*s*.002); ctx.stroke();
-      }
-    }
-    /* غابات العرعر على جبال السودة والهدا */
-    if(PL.terraces && fi>=.45){                       /* مدرجات فيفاء الزراعية تتبع شكل الجبل */
-      ctx.strokeStyle="rgba(24,44,20,"+(.26*(1-nightF*.6)).toFixed(3)+")"; ctx.lineWidth=Math.max(1,s*.0016);
-      for(let off=s*.012; off<gy-top; off+=s*.0085){
-        ctx.beginPath();
-        pts.forEach((y,k)=>{ const yy=y+off+Math.sin(k*.4+off)*s*.0015; k?ctx.lineTo(k*step,yy):ctx.moveTo(0,yy); });
-        ctx.stroke();
-      }
-    }
-    if(PL.trees && fi>.3){
-      const n=Math.round(40+fi*70), tc=C(mix(PL.trees, kh, .2+.7*nightF));
-      ctx.fillStyle=tc;
-      for(let k=0;k<n;k++){
-        const x=h01(k,seed+i*7)*w, idx=Math.min(pts.length-1,Math.round(x/step));
-        const y=pts[idx]+ s*.006 + h01(k,seed+i*13)*(gy-pts[idx])*.8;
-        const r=s*(.0032+h01(k,seed+i*19)*.004)*(.6+fi*.8);
-        ctx.beginPath(); ctx.ellipse(x,y,r*.8,r*1.15,0,0,TAU); ctx.fill();
-      }
-    }
-    /* عمق: قاعدة الطبقة أغمق من قمّتها */
-    const dg=ctx.createLinearGradient(0,top,0,gy);
-    dg.addColorStop(0,"rgba(0,0,0,0)"); dg.addColorStop(1,"rgba(0,0,0,"+(.16+.1*nightF).toFixed(3)+")");
-    ctx.fillStyle=dg; ctx.fillRect(0,top,w,gy-top+2);
-    ctx.restore();
-    /* حافة القمة: خط ضوء رفيع يوضّح الشكل */
-    ctx.strokeStyle="rgba(255,246,228,"+(lerp(.07,.18,fi)*(1-nightF*.75)).toFixed(3)+")";
-    ctx.lineWidth=Math.max(1,s*.0022);
-    ctx.beginPath(); pts.forEach((y,k)=>k?ctx.lineTo(k*step,y):ctx.moveTo(0,y)); ctx.stroke();
-    if(PL.mark==="elephant" && i===NL-1) drawElephantRock(ctx,w*.2,gy-s*.004,s,col,nightF,sx);
-  }
-  if(terr==="coast") drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR);
-  if(terr==="oasis") drawPalmSilhouettes(ctx,w,gy,s,K,C,nightF);
+/* ═══ محرّك التضاريس بإضاءة لكل بكسل ═══
+   لكل عمود نحسب خط القمة لكل طبقة، ولكل بكسل تحت القمة نبني سطحاً: ميل الوجه + أخاديد تعرية
+   (ضجيج ثنائي الأبعاد) → متجه عمودي، ثم إضاءة حسب اتجاه الشمس الفعلي. الكثبان لها تموّجات رمل
+   ووجه انزلاق مظلم وحافة قمة لامعة، والصخور طبقات رسوبية وشقوق، والجبال عرعر ومدرجات.
+   الصورة تنحفظ (كاش) وما تنعاد إلا لما الشمس تتحرك فعلاً — عشان الرسم يوصل ١٠٠–١٢٠ إطار/ث. */
+function vn2(x,y,seed){
+  const ix=Math.floor(x), iy=Math.floor(y), fx=x-ix, fy=y-iy, ux=fx*fx*(3-2*fx), uy=fy*fy*(3-2*fy);
+  const r0=Math.imul(iy,57731), r1=Math.imul(iy+1,57731);
+  const a=h01(ix+r0,seed), b=h01(ix+1+r0,seed), c=h01(ix+r1,seed), d=h01(ix+1+r1,seed);
+  return a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy;
 }
+function fbm2(x,y,seed,oct){ let v=0,a=.5,n=0; for(let k=0;k<oct;k++){ v+=a*vn2(x,y,seed+k*19); n+=a; x*=2.03; y*=2.03; a*=.5; } return v/n; }
+/* الكاش: آخر صورة جاهزة لكل مشهد، وصورة جديدة تنبني على دفعات صغيرة (٥ms/إطار) ثم تتلاشى فوق القديمة
+   بنعومة — فما يصير أي تعليق لما تتحرك الشمس. أول مرة للمكان تنبني كاملة مرة وحدة. */
+const TERR_JOBS=new Map(), TERR_LAST=new Map(), TERR_PREV=new Map();
+const TERR_CACHE={ clear(){ TERR_JOBS.clear(); TERR_LAST.clear(); TERR_PREV.clear(); } };
+function drawTerrain(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
+  const base=[PL.id,w|0,gy|0,s|0,C("#808080")].join("|");
+  const key=base+"|"+[Math.round(sx/8),Math.round(nightF*16),Math.round(clamp(elev,0,1)*20),K.sky[2],K.hills[1]].join("|");
+  let last=TERR_LAST.get(base);
+  if(!last || last.key!==key){
+    let job=TERR_JOBS.get(base);
+    if(!job || job.key!==key){ job=makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev); job.key=key; TERR_JOBS.set(base,job); }
+    job.step(last ? 5 : 1e9);
+    if(job.done){
+      if(last) TERR_PREV.set(base,last);
+      last={key,cv:job.cv,at:performance.now()}; TERR_LAST.set(base,last); TERR_JOBS.delete(base);
+      if(TERR_LAST.size>8){ const k0=TERR_LAST.keys().next().value; TERR_LAST.delete(k0); TERR_PREV.delete(k0); }
+    }
+  }
+  const H2=Math.ceil(gy+2), prev=TERR_PREV.get(base);
+  const f = prev ? clamp((performance.now()-last.at)/700,0,1) : 1;
+  if(f<1){ ctx.drawImage(prev.cv,0,0,w,H2); ctx.globalAlpha=f; ctx.drawImage(last.cv,0,0,w,H2); ctx.globalAlpha=1; }
+  else { if(prev) TERR_PREV.delete(base); ctx.drawImage(last.cv,0,0,w,H2); }
+  if(PL.terr==="coast") drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR);
+}
+/* كل سلسلة جبلية = قمة رئيسية + نتوءات (أكتاف) متداخلة تحتها؛ لكل نتوء وجه مضاء حسب الشمس،
+   وخط قمة لامع، وأخدود مظلم تحته. هذا اللي يعطي العمق الحقيقي بدل الرسمة المسطّحة.
+   الكثبان نفس الفكرة: كثبان ثانوية بقمم حادة، وجه مضاء ووجه انزلاق مظلم. */
+function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
+  const terr=PL.terr||"hills", H=TERR_H[terr]||TERR_H.hills, NL=H.length;
+  const seed=[...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),7)|0;
+  const Hh=Math.ceil(gy+2);
+  const q=clamp(Math.sqrt(300000/(w*Hh)), .6, Math.min(2,window.devicePixelRatio||1));
+  const W=Math.max(2,Math.round(w*q)), HH=Math.max(2,Math.round(Hh*q)), gyq=gy*q;
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=HH;
+  const g2=cv.getContext("2d");
+  const ridge=[], cols=[], amps=[], fis=[], styles=[];
+  for(let i=0;i<NL;i++){
+    const fi = NL>1 ? i/(NL-1) : 0; fis.push(fi); styles.push(terr);
+    const base = terr==="coast" ? gy-s*.17 : gy - s*lerp(.08,.004, NL>1?fi:1);
+    const amp=s*H[i]; amps.push(amp);
+    const r=new Float32Array(W);
+    for(let x=0;x<W;x++) r[x]=(base-terrainH(terr,(x/q)/w,i,seed+i*101)*amp)*q;
+    ridge.push(r);
+    const kh=pick3(K.hills,fi);
+    let col = PL.hill ? mix(pick3(PL.hill,fi), kh, .22+.66*nightF) : kh;
+    col = C(mix(col, K.sky[2], lerp(.50,0,Math.pow(fi,.8))*(1-nightF*.55)));
+    cols.push(hex2rgb(col));
+  }
+  if(PL.mark==="qarah"){
+    const a=.05, b=.50, amp=s*.31, base=gy-s*.034, r=new Float32Array(W);
+    for(let x=0;x<W;x++){
+      const t=(x/q)/w;
+      if(t<a-.05||t>b+.05){ r[x]=1e9; continue; }
+      const edge=Math.min(smooth(clamp((t-a+.05)/.08,0,1)), smooth(clamp((b+.05-t)/.08,0,1)));
+      const notch=(fbm(t*38,seed+77,3)-.5)*.12 + (vnoise(t*110,seed+78)>.8 ? -.08 : 0) + (vnoise(t*9,seed+79)-.5)*.10;
+      const hgt = edge<1 ? Math.pow(edge,.5)*(.82+notch) : .88+notch*.7;
+      r[x] = hgt<=.02 ? 1e9 : (base-hgt*amp)*q;
+    }
+    ridge.splice(1,0,r); amps.splice(1,0,amp); fis.splice(1,0,.40); styles.splice(1,0,"qarah");
+    cols.splice(1,0,hex2rgb(C(mix(mix("#D6BD92", pick3(K.hills,.4), .22+.64*nightF), K.sky[2], .12*(1-nightF*.5)))));
+  }
+  const NLx=ridge.length;
+  const mainM=[], sideA=[];
+  for(let i=0;i<NLx;i++){ const r0=ridge[i], m0=new Float32Array(W), sd=new Float32Array(W);
+    for(let x=0;x<W;x++) m0[x]=(r0[Math.min(W-1,x+3)]-r0[Math.max(0,x-3)])/6;
+    const R=Math.round(28*q);                              /* ميل ناعم على نافذة عريضة: اتجاه الأكتاف يتبدّل بتدرّج */
+    for(let x=0;x<W;x++){ const a=Math.max(0,x-R), b=Math.min(W-1,x+R); sd[x]=clamp(((r0[b]-r0[a])/(b-a||1))*5,-1,1); }
+    mainM.push(m0); sideA.push(sd); }
+  const skyRGB=hex2rgb(C(K.sky[2])), treeRGB=PL.trees?hex2rgb(C(mix(PL.trees,K.hills[2],.2+.7*nightF))):null;
+  const rockRGB=hex2rgb(C(mix(mix("#8C8374","#6E6558",.4), K.hills[2], .2+.7*nightF)));
+  const Lx=clamp((sx-w/2)/(w*.42),-1,1)*(1-clamp(elev,0,1)*.5);
+  const Ly=.30+clamp(elev,0,1)*.55, day=1-nightF*.85, warm=K.warmth||0;
+  const img=g2.createImageData(W,HH), Dd=img.data, out=[0,0,0];
+  /* حقل ارتفاع ثنائي الأبعاد لكل نوع سطح: الجبال شيفرونات قطرية (أكتاف وأخاديد تنزل من القمم)،
+     الكثبان خطوط قمم متتالية بوجه انزلاق حاد، والصخور طبقات. الإضاءة من ميل السطح بالاتجاهين. */
+  function ridged2(x,y,sd,oct){ let v=0,a=.5,n=0; for(let k=0;k<oct;k++){ const r=1-Math.abs(2*vn2(x,y,sd+k*23)-1); v+=a*r*r; n+=a; x*=2.07; y*=2.07; a*=.5; } return v/n; }
+  function hfield(st,u,v,side){
+    if(st==="mount"){                     /* يمين القمة الأكتاف تنزل يمين، ويسارها تنزل يسار — شيفرون حقيقي */
+      const wR=.5+.42*side, wL=1-wR;
+      return wL*ridged2(u*7+v*5.2,v*3.6,seed,3)+wR*ridged2(u*7-v*5.2+3.1,v*3.6,seed+7,3)+.16*fbm2(u*24,v*24,seed+3,2);
+    }
+    if(st==="dune"||st==="bigdune"){
+      const sc = st==="bigdune" ? 1.5 : 2.3;
+      const sw=u*sc+v*6.5+fbm2(u*1.4,v*2.6,seed,2)*1.5, fr=sw-Math.floor(sw);
+      const prof = fr<.78 ? fr/.78 : (1-fr)/.22;                                     /* صعود هيّن ثم وجه انزلاق حاد */
+      return prof*.10 + Math.sin(u*300+v*640+fbm2(u*6,v*6,seed+4,2)*14)*.005 + fbm2(u*12,v*12,seed+5,2)*.07;
+    }
+    if(st==="mesa"||st==="escarp"||st==="qarah") return fbm2(u*18,v*55,seed+3,3)*.35;
+    return fbm2(u*10,v*10,seed+2,3)*.5;
+  }
+  const Gs=.075*q*s;
+  const hPrev=[]; for(let i=0;i<NLx;i++){ const a=new Float32Array(HH); a.fill(NaN); hPrev.push(a); }
+  let lastH=NaN, lastI=-1;
+  function shadeAt(i,X,Y,x,y,track){
+    const st=styles[i], amp=Math.max(1,amps[i]);
+    const m=mainM[i][x], dMain=(y-ridge[i][x])/q/amp;
+    const u=X/s, v=Y/s, fi=fis[i];
+    const h=hfield(st,u,v,sideA[i][x]);
+    const hx=hPrev[i][y], dhx = hx===hx ? h-hx : 0;
+    const dhy = (lastI===i && lastH===lastH) ? h-lastH : 0;
+    if(track){ hPrev[i][y]=h; lastH=h; lastI=i; }
+    const nxBig=Math.sign(m)*clamp(Math.abs(m)*2.2,0,1)*Math.exp(-dMain*1.4);
+    const nxS=clamp(-dhx*Gs,-1,1), upS=clamp(-dhy*Gs,-1,1);
+    let nx=clamp(nxBig*.62+nxS*.75,-1,1);
+    let bright=0, mixTree=0, dark=0, rockMix=0;
+    if(st==="mount"){
+      bright += (fbm2(u*52,v*52,seed+7,2)-.5)*.14;
+      rockMix = clamp(Math.abs(nxS)*1.2+dMain*-.2+.15,0,.7);
+      if(treeRGB && fi>.25 && dMain>.05 && rockMix<.55){
+        const cl=vn2(u*22,v*22,seed+13), tn=vn2(u*190,v*190,seed+11), th=.70-cl*.30+Math.min(.18,dMain*.08)-fi*.05;
+        if(tn>th) mixTree=clamp((tn-th)*7,0,.85);
+      }
+      if(PL.terraces && fi>.4){ const band=(dMain*amps[i]/(s*.0085))%1; if(band<.2) dark+=.14; else if(band<.34) bright+=.06; }
+    } else if(st==="dune"||st==="bigdune"){
+      if(nxS*Math.sign(Lx||1)<-.25) dark += clamp((-nxS*Math.sign(Lx||1)-.25)*.5,0,.3);  /* وجوه الانزلاق الصغيرة */
+      const lee=-nxBig*Math.sign(Lx||1);
+      if(lee>.08) dark += clamp((lee-.08)*.55,0,.34);                                  /* الوجه البعيد عن الشمس */
+      bright += (h01(x*7919+(y|0),seed)-.5)*.03;
+    } else if(st==="mesa"||st==="escarp"||st==="qarah"){
+      bright += (fbm2(u*2,v*70+fbm2(u*3,v*3,seed,2)*1.2,seed+3,2)-.5)*.30;
+      if(vn2(u*60,v*5,seed+9)>.8) dark+=.14;
+      if(st==="qarah"){
+        if(vn2(u*38,v*2.4,seed+33)>.68) dark+=.18;
+        if(dMain>.3 && vn2(u*26,v*9,seed+31)>.80) dark+=.46;
+      }
+    }
+    const lf=nx*Lx;
+    if(dMain<.012) bright += .12*clamp(lf*2+.3,0,1);                                  /* خط القمة */
+    const ny=.45+.55*(1-Math.exp(-dMain*2.2));
+    const diff=clamp(lf*.95+upS*Ly*.45+ny*Ly*.40+.22,0,1.4);
+    let f=lerp(.56+.68*diff, .92+.12*diff, nightF) + bright*day - dark*day;
+    f*= 1 - .14*clamp(dMain*.55,0,1);                                               /* ظل القاع */
+    const c0=cols[i]; let R=c0[0], G=c0[1], B=c0[2];
+    if(rockMix>0){ R=lerp(R,rockRGB[0],rockMix); G=lerp(G,rockRGB[1],rockMix); B=lerp(B,rockRGB[2],rockMix); }
+    R*=f; G*=f; B*=f;
+    const sandy = st==="dune"||st==="bigdune";
+    const shb=(1-clamp(diff,0,1))*(sandy?.08:.22)*day;                               /* ظل الرمل دافئ، ظل الصخر مزرق */
+    R=lerp(R,skyRGB[0]*.62,shb); G=lerp(G,skyRGB[1]*.66,shb); B=lerp(B,skyRGB[2]*.80,shb);
+    const wl=warm*diff*day*18; R+=wl; G+=wl*.55;
+    if(mixTree>0){ const tf=f*.9; R=lerp(R,treeRGB[0]*tf,mixTree); G=lerp(G,treeRGB[1]*tf,mixTree); B=lerp(B,treeRGB[2]*tf,mixTree); }
+    const hz=(1-fi)*clamp(dMain*.7,0,1)*.28*(1-nightF*.5);
+    out[0]=lerp(R,skyRGB[0],hz); out[1]=lerp(G,skyRGB[1],hz); out[2]=lerp(B,skyRGB[2],hz);
+    return out;
+  }
+  let topMin=HH; for(let i=0;i<NLx;i++) for(let x=0;x<W;x++) if(ridge[i][x]<topMin) topMin=ridge[i][x];
+  const y0=Math.max(0,Math.floor(topMin));
+  function column(x){
+    const X=x/q; lastH=NaN; lastI=-1;
+    for(let y=y0;y<HH;y++){
+      let i=NLx-1; while(i>=0 && ridge[i][x]>y+1) i--;
+      if(i<0) continue;
+      const Y=(y+.5)/q, cov=clamp(y+1-ridge[i][x],0,1);
+      const c=shadeAt(i,X,Y,x,y,true); let R=c[0],G=c[1],B=c[2],A=255;
+      if(cov<1){
+        let j=i-1; while(j>=0 && ridge[j][x]>y+1) j--;
+        if(j>=0){ const b2=shadeAt(j,X,Y,x,y,false); R=lerp(b2[0],R,cov); G=lerp(b2[1],G,cov); B=lerp(b2[2],B,cov); }
+        else A=Math.round(255*cov);
+      }
+      const o=(y*W+x)*4; Dd[o]=R<0?0:R>255?255:R; Dd[o+1]=G<0?0:G>255?255:G; Dd[o+2]=B<0?0:B>255?255:B; Dd[o+3]=A;
+    }
+  }
+  const job={ cv, done:false, x:0,
+    step(budget){
+      if(this.done) return;
+      const t0=performance.now();
+      while(this.x<W){ column(this.x++); if((this.x&7)===0 && performance.now()-t0>budget) return; }
+      g2.putImageData(img,0,0);
+      g2.setTransform(q,0,0,q,0,0);
+      for(let i=0;i<NLx;i++){
+        g2.strokeStyle="rgba(255,246,228,"+(lerp(.05,.14,fis[i])*(1-nightF*.75)).toFixed(3)+")";
+        g2.lineWidth=Math.max(.8,s*.0018); g2.beginPath(); let pen=false;
+        for(let x=0;x<W;x+=2){ const rv=ridge[i][x]; if(rv>1e8){ pen=false; continue; } const yy=rv/q; pen?g2.lineTo(x/q,yy):g2.moveTo(x/q,yy); pen=true; }
+        g2.stroke();
+      }
+      if(PL.mark==="elephant") drawElephantRock(g2,w*.2,gy-s*.004,s,rgb2hex(cols[NLx-1]),nightF,sx);
+      if(terr==="oasis") drawPalmGrove(g2,w,gy,s,K,C,nightF,seed);
+      this.done=true;
+    } };
+  return job;
+}
+function renderTerrainImage(w,gy,s,PL,K,C,nightF,sx,elev){ const j=makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev); j.step(1e9); return j.cv; }
 
 /* ─── البحر: انعكاس السماء، شعاب ضحلة، موج يتحرك باستمرار، أمواج تتكسّر على الشاطئ ─── */
 function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
@@ -2803,7 +2940,7 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
   }
   /* الموج: قمم متقطعة تلمع وتنزاح مع الوقت، تتقارب قرب الأفق وتكبر قربك */
   for(let j=1;j<36;j++){
-    const f=Math.pow(j/36,1.85), y=hy+f*D, amp=s*.0022*(1+f*4), speed=.35+(j%4)*.12;
+    const f=Math.pow(j/36,1.85), y=hy+f*D, amp=s*.0034*(1+f*5), speed=.55+(j%4)*.16;
     ctx.strokeStyle="rgba(0,22,34,"+(.08+.10*f).toFixed(3)+")"; ctx.lineWidth=Math.max(1,s*.0011*(1+f*2.4));
     ctx.beginPath();
     for(let x=0;x<=w;x+=8) ctx.lineTo(x, y+Math.sin(x*.03/(.28+f)+t*speed*2+j*1.7)*amp);
@@ -2811,8 +2948,11 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
     ctx.strokeStyle="rgba(255,255,255,"+((.10+.16*f)*(1-nightF*.55)).toFixed(3)+")";
     ctx.lineWidth=Math.max(1,s*.0012*(1+f*2));
     const seg=s*(.03+f*.09);
+    const wa=(.10+.16*f)*(1-nightF*.55);
     for(let x=0;x<w;x+=seg){
-      if(vnoise(x/w*6/(.35+f)+t*speed*.6, j*13)<.56) continue;
+      const nA=clamp((vnoise(x/w*6/(.35+f)-t*speed*.9, j*13)-.46)*5,0,1);   /* يتلاشى تدريجياً بدل ما يختفي فجأة */
+      if(nA<.02) continue;
+      ctx.strokeStyle="rgba(255,255,255,"+(wa*nA).toFixed(3)+")";
       ctx.beginPath();
       for(let xx=x; xx<=x+seg*.7; xx+=6) ctx.lineTo(xx, y-amp*.9+Math.sin(xx*.03/(.28+f)+t*speed*2+j*1.7+.9)*amp);
       ctx.stroke();
@@ -2824,17 +2964,19 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
     const litC = nightF>.5 ? "225,236,255" : (elev<.25 ? "255,210,145" : "255,248,226");
     for(let j=0;j<40;j++){
       const f=Math.pow(j/40,1.5), y=hy+2+f*(D-4), spread=s*(.018+f*.17);
-      for(let q=0;q<4;q++){
-        const r=h01(j*7+q, Math.floor(t*6)+q*13);
-        const x=sx+(r-.5)*spread*2, len=s*(.008+f*.05)*(.4+r);
-        ctx.fillStyle="rgba("+litC+","+((.22+.6*(1-f))*glow*(.4+.6*r)).toFixed(3)+")";
-        ctx.fillRect(x-len/2, y, len, Math.max(1,s*.0016*(1+f*2)));
+      for(let q=0;q<4;q++){                          /* كل لمعة لها هوية ثابتة وتتحرك وتومض بنعومة */
+        const id=j*7+q, ph=h01(id,5)*TAU, sp=.7+h01(id,6)*1.5;
+        const x=sx+(h01(id,7)-.5)*spread*2+Math.sin(t*sp*.55+ph)*spread*.3;
+        const tw=Math.pow(.5+.5*Math.sin(t*sp*2.1+ph),2.2);
+        const len=s*(.008+f*.05)*(.45+h01(id,8)*.8);
+        ctx.fillStyle="rgba("+litC+","+((.24+.6*(1-f))*glow*(.15+.85*tw)).toFixed(3)+")";
+        ctx.fillRect(x-len/2, y+Math.sin(t*1.2+j*.7)*s*.0012, len, Math.max(1,s*.0016*(1+f*2)));
       }
     }
   }
   /* أمواج تتكسّر: ثلاث موجات تتقدّم نحو الشاطئ، تبيض وتنكسر ثم تختفي */
   for(let k=0;k<3;k++){
-    const p=((t/6.5)+k/3)%1, y=hy+D*(.52+.46*Math.pow(p,1.25));
+    const p=((t/5.2)+k/3)%1, y=hy+D*(.50+.48*Math.pow(p,1.25));
     const a=Math.sin(p*Math.PI)*(1-nightF*.4), th=s*(.002+.011*p);
     ctx.fillStyle="rgba(0,34,44,"+(.12*a).toFixed(3)+")";
     ctx.beginPath(); ctx.moveTo(0,y);
@@ -2848,75 +2990,15 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
   }
   ctx.restore();
   /* خط الشاطئ: الماء يتقدّم ويرجع ويخلّي الرمل لامع */
-  const surge=Math.sin(t*.9)*s*.006, fy=gy-s*.013+surge;
+  const surge=(Math.sin(t*1.1)*.7+Math.sin(t*.47)*.3)*s*.011, fy=gy-s*.015+surge;
   ctx.fillStyle="rgba(255,255,255,"+(.18*(1-nightF*.5)).toFixed(3)+")";
   ctx.fillRect(0,fy-s*.004,w,gy-fy+s*.02);
   ctx.fillStyle="rgba(255,255,255,"+(.62*(1-nightF*.45)).toFixed(3)+")";
   ctx.beginPath(); ctx.moveTo(0,gy+1);
   for(let x=0;x<=w;x+=6) ctx.lineTo(x, fy + Math.sin(x*.05+t*1.4)*s*.003 + Math.sin(x*.013-t*.6)*s*.004);
   ctx.lineTo(w,gy+1); ctx.closePath(); ctx.fill();
-  if(PL.mark==="uqair")    drawUqairFort(ctx,w*.76,hy+D*.02,s,K,C,nightF,sx);
-  if(PL.mark==="fountain") drawFountain(ctx,w*.26,hy+D*.18,s,nightF,t);
 }
 
-/* ─── ميناء العقير التاريخي: مبنى الجمارك الطيني بأروقته المقوّسة، وبرج مراقبة مخروطي ─── */
-function drawUqairFort(ctx,cx,by,s,K,C,nightF,sx){
-  const u=s*.0019, lit = sx>cx ? 1 : -1;
-  const clay = C(mix(mix("#D2B48A", K.sky[2], .18), K.hills[1], .15+.72*nightF));
-  const dark = C(mix("#9A7650", K.hills[2], .2+.7*nightF));
-  const hole = C(mix("#4A3320", K.hills[2], .5*nightF));
-  ctx.fillStyle="rgba(0,0,0,"+(.18*(1-nightF*.5)).toFixed(3)+")";           /* ظل على الرمل */
-  ctx.beginPath(); ctx.ellipse(cx-lit*10*u,by+2*u,70*u,4*u,0,0,TAU); ctx.fill();
-  ctx.fillStyle=C(mix("#E0CCA2", K.hills[2], .25+.65*nightF));               /* لسان رملي */
-  ctx.beginPath(); ctx.ellipse(cx,by+1.5*u,82*u,5*u,0,0,TAU); ctx.fill();
-  /* المبنى الرئيسي: طابقين، واجهة مضيئة وجانب مظلل */
-  const bx=cx-56*u, bw=86*u, bh=30*u, top=by-bh;
-  const wg=ctx.createLinearGradient(bx,0,bx+bw,0);
-  wg.addColorStop(0, lit>0?dark:clay); wg.addColorStop(1, lit>0?clay:dark);
-  ctx.fillStyle=wg; ctx.fillRect(bx,top,bw,bh);
-  ctx.fillStyle=shade(clay,-.06); ctx.fillRect(bx,top+bh*.48,bw,1.2*u);        /* فاصل الطابقين */
-  for(let k=0;k<7;k++){                                                          /* أروقة الطابق الأرضي */
-    const ax=bx+6*u+k*11.4*u, aw=7*u, ay=by-2*u, ah=11*u;
-    ctx.fillStyle=hole; ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax,ay-ah+aw/2);
-    ctx.arc(ax+aw/2,ay-ah+aw/2,aw/2,Math.PI,0); ctx.lineTo(ax+aw,ay); ctx.closePath(); ctx.fill();
-  }
-  ctx.fillStyle=hole;                                                            /* نوافذ الطابق العلوي */
-  for(let k=0;k<7;k++) ctx.fillRect(bx+8*u+k*11.4*u, top+5*u, 2.6*u, 5*u);
-  ctx.fillStyle=shade(clay,-.12);                                                /* شرفات مثلثة صغيرة */
-  for(let m=0;m<bw-2*u;m+=5*u){ ctx.beginPath(); ctx.moveTo(bx+m,top); ctx.lineTo(bx+m+2.5*u,top-3.2*u); ctx.lineTo(bx+m+5*u,top); ctx.fill(); }
-  ctx.fillStyle=C(mix("#5A4028",K.hills[2],.5*nightF));                          /* مرازيم خشبية */
-  for(let m=6*u;m<bw;m+=17*u) ctx.fillRect(bx+m,top+2*u,3.5*u,1*u);
-  /* البرج: أسطوانة مخروطية (أعرض من تحت) بتظليل أسطواني */
-  const tx=cx+44*u, tb=by, tt=by-54*u, rb=9*u, rt=6.5*u;
-  const tg=ctx.createLinearGradient(tx-rb,0,tx+rb,0);
-  tg.addColorStop(0, lit>0?dark:clay); tg.addColorStop(.5, lit>0?shade(clay,-.02):clay);
-  tg.addColorStop(.72, lit>0?clay:shade(dark,.05)); tg.addColorStop(1, lit>0?shade(clay,-.1):dark);
-  ctx.fillStyle=tg; ctx.beginPath();
-  ctx.moveTo(tx-rb,tb); ctx.lineTo(tx-rt,tt); ctx.lineTo(tx+rt,tt); ctx.lineTo(tx+rb,tb); ctx.closePath(); ctx.fill();
-  ctx.fillStyle=shade(clay,-.1);
-  for(let m=-rt;m<rt-.5*u;m+=3.25*u){ ctx.beginPath(); ctx.moveTo(tx+m,tt); ctx.lineTo(tx+m+1.6*u,tt-3.2*u); ctx.lineTo(tx+m+3.25*u,tt); ctx.fill(); }
-  ctx.fillStyle=hole;
-  [-44,-32,-20].forEach(y=>ctx.fillRect(tx-.9*u,by+y*u,1.8*u,4.5*u));
-  ctx.beginPath(); ctx.moveTo(tx-3*u,tb); ctx.lineTo(tx-3*u,tb-6*u); ctx.arc(tx,tb-6*u,3*u,Math.PI,0); ctx.lineTo(tx+3*u,tb); ctx.closePath(); ctx.fill();
-  if(nightF>.5){                                                                 /* نور خافت من الأروقة بالليل */
-    ctx.fillStyle="rgba(255,190,110,"+(.35*nightF).toFixed(3)+")";
-    for(let k=1;k<6;k+=2) ctx.fillRect(bx+8*u+k*11.4*u, top+5*u, 2.6*u, 5*u);
-  }
-}
-/* ─── نافورة الملك فهد بجدة: عمود ماء يتبدّد رذاذاً ─── */
-function drawFountain(ctx,x,by,s,nightF,t){
-  const h=s*.20, top=by-h;
-  const g=ctx.createLinearGradient(0,top,0,by);
-  g.addColorStop(0,"rgba(255,255,255,0)"); g.addColorStop(.25,"rgba(255,255,255,"+(.55*(1-nightF*.3)).toFixed(3)+")");
-  g.addColorStop(1,"rgba(255,255,255,.85)");
-  ctx.fillStyle=g;
-  ctx.beginPath(); ctx.moveTo(x-s*.003,by); ctx.lineTo(x-s*.0012,top+s*.02); ctx.lineTo(x+s*.0012,top+s*.02); ctx.lineTo(x+s*.003,by); ctx.fill();
-  for(let k=0;k<26;k++){                              /* رذاذ القمة ينجرف مع الريح */
-    const r=h01(k,Math.floor(t*4)), a=(1-r)*.45*(1-nightF*.3);
-    ctx.fillStyle="rgba(255,255,255,"+a.toFixed(3)+")";
-    ctx.beginPath(); ctx.arc(x+(r-.35)*s*.05, top+s*.02+h01(k+50,Math.floor(t*4))*s*.06, s*(.002+r*.004), 0, TAU); ctx.fill();
-  }
-}
 /* ─── صخرة الفيل بالعلا: كتلة بخرطوم يلامس الأرض وفتحة قوس بينهما ─── */
 function drawElephantRock(ctx,cx,by,s,col,nightF,sx){
   const sc=s*.0024;
@@ -2935,22 +3017,38 @@ function drawElephantRock(ctx,cx,by,s,col,nightF,sx){
   ctx.strokeStyle="rgba(60,28,12,"+(.22*(1-nightF*.6)).toFixed(3)+")"; ctx.lineWidth=Math.max(1,s*.0016);
   for(let k=1;k<6;k++){ ctx.beginPath(); ctx.moveTo(cx-36*sc,by-k*9*sc); ctx.bezierCurveTo(cx-10*sc,by-k*9.6*sc,cx+14*sc,by-k*9.4*sc,cx+38*sc,by-k*8.4*sc); ctx.stroke(); }
 }
-function drawPalmSilhouettes(ctx,w,gy,s,K,C,nightF){
-  const col = C(mix("#3E5230", K.hills[2], .35+.6*nightF));
-  ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineCap="round";
-  for(let i=0;i<9;i++){
-    const x = ((i*.6180339887)%1)*w, hgt = s*(.07+((i*37)%5)*.012), base = gy - s*.028;
-    const lean = (((i*53)%7)-3)*s*.003;
-    ctx.lineWidth=Math.max(1,s*.004);
-    ctx.beginPath(); ctx.moveTo(x,base); ctx.quadraticCurveTo(x+lean*.5,base-hgt*.5,x+lean,base-hgt); ctx.stroke();
-    ctx.lineWidth=Math.max(1,s*.0028);
-    for(let f=0;f<7;f++){
-      const ang = -Math.PI/2 + (f-3)*.42, len = s*.032;
-      const ex = x+lean+Math.cos(ang)*len, ey = base-hgt+Math.sin(ang)*len*.55 + len*.35;
-      ctx.beginPath(); ctx.moveTo(x+lean,base-hgt);
-      ctx.quadraticCurveTo(x+lean+Math.cos(ang)*len*.6, base-hgt+Math.sin(ang)*len*.6, ex, ey); ctx.stroke();
+function drawPalmSilhouettes(ctx,w,gy,s,K,C,nightF){ drawPalmGrove(ctx,w,gy,s,K,C,nightF,99); }
+/* بساتين نخيل الأحساء: صفّين (بعيد باهت وقريب أوضح)، جذوع مقوّسة وسعف متدلّي بخوص */
+function drawPalmGrove(ctx,w,gy,s,K,C,nightF,seed){
+  const rows=[{n:34,y:gy-s*.030,h:[.045,.07],haze:.42},{n:18,y:gy-s*.010,h:[.075,.12],haze:.12}];
+  ctx.lineCap="round";
+  rows.forEach((row,ri)=>{
+    const leaf=C(mix(mix("#3F5E2C",K.sky[2],row.haze), K.hills[2], .15+.72*nightF));
+    const leaf2=C(mix(mix("#5C7A3A",K.sky[2],row.haze), K.hills[2], .15+.72*nightF));
+    const bark=C(mix(mix("#6E5638",K.sky[2],row.haze), K.hills[2], .2+.7*nightF));
+    for(let k=0;k<row.n;k++){
+      const x=(h01(k,seed+ri*41)*1.1-.05)*w, hh=s*lerp(row.h[0],row.h[1],h01(k,seed+ri*43));
+      const lean=(h01(k,seed+ri*47)-.5)*hh*.18, by=row.y+h01(k,seed+ri*53)*s*.006, tx=x+lean, ty=by-hh;
+      ctx.strokeStyle=bark; ctx.lineWidth=Math.max(1,hh*.055);
+      ctx.beginPath(); ctx.moveTo(x,by); ctx.quadraticCurveTo(x+lean*.2,by-hh*.55,tx,ty); ctx.stroke();
+      const fr=11, L=hh*.46;
+      for(let f=0;f<fr;f++){
+        const ang=-Math.PI*.5+(f/(fr-1)-.5)*Math.PI*1.25 + (h01(k*13+f,seed)-.5)*.2;
+        const droop=Math.abs(Math.sin(ang+Math.PI/2))*L*.55;
+        const ex=tx+Math.cos(ang)*L, ey=ty+Math.sin(ang)*L*.6+droop;
+        const mx=tx+Math.cos(ang)*L*.55, my=ty+Math.sin(ang)*L*.62;
+        ctx.strokeStyle=f%2?leaf:leaf2; ctx.lineWidth=Math.max(.8,hh*.02);
+        ctx.beginPath(); ctx.moveTo(tx,ty); ctx.quadraticCurveTo(mx,my,ex,ey); ctx.stroke();
+        ctx.lineWidth=Math.max(.6,hh*.012);
+        for(let j=3;j<10;j++){
+          const t=j/10, px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex, py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey, ll=L*.16*(1-t*.6);
+          ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+Math.cos(ang+1.3)*ll*.5,py+ll*.8); ctx.moveTo(px,py); ctx.lineTo(px+Math.cos(ang-1.3)*ll*.5,py+ll*.8); ctx.stroke();
+        }
+      }
+      ctx.fillStyle=C(mix("#7A4A22",K.hills[2],.3+.6*nightF));                     /* عذوق التمر */
+      ctx.beginPath(); ctx.ellipse(tx,ty+hh*.06,hh*.05,hh*.04,0,0,TAU); ctx.fill();
     }
-  }
+  });
 }
 
 /* ─── مطر وثلج: خطوط مائلة تنزل مع الوقت، وندف تتمايل ─── */
@@ -3793,10 +3891,12 @@ function drawSceneCore(ctx,o){
 
 /* ─── ٩. مساعد اللوحات ──────────────────────────────────────── */
 function fitCanvas(cv,w,h){
-  const dpr=Math.min(3,window.devicePixelRatio||1);
-  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
-  cv.style.width=w+"px"; cv.style.height=h+"px";
-  const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return ctx;
+  const dpr=Math.min(3,window.devicePixelRatio||1), W=Math.round(w*dpr), H=Math.round(h*dpr);
+  const ctx=cv.getContext("2d");
+  if(cv.width!==W || cv.height!==H){                /* نعيد حجز الذاكرة بس لما يتغيّر المقاس فعلاً */
+    cv.width=W; cv.height=H; cv.style.width=w+"px"; cv.style.height=h+"px";
+  } else { ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,W,H); }
+  ctx.setTransform(dpr,0,0,dpr,0,0); return ctx;
 }
 function paint(cv,w,h,opts){ drawScene(fitCanvas(cv,w,h), Object.assign({w,h},opts)); }
 </script>
@@ -4333,7 +4433,7 @@ const SIZES = [
 ];
 
 let sess = null, anim = null, rafOn = false, hiddenAt = null;
-let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30, drawCost = 6;
+let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30, drawCost = 6, STAGE_RC = 0, CUR_DOME = 0;
 
 const el = {
   cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
@@ -4512,6 +4612,7 @@ function sizeHero(){
   const box=$(".stage").clientWidth||340;
   if(!box) return;
   heroW=box; heroH=Math.round(Math.min(box*1.22,(window.innerHeight||760)*.68));
+  try{ STAGE_RC = parseFloat(getComputedStyle($(".stage")).borderTopLeftRadius)||0; }catch(e){ STAGE_RC=0; }
   lastDraw=0; drawHero();
 }
 /* ريح بثلاث ترددات: ما تحس إنها تتكرر، عكس الموجة الواحدة */
@@ -4580,7 +4681,7 @@ function gateLoop(){
   if(!gateRaf) return;
   if(!gate.classList.contains("on") || document.hidden){ gateRaf=0; return; }
   const now=performance.now();
-  const gap = reduceMotion ? 4000 : Math.max(8, gateCost*2);
+  const gap = reduceMotion ? 4000 : gateCost*1.05;
   if(now-gateLast>gap){
     gateLast=now;
     const t0=performance.now(); drawGateScene();
@@ -4604,6 +4705,11 @@ function updateDayPart(){
   el.dayPart.textContent = (DAYPART_ICON[K.id]||"") + " " + TR(K.n);
 }
 function drawHero(){
+  CUR_DOME = STAGE_RC;
+  try{ drawHeroCore(); } finally { CUR_DOME = 0; }
+  if(!sess && !anim) startIdleAnim();
+}
+function drawHeroCore(){
   if(!heroW) return;
   const ctx=fitCanvas(el.cv,heroW,heroH);
   const species = sess?sess.seed:DB.seed;
@@ -4672,7 +4778,7 @@ function loop(){
     paintClock(m);
     const now=performance.now();
     /* الفجوة تتكيّف مع كلفة الرسمة: نبتة بسيطة تصل ١٢٠ إطار/ثانية، ومعقّدة تخفّ تلقائياً بلا تهنيج */
-    const gap = reduceMotion ? 2000 : Math.max(8, drawCost*2);
+    const gap = reduceMotion ? 2000 : drawCost*1.05;
     if(!sess.paused && now-lastDraw>gap){
       lastDraw=now;
       const t0=performance.now(); drawHero();
@@ -4782,7 +4888,33 @@ document.addEventListener("visibilitychange", ()=>{
 });
 window.addEventListener("pagehide", ()=>{ if(sess){ sess.hb=0; beat(); } if(CURRENT&&CURRENT.cloud) pushNow(true); });
 /* السماء (الشمس/القمر/الإضاءة) تتبع ساعتك حتى بلا جلسة شغالة — نحدّثها كل دقيقة */
-setInterval(()=>{ if(!sess && !anim && !document.hidden){ lastDraw=0; drawHero(); } }, 60000);
+/* ─── حلقة الرسم وقت السكون: المشهد حي دايماً (بحر، غيوم، مطر، فانوس، نجوم، حركة القمر)
+   المشاهد المتحركة ~٣٠ إطار/ث، والهادئة إطار كل ثانية — عشان ما يصير "قفز" مفاجئ أبداً ─── */
+let idleRaf=0, idleLast=0, idleCost=6;
+function idleActive(){
+  const pv=$("#view-plant");
+  return !sess && !anim && !document.hidden && heroW>0 && pv && pv.classList.contains("on") &&
+         !document.body.classList.contains("landing") && !document.body.classList.contains("gated");
+}
+function idleFast(){
+  const P=curPlace(), W=curWx(new Date());
+  return P.terr==="coast" || W.rain>.02 || W.snow>.02 || W.cloud>.02 || W.fog>.02 || lampOn();
+}
+function idleLoop(){
+  if(!idleRaf) return;
+  if(!idleActive()){ idleRaf=0; return; }
+  const now=performance.now();
+  const gap = reduceMotion ? 4000 : idleCost*1.05;
+  if(now-idleLast>gap){
+    idleLast=now; lastDraw=0;
+    CUR_DOME=STAGE_RC; try{ drawHeroCore(); } finally { CUR_DOME=0; }
+    idleCost=idleCost*.82+(performance.now()-now)*.18;
+  }
+  idleRaf=requestAnimationFrame(idleLoop);
+}
+function startIdleAnim(){ if(!idleRaf && idleActive()){ idleLast=0; idleRaf=requestAnimationFrame(idleLoop); } }
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) startIdleAnim(); });
+setInterval(()=>{ if(!sess && !anim && !document.hidden){ lastDraw=0; drawHero(); startIdleAnim(); } }, 60000);
 
 function restore(){
   const a=DB.active;
@@ -4876,6 +5008,7 @@ function renderPlaceChips(){
     box.appendChild(b);
   });
   renderSkyChips();
+  renderWxChips();
   updatePlaceBadge();
 }
 function moonEmoji(frac){ return ["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"][Math.round(frac*8)%8]; }
@@ -4894,7 +5027,7 @@ function updatePlaceBadge(){
   const gb=$("#geoBtn");
   if(gb){ gb.hidden = P.id!=="auto"; if(!gb.disabled) gb.textContent = geoSaved() ? TR("📍 حدّث موقعي الدقيق") : TR("📍 حدّد موقعي بدقة"); }
   const hint=$("#placeHint");
-  if(hint) hint.textContent = W.src==="live" ? TR("جو مباشر") : TR("جو الموسم");
+  if(hint) hint.textContent = W.src==="live" ? TR("جو مباشر") : W.src==="manual" ? TR("جو يدوي") : TR("جو الموسم");
 }
 $("#placeBadge").onclick=()=>{
   const pp=$("#placePanel");
@@ -4944,6 +5077,17 @@ document.addEventListener("pointerdown", e=>{
   b.appendChild(sp); setTimeout(()=>sp.remove(),720);
 },{passive:true});
 /* الوقت في المشهد: متزامن مع الواقع، أو ثابت نهار/غروب/ليل */
+function renderWxChips(){
+  const box=$("#wxChips"); if(!box) return;
+  const cur=wxMode(); box.innerHTML="";
+  [["live","حقيقي"],["clear","صافي"],["cloudy","غائم"],["rain","ممطر"],["fog","ضباب"]].forEach(([id,n])=>{
+    const b=document.createElement("button"); b.className="chip"; b.type="button"; b.textContent=TR(n);
+    b.setAttribute("aria-pressed", String(id===cur));
+    b.onclick=()=>{ try{ localStorage.setItem(WXM_KEY,id); }catch(e){} renderWxChips(); updatePlaceBadge();
+                    lastDraw=0; drawHero(); startIdleAnim(); };
+    box.appendChild(b);
+  });
+}
 function renderSkyChips(){
   const box=$("#skyChips"); if(!box) return;
   const cur=skyMode(); box.innerHTML="";
@@ -5193,7 +5337,7 @@ function landLoop(){
   if(!landRaf) return;
   if(!document.body.classList.contains("landing") || document.hidden){ landRaf=0; return; }
   const now=performance.now();
-  const gap = reduceMotion ? 4000 : Math.max(8, landCost*2);
+  const gap = reduceMotion ? 4000 : landCost*1.05;
   if(now-landLast>gap){
     landLast=now;
     const t0=performance.now(); paintLandingSky();
@@ -5286,14 +5430,9 @@ function enterApp(){
   }
   return false;
 }
-$("#homeLogin").onclick = ()=>{
-  leaveLanding();
-  if(!enterApp()){ showGate(); switchTab("login"); }
-};
-$("#homeSignup").onclick = ()=>{
-  leaveLanding();
-  showGate(); switchTab("signup");
-};
+$("#homeSignup").onclick = ()=>{ leaveLanding(); showGate(); switchTab("signup"); };
+$("#homeLogin").onclick  = ()=>{ leaveLanding(); if(!enterApp()){ showGate(); switchTab("login"); } };
+$("#homeGuest").onclick  = ()=>{ leaveLanding(); enterGuest(); };
 
 /* ═══ الجلسة الجماعية (٢–٨ أشخاص) ═══
    كل شي يمر عبر دوال آمنة بسوبابيس (group_sessions.sql). نسحب حالة الغرفة كل ٤ ثوانٍ
