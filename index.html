@@ -1028,6 +1028,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
         <select id="sRegion"></select></label>
       <label class="fld"><span>الجامعة <i>*</i></span>
         <select id="sUni" disabled></select></label>
+      <p class="g-note">ملاحظة: إذا كنت غير طالب بجامعة أو مدرسة، اختر (موظف) أو (لست طالب).</p>
       <button class="btn btn-primary" id="cUpBtn" style="width:100%">إنشاء الحساب</button>
       <p class="gswap">عندك حساب؟ <button type="button" id="goLogin">سجّل دخول</button></p>
     </div>
@@ -1708,7 +1709,9 @@ const DICT = {
  "اختر جامعتك":"Choose your university",
  "اختر المنطقة أولاً":"Choose your region first",
  "طالب مدرسة":"School student",
- "موظف (لست طالب)":"Employee (not a student)",
+ "موظف":"Employee",
+ "لست طالب":"Not a student",
+ "ملاحظة: إذا كنت غير طالب بجامعة أو مدرسة، اختر (موظف) أو (لست طالب).":"Note: if you're not a student at a university or school, choose (Employee) or (Not a student).",
  "اختر منطقتك.":"Choose your region.",
  "اختر جامعتك، أو طالب مدرسة.":"Choose your university, or school student.",
  "الجامعات":"Universities",
@@ -3937,11 +3940,11 @@ const REGIONS = [
   { id:"jazan",    n:"منطقة جازان" },
   { id:"najran",   n:"منطقة نجران" },
   { id:"bahah",    n:"منطقة الباحة" },
-  { id:"jouf",     n:"منطقة الجوف" },
-  { id:"employee", n:"موظف (لست طالب)" }
+  { id:"jouf",     n:"منطقة الجوف" }
 ];
 const SCHOOL_OPT = { id:"school", n:"طالب مدرسة", d:"moe.gov.sa" };
-const EMPLOYEE_OPT = { id:"employee", n:"موظف (لست طالب)", d:null };
+const EMPLOYEE_OPT = { id:"employee", n:"موظف", d:null };
+const NOT_STUDENT_OPT = { id:"not_student", n:"لست طالب", d:null };
 /* شعارات حقيقية مرسلة يدوياً ومدمجة بالكود مباشرة (base64) — أضمن حل ممكن، صفر اعتماد على
    الإنترنت أو مزوّدات خارجية. تُفحص أول شي قبل أي محاولة جلب من الشبكة. أضف هنا أي جامعة
    يرسل صاحب الموقع شعارها يدوياً، بالمفتاح = id الجامعة كما في UNIVERSITIES بالأسفل. */
@@ -4140,6 +4143,7 @@ function findUni(id){
   if(!id) return null;
   if(id==="school") return SCHOOL_OPT;
   if(id==="employee") return EMPLOYEE_OPT;
+  if(id==="not_student") return NOT_STUDENT_OPT;
   for(const r in UNIVERSITIES){ const f=UNIVERSITIES[r].find(u=>u.id===id); if(f) return f; }
   return null;
 }
@@ -4151,16 +4155,13 @@ function fillRegionSelect(selector, selected){
 function fillUniSelect(regionId, selector, selected){
   const sel=$(selector); if(!sel) return;
   if(!regionId){ sel.disabled=true; sel.innerHTML='<option value="">'+TR("اختر المنطقة أولاً")+'</option>'; return; }
-  if(regionId==="employee"){
-    sel.disabled=true;
-    sel.innerHTML='<option value="employee" selected>'+TR("موظف (لست طالب)")+'</option>';
-    return;
-  }
   sel.disabled=false;
   const list=(UNIVERSITIES[regionId]||[]);
   sel.innerHTML = '<option value="">'+TR("اختر جامعتك")+'</option>'+
     list.map(u=>'<option value="'+u.id+'"'+(u.id===selected?" selected":"")+'>'+u.n+'</option>').join("")+
-    '<option value="school"'+(selected==="school"?" selected":"")+'>'+TR("طالب مدرسة")+'</option>';
+    '<option value="school"'+(selected==="school"?" selected":"")+'>'+TR("طالب مدرسة")+'</option>'+
+    '<option value="employee"'+(selected==="employee"?" selected":"")+'>'+TR("موظف")+'</option>'+
+    '<option value="not_student"'+(selected==="not_student"?" selected":"")+'>'+TR("لست طالب")+'</option>';
 }
 
 const CLOUD_KEY = "hasad.cloud";
@@ -6592,6 +6593,7 @@ function openAccountEdit(){
         '<input id="eName" type="text" autocomplete="name" value="'+escAttr(CURRENT.name||"")+'"></label>'+
       '<label class="fld"><span>'+TR("المنطقة")+'</span><select id="eRegion"></select></label>'+
       '<label class="fld"><span>'+TR("الجامعة")+'</span><select id="eUni"></select></label>'+
+      '<p class="g-note">'+TR("ملاحظة: إذا كنت غير طالب بجامعة أو مدرسة، اختر (موظف) أو (لست طالب).")+'</p>'+
       '<div class="row-actions"><button class="btn btn-primary" id="eSavePersonal">'+TR("حفظ")+'</button></div>'+
     '</div>'+
     '<div id="paEmail" hidden>'+
