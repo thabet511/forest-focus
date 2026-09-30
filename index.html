@@ -1708,6 +1708,7 @@ const DICT = {
  "اختر جامعتك":"Choose your university",
  "اختر المنطقة أولاً":"Choose your region first",
  "طالب مدرسة":"School student",
+ "موظف (لست طالب)":"Employee (not a student)",
  "اختر منطقتك.":"Choose your region.",
  "اختر جامعتك، أو طالب مدرسة.":"Choose your university, or school student.",
  "الجامعات":"Universities",
@@ -3936,9 +3937,11 @@ const REGIONS = [
   { id:"jazan",    n:"منطقة جازان" },
   { id:"najran",   n:"منطقة نجران" },
   { id:"bahah",    n:"منطقة الباحة" },
-  { id:"jouf",     n:"منطقة الجوف" }
+  { id:"jouf",     n:"منطقة الجوف" },
+  { id:"employee", n:"موظف (لست طالب)" }
 ];
 const SCHOOL_OPT = { id:"school", n:"طالب مدرسة", d:"moe.gov.sa" };
+const EMPLOYEE_OPT = { id:"employee", n:"موظف (لست طالب)", d:null };
 /* شعارات حقيقية مرسلة يدوياً ومدمجة بالكود مباشرة (base64) — أضمن حل ممكن، صفر اعتماد على
    الإنترنت أو مزوّدات خارجية. تُفحص أول شي قبل أي محاولة جلب من الشبكة. أضف هنا أي جامعة
    يرسل صاحب الموقع شعارها يدوياً، بالمفتاح = id الجامعة كما في UNIVERSITIES بالأسفل. */
@@ -4136,6 +4139,7 @@ function uniBadgeSvg(id, name){
 function findUni(id){
   if(!id) return null;
   if(id==="school") return SCHOOL_OPT;
+  if(id==="employee") return EMPLOYEE_OPT;
   for(const r in UNIVERSITIES){ const f=UNIVERSITIES[r].find(u=>u.id===id); if(f) return f; }
   return null;
 }
@@ -4147,6 +4151,11 @@ function fillRegionSelect(selector, selected){
 function fillUniSelect(regionId, selector, selected){
   const sel=$(selector); if(!sel) return;
   if(!regionId){ sel.disabled=true; sel.innerHTML='<option value="">'+TR("اختر المنطقة أولاً")+'</option>'; return; }
+  if(regionId==="employee"){
+    sel.disabled=true;
+    sel.innerHTML='<option value="employee" selected>'+TR("موظف (لست طالب)")+'</option>';
+    return;
+  }
   sel.disabled=false;
   const list=(UNIVERSITIES[regionId]||[]);
   sel.innerHTML = '<option value="">'+TR("اختر جامعتك")+'</option>'+
