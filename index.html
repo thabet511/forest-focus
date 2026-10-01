@@ -763,6 +763,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.farmwrap{
     </div>
       <button class="home-guest" id="homeGuest" type="button">أو دخول كضيف</button>
     <p class="home-foot">صنع بحب من حصاد الإنتاجية 🤍🍃</p>
+    <p class="home-foot">للتواصل: <a href="mailto:hasad.productivity@gmail.com" dir="ltr" style="color:inherit">hasad.productivity@gmail.com</a></p>
   </main>
 
   <!-- ══ ١) النبتة ══ -->
@@ -1573,6 +1574,7 @@ const DICT = {
  "كلمة السر ٦ خانات فأكثر.":"Password must be 6 characters or more.",
  "كلمة السر لازم ٦ خانات فأكثر.":"Password must be 6 characters or more.",
  "كلمة السر لازم ٨ خانات فأكثر، وفيها حرف كبير وحرف صغير ورقم.":"Password must be at least 8 characters, with an uppercase letter, a lowercase letter, and a number.",
+ "استخدم إيميل حقيقي (جيميل، هوتميل، اوت لوك، إيميل جامعتك، أو إيميل عملك).":"Use a real email (Gmail, Hotmail, Outlook, your university email, or your work email).",
  "الإيميل أو كلمة السر غلط.":"Wrong email or password.",
  "فيه حساب بهذا الإيميل. سجّل دخول بدل ما تنشئ.":"An account already uses this email. Log in instead.",
  "تم تسجيلك بنجاح! سجّل دخولك الآن.":"You're signed up! Log in now.",
@@ -1812,6 +1814,23 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 const PASS_RULE_MSG = "كلمة السر لازم ٨ خانات فأكثر، وفيها حرف كبير وحرف صغير ورقم.";
 function passStrong(p){
   return p.length>=8 && /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p);
+}
+/* إيميلات مؤقتة ووهمية معروفة — ممنوعة بالتسجيل. كل إيميل ثاني (جيميل، هوتميل،
+   اوتلوك، جامعي، أو إيميل عمل بأي نطاق خاص) مسموح، عشان ما نقدر نحصر كل نطاقات
+   الجامعات والشركات يدوياً. */
+const DISPOSABLE_EMAIL_DOMAINS = [
+  "mailinator.com","yopmail.com","guerrillamail.com","guerrillamail.info","temp-mail.org",
+  "tempmail.com","tempmail.net","10minutemail.com","10minutemail.net","throwawaymail.com",
+  "trashmail.com","trashmail.net","fakeinbox.com","getnada.com","sharklasers.com",
+  "dispostable.com","mailnesia.com","moakt.com","mohmal.com","maildrop.cc",
+  "mintemail.com","emailondeck.com","mailcatch.com","spamgourmet.com","mytemp.email",
+  "33mail.com","fakemailgenerator.com","harakirimail.com","mailnull.com","burnermail.io"
+];
+const EMAIL_RULE_MSG = "استخدم إيميل حقيقي (جيميل، هوتميل، اوت لوك، إيميل جامعتك، أو إيميل عملك).";
+function emailDomainAllowed(email){
+  const domain = (email.split("@")[1]||"").trim().toLowerCase();
+  if(!domain) return false;
+  return !DISPOSABLE_EMAIL_DOMAINS.includes(domain);
 }
 const clamp = (v,a,b) => v<a?a:v>b?b:v;
 const lerp  = (a,b,t) => a+(b-a)*t;
@@ -6292,6 +6311,7 @@ async function doSignup(){
   if(!/^[A-Za-z0-9_.]+$/.test(username)){ msg(TR("اسم المستخدم: حروف، أرقام، أو _ . بس.")); $("#sUser").focus(); return; }
   if(!email){ msg(TR("اكتب إيميلك.")); $("#sEmail").focus(); return; }
   if(!/.+@.+\..+/.test(email)){ msg(TR("الإيميل غير صحيح.")); $("#sEmail").focus(); return; }
+  if(!emailDomainAllowed(email)){ msg(TR(EMAIL_RULE_MSG)); $("#sEmail").focus(); return; }
   if(!pass){ msg(TR("اكتب كلمة السر.")); $("#sPass").focus(); return; }
   if(!passStrong(pass)){ msg(TR(PASS_RULE_MSG)); $("#sPass").focus(); return; }
   if(!region){ msg(TR("اختر منطقتك.")); $("#sRegion").focus(); return; }
@@ -6705,6 +6725,7 @@ async function saveAccountEdit(which){
   } else if(which==="email"){
     const email = ($("#eEmail").value||"").trim();
     if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ emsg(TR("الإيميل غير صحيح.")); $("#eEmail").focus(); return; }
+    if(!emailDomainAllowed(email)){ emsg(TR(EMAIL_RULE_MSG)); $("#eEmail").focus(); return; }
     if(email===CURRENT.email){ emsg(TR("ما غيّرت شي.")); return; }
     body.email = email;
   } else if(which==="password"){
