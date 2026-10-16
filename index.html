@@ -4217,12 +4217,37 @@ function saveSession(js){
           username: (md && md.username) || (TOK&&TOK.username) || null };
   writeTok(TOK); return true;
 }
+let tokenRefreshPromise = null;
 async function ensureToken(){
   if(!TOK) throw new Error(TR("ما فيه جلسة"));
   if(Date.now() < TOK.exp) return;
-  const js = await sbFetch("/auth/v1/token?grant_type=refresh_token", { method:"POST", body:{ refresh_token:TOK.refresh } });
-  if(!saveSession(js)) throw new Error(TR("انتهت الجلسة"));
+  /* تاب ثاني (أو جلسة جماعية تحدّث كل ٤ ثواني) ممكن يكون جدد الرمز قبلنا بلحظة — نقرأ آخر نسخة بالتخزين أول */
+  const latest = readTok();
+  if(latest && latest.access && Date.now() < latest.exp){ TOK = latest; return; }
+  /* فيه تجديد شغّال الحين؟ ننتظر نفس الطلب بدل ما نفتح طلب ثاني متزاحم يستخدم نفس refresh token */
+  if(tokenRefreshPromise) return tokenRefreshPromise;
+  tokenRefreshPromise = (async()=>{
+    try{
+      const js = await sbFetch("/auth/v1/token?grant_type=refresh_token", { method:"POST", body:{ refresh_token:(latest||TOK).refresh } });
+      if(!saveSession(js)) throw new Error(TR("انتهت الجلسة"));
+    }catch(e){
+      /* الرمز صار "مستخدم من قبل" (تزاحم تابات/طلبات) — جرّب آخر نسخة بالتخزين قبل ما نسلّم */
+      const fresh = readTok();
+      if(fresh && fresh.access && Date.now() < fresh.exp){ TOK = fresh; return; }
+      TOK = null; writeTok(null);
+      throw e;
+    } finally {
+      tokenRefreshPromise = null;
+    }
+  })();
+  return tokenRefreshPromise;
 }
+/* تاب أو نافذة ثانية جدّدت الجلسة أو خرجت منها؟ نتزامن فوراً بدل ما نستخدم رمز قديم فاسد */
+window.addEventListener("storage", (e)=>{
+  if(e.key === CLOUD_KEY){
+    try{ TOK = e.newValue ? JSON.parse(e.newValue) : null; }catch(err){}
+  }
+});
 const cloudSignUp = (email,password,name,region,uni,username) => sbFetch("/auth/v1/signup", { method:"POST", body:{ email, password, data:{ name, region, uni, username } } });
 const cloudSignIn = (email,password) => sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } });
 /* استدعاءات عامة قبل تسجيل الدخول — بدون جلسة، بمفتاح anon بس */
