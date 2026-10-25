@@ -4186,7 +4186,7 @@ function fillUniSelect(regionId, selector, selected){
 
 const CLOUD_KEY = "hasad.cloud";
 let TOK = null;                       /* {access, refresh, exp, uid, email} */
-let pushTimer = null, syncState = "off", lastSync = 0;
+let pushTimer = null, syncState = "off", lastSync = 0, liveSyncTimer = null;
 
 function readTok(){ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY)||"null"); }catch(e){ return null; } }
 function writeTok(t){ try{ t?localStorage.setItem(CLOUD_KEY,JSON.stringify(t)):localStorage.removeItem(CLOUD_KEY); }catch(e){} }
@@ -4932,10 +4932,15 @@ function startSession(){
   const pb=$("#pauseBtn");
   if(pb) pb.onclick=()=>{ if(sess.paused) resumeSession(); else pauseSession(); };
   holdScreen(true); startLoop(); paintClock(0);
+  /* مؤقّت مستقل عن حلقة الرسم (requestAnimationFrame) — المتصفح يوقف rAF تماماً
+     لو التاب صار بالخلفية أو الجوال اتقفل، فـ beat() يتوقف معه وما يترفع شي للسحابة
+     ساعات طويلة بصمت. هذا التايمر يحاول كل ٦٠ ثانية مهما كان وضع التاب. */
+  clearInterval(liveSyncTimer); liveSyncTimer = setInterval(liveSync, 60000);
   toast(TR("زُرعت. العدّاد ماشي."),"🌱");
 }
 function endCommon(){
   rafOn=false; hiddenAt=null; sess=null; DB.active=null;
+  clearInterval(liveSyncTimer); liveSyncTimer=null;
   el.setup.style.display=""; el.run.style.display="none";
   holdScreen(false); renderAll(); paintClock(0);
 }
