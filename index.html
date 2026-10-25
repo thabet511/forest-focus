@@ -4385,7 +4385,7 @@ async function pushNow(quiet){
   }
 }
 /* ── ترتيب الجامعات: بيانات مجمّعة وعامة، تُقرأ حتى بلا تسجيل دخول ── */
-let uniBoardCache=null, uniBoardAt=0;
+let uniBoardCache=null, uniBoardAt=0, uniBoardTimer=null;
 function fetchUniLeaderboard(){
   return sbFetch("/rest/v1/rpc/university_leaderboard", { method:"POST", body:{} }, false);
 }
@@ -6085,6 +6085,9 @@ function goCore(name){
   if(name==="group")  renderGroup();
   if(name==="home")   window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"});
   if(name==="plant"){ setTimeout(sizeHero,20); window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"}); }
+  /* ترتيب الجامعات يتحدّث تلقائياً كل ٣٠ ثانية ما دام المستخدم بصفحته، ويتوقف لما يطلع منها */
+  clearInterval(uniBoardTimer); uniBoardTimer=null;
+  if(name==="uni") uniBoardTimer=setInterval(()=>{ uniBoardCache=null; renderUniBoard(); }, 30000);
 }
 $$(".nav-btn").forEach(b=>b.onclick=()=>go(b.dataset.go));
 
