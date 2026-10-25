@@ -603,8 +603,10 @@ async function doLogin(){
   btn.disabled=false; btn.textContent="دخول";
 }
 
+let adminRefreshTimer = null;
 function doLogout(){
   TOK=null; writeTok(null);
+  clearInterval(adminRefreshTimer); adminRefreshTimer=null;
   try{ localStorage.removeItem("hasad.admEmail"); }catch(e){}
   el("mainView").style.display="none";
   el("loginView").style.display="flex";
@@ -624,9 +626,22 @@ async function loadDashboard(){
     el("statHours").textContent = total.toFixed(1);
     el("statAvg").textContent   = allUsers.length ? (total/allUsers.length).toFixed(1) : "0.0";
     renderTable();
+    /* تحديث تلقائي كل ٣٠ ثانية بدون ما يفرغ الجدول أو يصفّر البحث/الترتيب */
+    clearInterval(adminRefreshTimer);
+    adminRefreshTimer = setInterval(refreshDashboardSilently, 30000);
   }catch(e){
     el("tblBody").innerHTML='<tr class="empty-row"><td colspan="6">خطأ: '+esc(e.message)+'</td></tr>';
   }
+}
+async function refreshDashboardSilently(){
+  try{
+    allUsers = (await sbFetch("/rest/v1/rpc/admin_list_users",{method:"POST",body:{}},true)) || [];
+    const total = allUsers.reduce((s,r)=>s+(+r.total_hours||0),0);
+    el("statCount").textContent = allUsers.length.toLocaleString("ar");
+    el("statHours").textContent = total.toFixed(1);
+    el("statAvg").textContent   = allUsers.length ? (total/allUsers.length).toFixed(1) : "0.0";
+    renderTable();
+  }catch(e){ /* فشل مؤقت بالتحديث الخلفي — نحاول ثاني بعد ٣٠ ثانية، بدون إزعاج الشاشة */ }
 }
 
 function renderTable(){
