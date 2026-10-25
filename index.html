@@ -4333,6 +4333,25 @@ function schedulePush(){
   clearTimeout(pushTimer);
   pushTimer = setTimeout(()=>{ pushNow(true); }, 45000);
 }
+/* تحديث حي لعدد الدقائق أثناء الجلسة الشغّالة — بدون انتظار نهايتها وبدون لمس بيانات المزرعة
+   أو خوارزمية النمو؛ تعديل خفيف لعمود total_minutes فقط، عشان المنافسة ولوحة الأدمن تتحرّك
+   لحظياً بدل ما تنتظر اكتمال الجلسة. يتصحّح تلقائياً أول ما الجلسة تخلص (ذبلت أو نجحت) لأن
+   pushNow العادي يعيد حسابه من جلساتك المكتملة فقط. */
+let lastLiveSync = 0;
+async function liveSync(){
+  if(!CURRENT || !CURRENT.cloud || !cloudReady() || !sess || sess.paused) return;
+  const now = Date.now();
+  if(now - lastLiveSync < 60000) return;
+  lastLiveSync = now;
+  try{
+    await ensureToken();
+    const completed = (DB.plants||[]).filter(p=>p.survived).reduce((a,p)=>a+p.minutes,0);
+    const total = Math.round(completed + Math.max(0, elapsedMin()));
+    await sbFetch("/rest/v1/farms?user_id=eq."+TOK.uid, {
+      method:"PATCH", headers:{ "Prefer":"return=minimal" }, body:{ total_minutes: total }
+    }, true);
+  }catch(e){ /* تجاهل بصمت — نحاول ثاني بعد ٦٠ ثانية مع beat() التالية */ }
+}
 /* الرفع يقرأ السحابة أولاً ويدمج — عشان ما يمسح شغل جهاز ثانٍ */
 async function pushNow(quiet){
   if(!CURRENT || !CURRENT.cloud || !cloudReady()) return false;
@@ -4880,6 +4899,7 @@ function beat(){
   DB.active={ id:sess.id, startedAt:sess.startedAt, seed:sess.seed, tagId:sess.tagId, savedAt:now,
               paused:!!sess.paused, pausedAt:sess.pausedAt||null };
   writeStore();
+  liveSync();
 }
 function checkTier(m){
   const t=tierOf(m);
