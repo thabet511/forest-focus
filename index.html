@@ -5021,6 +5021,12 @@ function restore(){
   el.runTitle.textContent=TR(sp.n)+TR(" · جلسة مستعادة");
   el.runNote.textContent=TR("رجّعنا العدّاد من مكانه.");
   if(DB.strict && DB.grace!==Infinity && gap>DB.grace+20000){ wither(TR("انقفلت الصفحة")); return; }
+  /* كانت ناقصة هنا: ربط زر الإيقاف ومؤقّت المزامنة الحية — موجودين بـ startSession() بس
+     مو بـ restore()، فأي جلسة ترجع بعد تحديث الصفحة كان زر "إيقاف" يصير بلا أي أثر عند الضغط،
+     والمزامنة الحية توقف أيضاً إلى أن تخلص الجلسة. */
+  const pb=$("#pauseBtn");
+  if(pb) pb.onclick=()=>{ if(sess.paused) resumeSession(); else pauseSession(); };
+  clearInterval(liveSyncTimer); liveSyncTimer = setInterval(liveSync, 60000);
   holdScreen(true); startLoop();
   toast(TR("رجّعنا جلستك: ")+hhmm(elapsedMin())+TR(" لين الآن."),"⏱️");
 }
