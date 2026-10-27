@@ -476,6 +476,10 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
   background:var(--paper); border:1px solid var(--line); border-radius:var(--r-m);
   box-shadow:var(--shadow-1); display:flex; flex-direction:column; overflow:hidden;
 }
+/* display:flex أعلى كان يفوز على خاصية hidden الافتراضية من المتصفح (الـ display الصريح من
+   المطوّر يتغلّب على قاعدة [hidden] المدمجة بالمتصفح)، فزر الإغلاق كان يضبط hidden صحيح
+   بس الشات يبقى ظاهر بصرياً. هذا السطر يضمن إخفاءه فعلياً. */
+.g-chat-panel[hidden]{display:none}
 .g-chat-hdr{display:flex;align-items:center;gap:7px;padding:10px 12px;font-size:13px;font-weight:600;
   color:var(--ink-2); border-bottom:0.5px solid var(--line)}
 .g-chat-hdr span{flex:1}
@@ -2196,7 +2200,9 @@ const PLACES = [
   { id:"umluj",     n:"أملج",          sub:"ساحل البحر الأحمر", ll:[25.02,37.27], terr:"coast", clim:"coast",
     hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
   { id:"tuwaiq",    n:"جبال طويق",     sub:"الرياض",   ll:[24.71,46.68], terr:"escarp",  clim:"najd",
-    hill:["#CDAC82","#B39066","#977750"], soil:"#B9996F" }
+    hill:["#CDAC82","#B39066","#977750"], soil:"#B9996F" },
+  { id:"ghadha",    n:"الغضا",         sub:"عنيزة",    ll:[26.0445,43.8753], terr:"dune", clim:"najd",
+    hill:["#E2B37C","#D4975A","#C07F43"], soil:"#D29860" }
 ];
 const GEO_KEY="hasad.geo";
 function geoSaved(){ try{ const g=JSON.parse(localStorage.getItem(GEO_KEY)||"null"); return (g&&Number.isFinite(g[0])&&Number.isFinite(g[1]))?g:null; }catch(e){ return null; } }
@@ -2847,7 +2853,11 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
       const sc = st==="bigdune" ? 1.5 : 2.3;
       const sw=u*sc+v*6.5+fbm2(u*1.4,v*2.6,seed,2)*1.5, fr=sw-Math.floor(sw);
       const prof = fr<.78 ? fr/.78 : (1-fr)/.22;                                     /* صعود هيّن ثم وجه انزلاق حاد */
-      return prof*.10 + Math.sin(u*300+v*640+fbm2(u*6,v*6,seed+4,2)*14)*.005 + fbm2(u*12,v*12,seed+5,2)*.07;
+      /* تعرّجات الرمل (ripples) بطبقتين فوق بعض — خشنة تتبع انحناء الكثيب، وناعمة أدق فوقها —
+         هذا اللي يعطي ملمس حبيبات الرمل الحقيقي بدل سطح أملس موحّد */
+      const rippleCoarse = Math.sin(u*300+v*640+fbm2(u*6,v*6,seed+4,2)*14)*.0062;
+      const rippleFine   = Math.sin(u*860+v*1450+fbm2(u*9,v*9,seed+15,2)*22)*.0024;
+      return prof*.10 + rippleCoarse + rippleFine + fbm2(u*12,v*12,seed+5,2)*.07;
     }
     if(st==="mesa"||st==="escarp"||st==="qarah") return fbm2(u*18,v*55,seed+3,3)*.35;
     return fbm2(u*10,v*10,seed+2,3)*.5;
@@ -2869,6 +2879,7 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     let bright=0, mixTree=0, dark=0, rockMix=0;
     if(st==="mount"){
       bright += (fbm2(u*52,v*52,seed+7,2)-.5)*.14;
+      bright += (fbm2(u*150,v*150,seed+23,2)-.5)*.07;           /* نقش صخري دقيق إضافي يكسر النعومة */
       rockMix = clamp(Math.abs(nxS)*1.2+dMain*-.2+.15,0,.7);
       if(treeRGB && fi>.25 && dMain>.05 && rockMix<.55){
         const cl=vn2(u*22,v*22,seed+13), tn=vn2(u*190,v*190,seed+11), th=.70-cl*.30+Math.min(.18,dMain*.08)-fi*.05;
@@ -2879,7 +2890,9 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
       if(nxS*Math.sign(Lx||1)<-.25) dark += clamp((-nxS*Math.sign(Lx||1)-.25)*.5,0,.3);  /* وجوه الانزلاق الصغيرة */
       const lee=-nxBig*Math.sign(Lx||1);
       if(lee>.08) dark += clamp((lee-.08)*.55,0,.34);                                  /* الوجه البعيد عن الشمس */
-      bright += (h01(x*7919+(y|0),seed)-.5)*.03;
+      /* حبيبات الرمل: ضجيج خشن + ضجيج دقيق فوقه، يعطي ملمس الرمل الحقيقي بدل تدرّج أملس */
+      bright += (h01(x*7919+(y|0),seed)-.5)*.035;
+      bright += (h01((x*131+y*977)|0,seed+41)-.5)*.02;
     } else if(st==="mesa"||st==="escarp"||st==="qarah"){
       bright += (fbm2(u*2,v*70+fbm2(u*3,v*3,seed,2)*1.2,seed+3,2)-.5)*.30;
       if(vn2(u*60,v*5,seed+9)>.8) dark+=.14;
@@ -2902,7 +2915,7 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     R=lerp(R,skyRGB[0]*.62,shb); G=lerp(G,skyRGB[1]*.66,shb); B=lerp(B,skyRGB[2]*.80,shb);
     const wl=warm*diff*day*18; R+=wl; G+=wl*.55;
     if(mixTree>0){ const tf=f*.9; R=lerp(R,treeRGB[0]*tf,mixTree); G=lerp(G,treeRGB[1]*tf,mixTree); B=lerp(B,treeRGB[2]*tf,mixTree); }
-    const hz=(1-fi)*clamp(dMain*.7,0,1)*.28*(1-nightF*.5);
+    const hz=(1-fi)*clamp(dMain*.7,0,1)*.35*(1-nightF*.5);   /* ضباب جوّي أعمق على القمم البعيدة = إحساس عمق أقوى */
     out[0]=lerp(R,skyRGB[0],hz); out[1]=lerp(G,skyRGB[1],hz); out[2]=lerp(B,skyRGB[2],hz);
     return out;
   }
@@ -2962,12 +2975,17 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
     rg.addColorStop(0,"rgba("+hex2rgb(reef).join(",")+","+(.34*(1-nightF*.6)).toFixed(3)+")"); rg.addColorStop(1,"rgba("+hex2rgb(reef).join(",")+",0)");
     ctx.fillStyle=rg; ctx.save(); ctx.translate(x,y); ctx.scale(1,ry/rx); ctx.beginPath(); ctx.arc(0,0,rx,0,TAU); ctx.restore(); ctx.fill();
   }
-  /* الموج: قمم متقطعة تلمع وتنزاح مع الوقت، تتقارب قرب الأفق وتكبر قربك */
+  /* الموج: قمم متقطعة تلمع وتنزاح مع الوقت، تتقارب قرب الأفق وتكبر قربك.
+     أضفنا التواء عشوائي (fbm) على طور الموجة بدل الجيبية الصافية — موج البحر الحقيقي
+     ما يتكرر بشكل منتظم، فهذا يكسر الرتابة ويعطي حركة أكثر عضوية وطبيعية */
   for(let j=1;j<36;j++){
     const f=Math.pow(j/36,1.85), y=hy+f*D, amp=s*.0034*(1+f*5), speed=.55+(j%4)*.16;
     ctx.strokeStyle="rgba(0,22,34,"+(.08+.10*f).toFixed(3)+")"; ctx.lineWidth=Math.max(1,s*.0011*(1+f*2.4));
     ctx.beginPath();
-    for(let x=0;x<=w;x+=8) ctx.lineTo(x, y+Math.sin(x*.03/(.28+f)+t*speed*2+j*1.7)*amp);
+    for(let x=0;x<=w;x+=8){
+      const warp=(vnoise(x*.006+j*3.1,j*17)-.5)*2.4;
+      ctx.lineTo(x, y+Math.sin(x*.03/(.28+f)+t*speed*2+j*1.7+warp)*amp);
+    }
     ctx.stroke();
     ctx.strokeStyle="rgba(255,255,255,"+((.10+.16*f)*(1-nightF*.55)).toFixed(3)+")";
     ctx.lineWidth=Math.max(1,s*.0012*(1+f*2));
@@ -2978,9 +2996,21 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
       if(nA<.02) continue;
       ctx.strokeStyle="rgba(255,255,255,"+(wa*nA).toFixed(3)+")";
       ctx.beginPath();
-      for(let xx=x; xx<=x+seg*.7; xx+=6) ctx.lineTo(xx, y-amp*.9+Math.sin(xx*.03/(.28+f)+t*speed*2+j*1.7+.9)*amp);
+      const warp2=(vnoise(x*.006+j*3.1,j*17)-.5)*2.4;
+      for(let xx=x; xx<=x+seg*.7; xx+=6) ctx.lineTo(xx, y-amp*.9+Math.sin(xx*.03/(.28+f)+t*speed*2+j*1.7+.9+warp2)*amp);
       ctx.stroke();
     }
+  }
+  /* بريق متناثر وخفيف على كل سطح البحر (غير درب الشمس/القمر) — ينبض ويخفت بثبات لكل نقطة،
+     يحاكي لمعان صفحة الماء المتموّجة بشكل عام، لا فقط باتجاه الشمس */
+  for(let j=0;j<60;j++){
+    const fy=h01(j,211), y=hy+fy*D, x=h01(j,213)*w;
+    const tw=Math.pow(.5+.5*Math.sin(t*(1.1+h01(j,215)*2.2)+h01(j,217)*TAU),3);
+    const a=(.05+.11*fy)*(1-nightF*.55)*tw;
+    if(a<.015) continue;
+    const sz=Math.max(1,s*.0016*(1+fy));
+    ctx.fillStyle="rgba(255,255,255,"+a.toFixed(3)+")";
+    ctx.fillRect(x,y,sz,sz);
   }
   /* درب لمعان الشمس/القمر يتلألأ */
   const glow = nightF>.5 ? .45+.5*(K.disc==="moon"?1:0) : clamp(1-elev*.55,.35,1);
@@ -4867,7 +4897,11 @@ function loop(){
     const now=performance.now();
     /* الفجوة تتكيّف مع كلفة الرسمة: نبتة بسيطة تصل ١٢٠ إطار/ثانية، ومعقّدة تخفّ تلقائياً بلا تهنيج */
     const gap = reduceMotion ? 2000 : drawCost*1.05;
-    if(!sess.paused && now-lastDraw>gap){
+    /* شلنا شرط !sess.paused: المشهد (السما والبحر والغيم) يفضل يتحرك وقت التوقف المؤقت
+       لأن drawHero() يرسم "الوقت الحقيقي" (tms=performance.now() ومواعيد الساعة) بشكل مستقل
+       عن دقائق الجلسة. دقائق النمو (m=elapsedMin()) نفسها متجمدة أثناء التوقف (sessNow() ترجع
+       pausedAt) فالنبتة ما تكبر ولا تنبت أكثر — فقط المشهد المحيط يستمر بصرياً. */
+    if(now-lastDraw>gap){
       lastDraw=now;
       const t0=performance.now(); drawHero();
       drawCost = drawCost*.82 + (performance.now()-t0)*.18;
