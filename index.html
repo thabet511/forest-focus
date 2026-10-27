@@ -2628,11 +2628,14 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
     }
   }
 
-  /* ٤) قرص الشمس أو القمر مع هالته */
+  /* ٤) قرص الشمس أو القمر مع هالته — وقفات أكثر (بدل ٣) تعطي تلاشي أنعم بالتدريج بدل
+     دائرة باهتة مسطّحة واحدة تهيمن على نصف السما؛ نواة أصغر وأسطع + توهّج متوسط + توهّج بعيد خفيف */
   const dR=discR;
-  const halo=ctx.createRadialGradient(sx,sy,dR*.2,sx,sy,dR*7.8);
-  halo.addColorStop(0,  K.halo[0]); halo.addColorStop(.28,K.halo[1]);
-  halo.addColorStop(1,"rgba(0,0,0,0)");
+  const halo=ctx.createRadialGradient(sx,sy,dR*.15,sx,sy,dR*6.4);
+  halo.addColorStop(0,   K.halo[0]);
+  halo.addColorStop(.16, K.halo[0]);
+  halo.addColorStop(.42, K.halo[1]);
+  halo.addColorStop(1,  "rgba(0,0,0,0)");
   ctx.fillStyle=halo; ctx.fillRect(0,0,w,gy+1);
   if(K.disc==="moon"){
     /* القمر بطوره الحقيقي المطابق لليلة الهجرية */
@@ -2810,6 +2813,19 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     const amp=s*H[i]; amps.push(amp);
     const r=new Float32Array(W);
     for(let x=0;x<W;x++) r[x]=(base-terrainH(terr,(x/q)/w,i,seed+i*101)*amp)*q;
+    if(terr==="mount"){
+      /* جبال عسير/السودة الحقيقية هضاب متموّجة بمنحدرات متدرّجة، مو قمم جبال الألب الحادة.
+         ridged noise وحدها تعطي ذرى حادة متكرّرة شكلها "لو-بولي" مصطنع. نمرّر تمويه مثلّثي خفيف
+         على خط القمة يدوّر الذرى الدقيقة ويحافظ على التموّج العام والقمم الكبيرة المميّزة —
+         خلط مو استبدال كامل، عشان يبقى فيه شوي حدّة طبيعية بالقمم */
+      const rad=Math.max(2,Math.round(22*q)), sm=new Float32Array(W);
+      for(let x=0;x<W;x++){
+        let sum=0,wsum=0;
+        for(let k=-rad;k<=rad;k++){ const xx=x+k; if(xx<0||xx>=W) continue; const wgt=1-Math.abs(k)/(rad+1); sum+=r[xx]*wgt; wsum+=wgt; }
+        sm[x]=wsum>0?sum/wsum:r[x];
+      }
+      for(let x=0;x<W;x++) r[x]=r[x]*.35+sm[x]*.65;
+    }
     ridge.push(r);
     const kh=pick3(K.hills,fi);
     let col = PL.hill ? mix(pick3(PL.hill,fi), kh, .22+.66*nightF) : kh;
@@ -2844,19 +2860,32 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
   /* حقل ارتفاع ثنائي الأبعاد لكل نوع سطح: الجبال شيفرونات قطرية (أكتاف وأخاديد تنزل من القمم)،
      الكثبان خطوط قمم متتالية بوجه انزلاق حاد، والصخور طبقات. الإضاءة من ميل السطح بالاتجاهين. */
   function ridged2(x,y,sd,oct){ let v=0,a=.5,n=0; for(let k=0;k<oct;k++){ const r=1-Math.abs(2*vn2(x,y,sd+k*23)-1); v+=a*r*r; n+=a; x*=2.07; y*=2.07; a*=.5; } return v/n; }
+  /* التواء عضوي بطيء التغيّر للإحداثيات قبل إطعامها لنمط الشيفرون — يكسر الانتظام الهندسي
+     المتكرر (نفس الشكل يتكرر بدقة) ويعطي كل سفح شكل تعرية خاص به بدل نمط واحد مكرّر */
+  function warpUV(u,v,sd){
+    const wx=(fbm2(u*1.1,v*1.1,sd,3)-.5)*1.15, wy=(fbm2(u*1.1+11,v*1.1+11,sd+41,3)-.5)*1.15;
+    return [u+wx, v+wy];
+  }
   function hfield(st,u,v,side){
     if(st==="mount"){                     /* يمين القمة الأكتاف تنزل يمين، ويسارها تنزل يسار — شيفرون حقيقي */
-      const wR=.5+.42*side, wL=1-wR;
-      return wL*ridged2(u*7+v*5.2,v*3.6,seed,3)+wR*ridged2(u*7-v*5.2+3.1,v*3.6,seed+7,3)+.16*fbm2(u*24,v*24,seed+3,2);
+      const uv=warpUV(u,v,seed+90), uw=uv[0], vw=uv[1];
+      const wR=.5+.36*side, wL=1-wR;
+      /* ridged2 وحدها (لو هي المسيطرة على الحقل) تعطي خطوط حادة متكرّرة بنفس الاتجاه —
+         تبين كخطوط "فرشاة معدن" مصطنعة على وش الجبل كامل. نخفّف وزنها ونخلط معها تعرية
+         أعرض وأنعم (fbm2 بتردد واطي) تكسر الاتجاه الواحد وتعطي إحساس نحت طبيعي غير منتظم */
+      const chevron = wL*ridged2(uw*5.1+vw*3.7,vw*2.6,seed,4)+wR*ridged2(uw*5.1-vw*3.7+3.1,vw*2.6,seed+7,4);
+      const erosion = fbm2(uw*3.1,vw*3.1,seed+31,4);
+      return chevron*.50 + erosion*.42 + .11*fbm2(u*21,v*21,seed+3,3) + .05*fbm2(u*68,v*68,seed+19,2);
     }
     if(st==="dune"||st==="bigdune"){
       const sc = st==="bigdune" ? 1.5 : 2.3;
       const sw=u*sc+v*6.5+fbm2(u*1.4,v*2.6,seed,2)*1.5, fr=sw-Math.floor(sw);
       const prof = fr<.78 ? fr/.78 : (1-fr)/.22;                                     /* صعود هيّن ثم وجه انزلاق حاد */
-      /* تعرّجات الرمل (ripples) بطبقتين فوق بعض — خشنة تتبع انحناء الكثيب، وناعمة أدق فوقها —
-         هذا اللي يعطي ملمس حبيبات الرمل الحقيقي بدل سطح أملس موحّد */
-      const rippleCoarse = Math.sin(u*300+v*640+fbm2(u*6,v*6,seed+4,2)*14)*.0062;
-      const rippleFine   = Math.sin(u*860+v*1450+fbm2(u*9,v*9,seed+15,2)*22)*.0024;
+      /* تعرّجات الرمل (ripples): ترددها هنا مضبوط عشان يبقى أقل من حد نايكويست لدقّة الرسم
+         الداخلية (q قد تكون أقل من ١)، وإلا يطلع تداخل مويريه كخطوط قطرية مزيّفة عريضة بدل
+         نسيج رمل ناعم — هذا بالضبط سبب "الخطوط المائلة" اللي كانت تبين على الكثبان */
+      const rippleCoarse = Math.sin(u*34+v*74+fbm2(u*6,v*6,seed+4,2)*9)*.0066;
+      const rippleFine   = Math.sin(u*58+v*122+fbm2(u*9,v*9,seed+15,2)*13)*.0028;
       return prof*.10 + rippleCoarse + rippleFine + fbm2(u*12,v*12,seed+5,2)*.07;
     }
     if(st==="mesa"||st==="escarp"||st==="qarah") return fbm2(u*18,v*55,seed+3,3)*.35;
@@ -2879,20 +2908,27 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     let bright=0, mixTree=0, dark=0, rockMix=0;
     if(st==="mount"){
       bright += (fbm2(u*52,v*52,seed+7,2)-.5)*.14;
-      bright += (fbm2(u*150,v*150,seed+23,2)-.5)*.07;           /* نقش صخري دقيق إضافي يكسر النعومة */
+      bright += (fbm2(u*150,v*150,seed+23,2)-.5)*.065;         /* نقش صخري دقيق إضافي يكسر النعومة */
       rockMix = clamp(Math.abs(nxS)*1.2+dMain*-.2+.15,0,.7);
       if(treeRGB && fi>.25 && dMain>.05 && rockMix<.55){
-        const cl=vn2(u*22,v*22,seed+13), tn=vn2(u*190,v*190,seed+11), th=.70-cl*.30+Math.min(.18,dMain*.08)-fi*.05;
-        if(tn>th) mixTree=clamp((tn-th)*7,0,.85);
+        /* الشجر يتجمّع بقطع غابة واسعة (patch) بدل ما يتوزّع كبقع متناثرة بانتظام على كل
+           المنحدر — هذا أقرب لتوزيع الغطاء النباتي الحقيقي اللي يتبع الرطوبة والميل */
+        const patch=vn2(u*3.1,v*3.1,seed+61), patchF=clamp((patch-.30)/.22,0,1);  /* حافة ناعمة بدل قطع حاد */
+        if(patchF>.02){
+          const cl=vn2(u*17,v*17,seed+13), tn=vn2(u*95,v*95,seed+11);
+          const th=.64-cl*.34+Math.min(.18,dMain*.08)-fi*.05-patchF*.30;
+          if(tn>th) mixTree=clamp((tn-th)*3.6,0,.82)*patchF;
+          if(mixTree>0){ const clump=vn2(u*46,v*46,seed+77); mixTree*=.76+.36*clump; }  /* تفاوت لوني بين كتل الشجر */
+        }
       }
       if(PL.terraces && fi>.4){ const band=(dMain*amps[i]/(s*.0085))%1; if(band<.2) dark+=.14; else if(band<.34) bright+=.06; }
     } else if(st==="dune"||st==="bigdune"){
       if(nxS*Math.sign(Lx||1)<-.25) dark += clamp((-nxS*Math.sign(Lx||1)-.25)*.5,0,.3);  /* وجوه الانزلاق الصغيرة */
       const lee=-nxBig*Math.sign(Lx||1);
       if(lee>.08) dark += clamp((lee-.08)*.55,0,.34);                                  /* الوجه البعيد عن الشمس */
-      /* حبيبات الرمل: ضجيج خشن + ضجيج دقيق فوقه، يعطي ملمس الرمل الحقيقي بدل تدرّج أملس */
-      bright += (h01(x*7919+(y|0),seed)-.5)*.035;
-      bright += (h01((x*131+y*977)|0,seed+41)-.5)*.02;
+      /* حبيبات الرمل: ضجيج خشن + ضجيج دقيق فوقه، يعطي ملمس حبيبي حقيقي بدل تدرّج أملس */
+      bright += (h01(x*7919+(y|0),seed)-.5)*.032;
+      bright += (h01((x*131+y*977)|0,seed+41)-.5)*.018;
     } else if(st==="mesa"||st==="escarp"||st==="qarah"){
       bright += (fbm2(u*2,v*70+fbm2(u*3,v*3,seed,2)*1.2,seed+3,2)-.5)*.30;
       if(vn2(u*60,v*5,seed+9)>.8) dark+=.14;
@@ -2915,7 +2951,12 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     R=lerp(R,skyRGB[0]*.62,shb); G=lerp(G,skyRGB[1]*.66,shb); B=lerp(B,skyRGB[2]*.80,shb);
     const wl=warm*diff*day*18; R+=wl; G+=wl*.55;
     if(mixTree>0){ const tf=f*.9; R=lerp(R,treeRGB[0]*tf,mixTree); G=lerp(G,treeRGB[1]*tf,mixTree); B=lerp(B,treeRGB[2]*tf,mixTree); }
-    const hz=(1-fi)*clamp(dMain*.7,0,1)*.35*(1-nightF*.5);   /* ضباب جوّي أعمق على القمم البعيدة = إحساس عمق أقوى */
+    /* ضباب العمق الجوّي: قديماً كان يعتمد على dMain (البعد عن خط القمة مقسوم على سعة الطبقة
+       المحلية amp) — بالتضاريس المنخفضة السعة جداً زي الكثبان (amp صغير جداً) كان dMain يتضخّم
+       بسرعة خيالية فيوصل الضباب لأقصاه على كل سطح الكثيب تقريباً، فيطلع بلون رمادي مغسول بدل
+       اللون الرملي الدافئ. الحين الضباب يعتمد بس على بُعد الطبقة (fi) بلا علاقة بالسعة المحلية،
+       وهذا أصح فيزيائياً أصلاً: الطبقة البعيدة كلها ضبابية بالتساوي تقريباً، مو بس قرب قمّتها */
+    const hz=Math.pow(1-fi,1.6)*.33*(1-nightF*.5);
     out[0]=lerp(R,skyRGB[0],hz); out[1]=lerp(G,skyRGB[1],hz); out[2]=lerp(B,skyRGB[2],hz);
     return out;
   }
@@ -2975,43 +3016,55 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
     rg.addColorStop(0,"rgba("+hex2rgb(reef).join(",")+","+(.34*(1-nightF*.6)).toFixed(3)+")"); rg.addColorStop(1,"rgba("+hex2rgb(reef).join(",")+",0)");
     ctx.fillStyle=rg; ctx.save(); ctx.translate(x,y); ctx.scale(1,ry/rx); ctx.beginPath(); ctx.arc(0,0,rx,0,TAU); ctx.restore(); ctx.fill();
   }
-  /* الموج: قمم متقطعة تلمع وتنزاح مع الوقت، تتقارب قرب الأفق وتكبر قربك.
-     أضفنا التواء عشوائي (fbm) على طور الموجة بدل الجيبية الصافية — موج البحر الحقيقي
-     ما يتكرر بشكل منتظم، فهذا يكسر الرتابة ويعطي حركة أكثر عضوية وطبيعية */
-  for(let j=1;j<36;j++){
-    const f=Math.pow(j/36,1.85), y=hy+f*D, amp=s*.0034*(1+f*5), speed=.55+(j%4)*.16;
-    ctx.strokeStyle="rgba(0,22,34,"+(.08+.10*f).toFixed(3)+")"; ctx.lineWidth=Math.max(1,s*.0011*(1+f*2.4));
+  /* الموج: أمواج انتفاخ (swells) مستقلة عشوائية بدل ٣٥ خط جيبي شبه-دوري متكرر — الخطوط
+     القديمة كانت تتداخل فيما بينها رياضياً وتكوّن نقش شبكي/متعرّج واضح (موريه) يشبه "خطوط
+     مرسومة على ورق" مو ماء حقيقي. كل موجة هنا طولها وعمقها وسرعتها وموضعها عشوائي مستقل،
+     بحافة ناعمة عبر shadowBlur بدل تكرار آلي حاد.
+     السرعة هنا مضبوطة مباشرة بوحدة بكسل/ثانية (بدون ضرب في s بشكل غير محسوب) فتبقى بمعدّل
+     واقعي يحاكي تدحرج الموج الحقيقي بصرياً، لا سرعة خيالية تتضخّم مع كبر المشهد (كانت المشكلة
+     السابقة: سرعة فعلية تصل ١٣٨٢ بكسل/ثانية لبعض الأمواج — أسرع من الواقعي بـ٧-٢٥ مرة).
+     فوقها طبقتان فيزيائيتان إضافيتان حسب طلبك بخوارزميات أقوى:
+     (أ) الاضطحال shoaling — الموج يتباطأ فيزيائياً وهو يقترب من الشاطئ الضحل (fy قريب من ١)،
+     (ب) مجموعات الموج wave sets — نبضة تكبير/تصغير بطيئة تتكرر كل ٣٠-٤٠ ثانية وتسافر نحو
+     الشاطئ، تحاكي ظاهرة حقيقية معروفة: الأمواج تصل بمجموعات متتالية من موج أكبر وأهدأ */
+  const swN = 24, setFreq=.17, setTravel=1.1;
+  for(let j=0;j<swN;j++){
+    const fy = h01(j,301);
+    const y = hy + Math.pow(fy,1.25)*D;
+    const shoal = 1 - clamp((fy-.82)/.18,0,1)*.55;                 /* تباطؤ قرب الشاطئ */
+    const depthF = .5+fy*.95;
+    const baseSpeedPxS = (s/460)*(9+h01(j,303)*24)*depthF*shoal;   /* بكسل/ثانية مباشرة */
+    const len = w*(.16+.42*h01(j,305));
+    const baseX = h01(j,307)*(w+len)-len;
+    const cx0 = (((baseX + t*baseSpeedPxS) % (w+len)) + (w+len)) % (w+len) - len;
+    const setPh = t*setFreq - fy*setTravel + h01(j,331)*.9;
+    const setMod = .70 + .30*Math.pow(.5+.5*Math.sin(setPh),1.4);  /* نبضة مجموعات الموج */
+    const amp = s*(.0017+.0072*fy)*setMod;
+    const thick = Math.max(1, s*(.0012+.0052*fy)*(.85+.15*setMod));
+    const dA = (.055+.085*fy)*(1-nightF*.25)*setMod;
+    const lA = (.07+.13*fy)*(1-nightF*.55)*setMod;
+    const seed1=j*31+5, seed2=j*31+71, steps=14, ph=h01(j,311)*TAU, wn=7+h01(j,313)*5;
+    ctx.lineJoin="round"; ctx.lineCap="round";
+    ctx.save(); ctx.shadowBlur=thick*2.3; ctx.shadowColor="rgba(0,18,28,"+dA.toFixed(3)+")";
+    ctx.strokeStyle="rgba(0,18,28,"+dA.toFixed(3)+")"; ctx.lineWidth=thick;
     ctx.beginPath();
-    for(let x=0;x<=w;x+=8){
-      const warp=(vnoise(x*.006+j*3.1,j*17)-.5)*2.4;
-      ctx.lineTo(x, y+Math.sin(x*.03/(.28+f)+t*speed*2+j*1.7+warp)*amp);
+    for(let k=0;k<=steps;k++){
+      const u=k/steps, x=cx0+u*len;
+      const yy=y+Math.sin(u*wn+ph)*amp*.55+(vnoise(u*3.6+j*4.1,seed1)-.5)*amp*1.1;
+      u===0?ctx.moveTo(x,yy):ctx.lineTo(x,yy);
     }
-    ctx.stroke();
-    ctx.strokeStyle="rgba(255,255,255,"+((.10+.16*f)*(1-nightF*.55)).toFixed(3)+")";
-    ctx.lineWidth=Math.max(1,s*.0012*(1+f*2));
-    const seg=s*(.03+f*.09);
-    const wa=(.10+.16*f)*(1-nightF*.55);
-    for(let x=0;x<w;x+=seg){
-      const nA=clamp((vnoise(x/w*6/(.35+f)-t*speed*.9, j*13)-.46)*5,0,1);   /* يتلاشى تدريجياً بدل ما يختفي فجأة */
-      if(nA<.02) continue;
-      ctx.strokeStyle="rgba(255,255,255,"+(wa*nA).toFixed(3)+")";
-      ctx.beginPath();
-      const warp2=(vnoise(x*.006+j*3.1,j*17)-.5)*2.4;
-      for(let xx=x; xx<=x+seg*.7; xx+=6) ctx.lineTo(xx, y-amp*.9+Math.sin(xx*.03/(.28+f)+t*speed*2+j*1.7+.9+warp2)*amp);
-      ctx.stroke();
+    ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.shadowBlur=thick*1.6; ctx.shadowColor="rgba(255,255,255,"+lA.toFixed(3)+")";
+    ctx.strokeStyle="rgba(255,255,255,"+lA.toFixed(3)+")"; ctx.lineWidth=thick*.55;
+    ctx.beginPath();
+    for(let k=0;k<=steps;k++){
+      const u=k/steps, x=cx0+u*len;
+      const yy=y-thick*1.3+Math.sin(u*wn+ph+.6)*amp*.55+(vnoise(u*3.6+j*4.1+9,seed2)-.5)*amp*1.1;
+      u===0?ctx.moveTo(x,yy):ctx.lineTo(x,yy);
     }
+    ctx.stroke(); ctx.restore();
   }
-  /* بريق متناثر وخفيف على كل سطح البحر (غير درب الشمس/القمر) — ينبض ويخفت بثبات لكل نقطة،
-     يحاكي لمعان صفحة الماء المتموّجة بشكل عام، لا فقط باتجاه الشمس */
-  for(let j=0;j<60;j++){
-    const fy=h01(j,211), y=hy+fy*D, x=h01(j,213)*w;
-    const tw=Math.pow(.5+.5*Math.sin(t*(1.1+h01(j,215)*2.2)+h01(j,217)*TAU),3);
-    const a=(.05+.11*fy)*(1-nightF*.55)*tw;
-    if(a<.015) continue;
-    const sz=Math.max(1,s*.0016*(1+fy));
-    ctx.fillStyle="rgba(255,255,255,"+a.toFixed(3)+")";
-    ctx.fillRect(x,y,sz,sz);
-  }
+  ctx.shadowBlur=0;
   /* درب لمعان الشمس/القمر يتلألأ */
   const glow = nightF>.5 ? .45+.5*(K.disc==="moon"?1:0) : clamp(1-elev*.55,.35,1);
   if(sy<hy){
@@ -3027,6 +3080,17 @@ function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
         ctx.fillRect(x-len/2, y+Math.sin(t*1.2+j*.7)*s*.0012, len, Math.max(1,s*.0016*(1+f*2)));
       }
     }
+  }
+  /* بريق متناثر وخفيف على كل سطح البحر (غير درب الشمس/القمر) — نقاط ثابتة المكان تنبض وتخفت
+     بثبات، تحاكي تلألؤ صفحة الماء المتموّجة بشكل عام لا فقط باتجاه الشمس */
+  for(let j=0;j<70;j++){
+    const fy=h01(j,211), y=hy+fy*D, x=h01(j,213)*w;
+    const tw=Math.pow(.5+.5*Math.sin(t*(1.1+h01(j,215)*2.2)+h01(j,217)*TAU),3);
+    const a=(.05+.13*fy)*(1-nightF*.55)*tw;
+    if(a<.015) continue;
+    const sz=Math.max(1,s*.0017*(1+fy*1.2));
+    ctx.fillStyle="rgba(255,255,255,"+a.toFixed(3)+")";
+    ctx.beginPath(); ctx.arc(x,y,sz*.5,0,TAU); ctx.fill();
   }
   /* أمواج تتكسّر: ثلاث موجات تتقدّم نحو الشاطئ، تبيض وتنكسر ثم تختفي */
   for(let k=0;k<3;k++){
