@@ -2172,7 +2172,15 @@ function siteLatLon(){
    ═══════════════════════════════════════════════════════════════ */
 const PLACE_KEY = "hasad.place";
 const PLACES = [
-  { id:"auto",      n:"موقعي",         sub:"حسب منطقتك الزمنية", ll:null,          terr:"hills",  clim:"auto" },
+  /* "موقعي" ما يتحدّد بإحداثيات GPS فعلية (تلك تتحكّم بموقع الشمس/القمر الفلكي بس، مو بمكان
+     التضاريس) — فهذا المكان هو اللي يبين فعلياً لأي مستخدم جديد قبل ما يختار مكان من القائمة،
+     وكان قبل كذا بلا أي لون مخصّص (PL.hill غير معرّف)، فيسقط على لون الضباب العام للسما نفسه
+     (K.hills) بدون أي مزيج تربة حقيقي — هذا اللي يطلع رمادي مزرق مسطّح بلا ملمس إطلاقاً، حتى
+     بعد كل تحسينات الواقعية لأن hfield/shadeAt ما كان فيهم حالة "hills" مخصّصة أصلاً. الحين
+     أعطيناه لوحة تلال نجدية دافئة عامة + معالجة hfield/shadeAt خاصة (تحت) بدل ما يضل أسوأ
+     مشهد بالتطبيق وهو أكثر مشهد يشوفه أي حد فعلياً */
+  { id:"auto",      n:"موقعي",         sub:"حسب منطقتك الزمنية", ll:null,          terr:"hills",  clim:"auto",
+    hill:["#C9A876","#AD8759","#8E6C47"], soil:"#B38E60", trees:"#5B6B3E" },
   { id:"soudah",    n:"السودة",        sub:"عسير",     ll:[18.27,42.36], terr:"mount",   clim:"sw",    fog:.55,
     hill:["#7C9479","#56744F","#3B5A37"], soil:"#6A5A45", trees:"#1C3A20" },
   { id:"hada",      n:"الهدا",         sub:"الطائف",   ll:[21.37,40.29], terr:"mount",   clim:"sw",    fog:.25,
@@ -2546,6 +2554,57 @@ function meteorAt(t){
   return { x0:.10+r1*.74, y0:.04+r2*.26, len:.16+r3*.16,
            ang:.55+r2*.40, t:ph, bright:.7+r3*.3 };
 }
+/* ─── لمسة تصوير أخيرة: تحبّب رقيق + غسلة لون جوّية موحّدة + تظليل أطراف ───
+   بدون هذا، كل طبقة (سما/غيوم/تضاريس/أرض) ملوّنة بشكل مستقل رياضياً صحيح بس النتيجة
+   تبين "طبقات متراكبة" مو صورة واحدة متماسكة. هالتمرير الأخير يلف المشهد كامل بمزاج
+   إضاءة واحد (دافئ عند الغروب/الشروق، بارد ليلاً) ويكسر نعومة التدرّجات الرقمية المثالية
+   اللي تبين بلاستيكية — نفس الحيل اللي تستخدمها برامج التصوير الاحترافية (grain, color
+   grade, vignette) لتقريب أي رسم رقمي من إحساس الصورة الحقيقية. */
+let GRAIN_TILE=null;
+function grainTile(){
+  if(GRAIN_TILE) return GRAIN_TILE;
+  /* كنت أحسب كل بكسل من عيّنة عشوائية وحدة بمدى كامل ٠-٢٥٥ (تشويش أبيض خام)، وفوقها
+     globalCompositeOperation="overlay" اللي يفخّم التباين المحلي بشدة — النتيجة كانت
+     "نويز" واضح يشبه تشويش شاشة تلفزيون قديم بدل حبيبية فيلم ناعمة. الحل: متوسط ٣ عيّنات
+     عشوائية مستقلة لكل بكسل بدل عيّنة وحدة — يعطي توزيع "جرسي" (قيم وسطى أكثر، أطراف
+     متطرفة أقل)، وهذا بالضبط شكل حبيبية الفيلم الحقيقية (مجموع فوتونات عشوائية، مو تشويش
+     رقمي خام). */
+  const T=96, cv=document.createElement('canvas'); cv.width=T; cv.height=T;
+  const gx=cv.getContext('2d'); const id=gx.createImageData(T,T);
+  for(let p=0;p<T*T;p++){
+    const avg=(h01(p,777)+h01(p,991)+h01(p,1321))/3;
+    const v=Math.floor(avg*255); const o=p*4; id.data[o]=id.data[o+1]=id.data[o+2]=v; id.data[o+3]=255;
+  }
+  gx.putImageData(id,0,0); GRAIN_TILE=cv; return cv;
+}
+function drawAtmosphereFinish(ctx,w,h,s,K,nightF,sx,sy,elev){
+  const op=ctx.globalCompositeOperation, al=ctx.globalAlpha;
+  try{
+    const tile=grainTile();
+    ctx.globalCompositeOperation='overlay'; ctx.globalAlpha=.055;
+    const pat=ctx.createPattern(tile,'repeat');
+    ctx.fillStyle=pat; ctx.fillRect(0,0,w,h);
+  }catch(e){ /* بعض المتصفحات القديمة ما تدعم createPattern+overlay، نتجاهل بهدوء */ }
+  ctx.globalCompositeOperation=op; ctx.globalAlpha=al;
+
+  const lowSun = clamp(1-elev*1.5,0,1);
+  const warmC = nightF>.5 ? "70,100,170" : "255,170,90";
+  const washA = nightF>.5 ? .07*nightF : .05+.10*lowSun;
+  if(washA>.01){
+    try{
+      const wash=ctx.createRadialGradient(sx,sy,0,sx,sy,Math.max(w,h)*.9);
+      wash.addColorStop(0,"rgba("+warmC+","+washA.toFixed(3)+")");
+      wash.addColorStop(1,"rgba("+warmC+",0)");
+      ctx.globalCompositeOperation='soft-light';
+      ctx.fillStyle=wash; ctx.fillRect(0,0,w,h);
+    }catch(e){}
+    ctx.globalCompositeOperation=op;
+  }
+
+  const vg=ctx.createRadialGradient(w/2,h*.46,Math.min(w,h)*.42,w/2,h*.46,Math.max(w,h)*.74);
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(6,8,14,"+(.16+nightF*.08).toFixed(3)+")");
+  ctx.fillStyle=vg; ctx.fillRect(0,0,w,h);
+}
 /* ─── بيئة كاملة: سماء، شمس، تلال، سهل ممتد ─────────────────
    تُرسم قبل كل شي. لا تستهلك rnd() نهائياً عشان أشكال النبتات
    تبقى مطابقة تماماً لبذورها المحفوظة.
@@ -2655,8 +2714,12 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
     ctx.fillStyle=disc; ctx.beginPath(); ctx.arc(sx,sy,dR,0,TAU); ctx.fill();
   }
 
-  /* ٤ب) غيوم متحرّكة فوق القرص — عددها وكثافتها من الجو الفعلي */
-  drawClouds(ctx,w,gy,s,WX,K,nightF,tms);
+  /* ٤ب) غيوم متحرّكة فوق القرص — عددها وكثافتها من الجو الفعلي، مضاءة باتجاه الشمس/القمر */
+  const cloudList = drawClouds(ctx,w,gy,s,WX,K,nightF,tms,sx,sy);
+
+  /* ٤ج) طيور بعيدة تحلّق — لمسة حياة بسيطة بس فرقها واضح: مشهد بلا أي شي متحرّك بالسما
+     غير الشمس والغيم يحس فاضي/ساكن بشكل غير طبيعي */
+  drawBirds(ctx,w,gy,s,nightF,tms);
 
   /* ٥) ثلاث طبقات تضاريس — شكلها يتبع المكان المختار، ولونها يتبع ضوء الوقت */
   drawTerrain(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR);
@@ -2684,6 +2747,43 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
   ctx.fillStyle=gnd; ctx.fillRect(0,gy,w,h-gy+1);
   ctx.fillStyle = K.stars>.5 ? "rgba(150,180,205,.20)" : "rgba(255,246,214,.46)";
   ctx.fillRect(0,gy-Math.max(1,s*.0022),w,Math.max(1,s*.0038));
+  /* ظل الغيوم على الأرض: كل غيمة تسقط بقعة ظل ناعمة على السهل، منزاحة بعكس اتجاه الشمس
+     وبمقدار يكبر كل ما قلّ ارتفاعها (ظل طويل ممتد عند الشروق/الغروب، قصير تحتها عند الظهر
+     تماماً) — فيزياء إسقاط حقيقية بسيطة تربط السما بالأرض بدل طبقتين منفصلتين بلا علاقة */
+  if(cloudList && cloudList.length){
+    const stretch = lerp(2.6,.35,clamp(elev,0,1));
+    ctx.save(); ctx.beginPath(); ctx.rect(0,gy,w,h-gy+1); ctx.clip();
+    cloudList.forEach(cl=>{
+      const off=(cl.cx-sx)*stretch;
+      const shx=((cl.cx+off)%w+w)%w;
+      const shy=gy+(h-gy)*clamp(.06+.22*(cl.cy/(gy*.48)),0,.85);
+      const shw=cl.cw*(1.15+Math.min(2.2,Math.abs(off)*.0009)), shh=shw*.16;
+      const sh=ctx.createRadialGradient(shx,shy,0,shx,shy,shw);
+      const sa=cl.a*.34*(1-nightF*.5);
+      sh.addColorStop(0,"rgba(20,16,10,"+sa.toFixed(3)+")"); sh.addColorStop(1,"rgba(20,16,10,0)");
+      ctx.fillStyle=sh; ctx.save(); ctx.translate(shx,shy); ctx.scale(1,shh/shw);
+      ctx.beginPath(); ctx.arc(0,0,shw,0,TAU); ctx.fill(); ctx.restore();
+    });
+    ctx.restore();
+  }
+  /* سراب الحر: شريط رقيق يتموّج فوق خط الأفق مباشرة بالمشاهد الصحراوية وقت الشمس العالية —
+     انكسار الضوء الحقيقي فوق الرمل/الصخر الساخن، ظاهرة بصرية مألوفة جداً بصحاري نجد والربع
+     الخالي. تختفي تلقائياً بالليل والغيم الكثيف وبالسواحل الباردة نسبياً */
+  if(nightF<.08 && tms!=null && (PL.terr==="dune"||PL.terr==="bigdune"||PL.terr==="mesa"||PL.terr==="escarp")){
+    const heat = clamp((elev-.30)/.55,0,1)*(1-WX.cloud*.65)*(1-WX.rain*2);
+    if(heat>.06){
+      const bandH=s*.030, by0=gy-bandH;
+      ctx.save(); ctx.beginPath(); ctx.rect(0,by0,w,bandH+2); ctx.clip();
+      for(let r=0;r<6;r++){
+        const ry=by0+(r/5)*bandH, amp=s*.0017*(1-r/7);
+        ctx.save(); ctx.translate(Math.sin(tms*.0021+r*1.35)*amp*3.2,0);
+        ctx.fillStyle="rgba(255,250,232,"+(heat*.055*(1-r/9)).toFixed(3)+")";
+        ctx.fillRect(-amp*4,ry,w+amp*8,bandH/5+1);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+  }
   if(nightF>.25){                                   /* محاق = ليل أظلم، بدر = الأرض منوّرة */
     ctx.fillStyle="rgba(3,6,14,"+((1-moonLight)*.30*nightF).toFixed(3)+")"; ctx.fillRect(0,0,w,h);
     if(moonLight>.05){ ctx.fillStyle="rgba(150,178,222,"+(moonLight*.08*nightF).toFixed(3)+")"; ctx.fillRect(0,0,w,h); }
@@ -2693,38 +2793,83 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
     const ph = tms % 9000;
     if(ph<90 || (ph>160 && ph<220)){ ctx.fillStyle="rgba(235,240,255,.28)"; ctx.fillRect(0,0,w,h); }
   }
+  /* ٨) اللمسة الأخيرة: تحبّب + غسلة لون موحّدة + تظليل أطراف — تلف المشهد بمزاج واحد متماسك */
+  drawAtmosphereFinish(ctx,w,h,s,K,nightF,sx,sy,elev);
 }
 
-/* ─── غيوم ناعمة: نفخات متداخلة بلا حواف، قاعدة مسطّحة رمادية، وتنزاح ببطء مع الريح ─── */
-function drawClouds(ctx,w,gy,s,WX,K,nightF,tms){
+/* ─── غيوم ناعمة: نفخات متداخلة بلا حواف، قاعدة مسطّحة رمادية، وتنزاح ببطء مع الريح ───
+   كل غيمة الحين لها جهة مضاءة تواجه الشمس/القمر فعلياً (أفتح وأدفأ) وجهة مقابلة أغمق وأبرد
+   — قديماً كانت كل النفخات بنفس اللون الموحّد بلا أي علاقة باتجاه الضوء، فتبين مسطّحة.
+   كمان ترجع قائمة مواقع الغيوم عشان drawEnvironment يستخدمها لإسقاط ظلالها على الأرض. */
+function drawClouds(ctx,w,gy,s,WX,K,nightF,tms,sx,sy){
   const n = Math.round(WX.cloud*7);
-  if(!n) return;
+  const clouds=[];
+  if(!n) return clouds;
   const t = (tms||0)/1000;
   const top = nightF>.5 ? "118,130,150" : "255,255,255";
   const base = nightF>.5 ? "52,60,76" : (WX.cloud>.6 ? "150,158,168" : "206,212,220");
+  const topArr=top.split(',').map(Number), baseArr=base.split(',').map(Number);
+  const lowSun = clamp(1-(K.elev!=null?K.elev:.5)*1.4,0,1)*(1-nightF*.3);  /* قرب الأفق = توهّج مغيب أقوى */
+  const warmArr = nightF>.5 ? [198,208,226] : (lowSun>.3 ? [255,224,178] : [255,250,238]);
+  const litArr = mixRGB(topArr,warmArr,.62), shadeArr = mixRGB(topArr,baseArr,.55);
+  const baseLitArr = mixRGB(baseArr,warmArr,lowSun*.5);
   for(let i=0;i<n;i++){
     const speed = .003 + ((i*37)%7)*.001;
     const cx = ((((i*.6180339887) + t*speed) % 1.3) - .15) * w;
     const cy = gy*(.12 + ((i*.7548776662)%1)*.36);
     const cw = s*(.16 + ((i*53)%5)*.035) * (.85+WX.cloud*.45);
     const a  = (.30 + WX.cloud*.30) * (nightF>.5 ? .8 : 1);
+    clouds.push({cx,cy,cw,a});
+    const dirToSun = (sx!=null && (sx-cx)<0) ? -1 : 1;
     ctx.save();
     for(let k=0;k<11;k++){                      /* نفخات بلا حلقات: لون واحد يتلاشى للشفافية */
-      const fx = ((k*.618)%1 - .5)*cw*1.5, fy = -Math.abs(Math.sin(k*1.7))*cw*.30;
+      /* +cw*.12 تزيح مجموعة النفخات لتحت شوي عشان تتداخل مع قاعدة الغيمة (bg ellipse) —
+         بدونها يطلع فجوة فاتحة أفقية بين النفخات العلوية والقاعدة، تبين كخط عطل غريب
+         في منتصف الغيمة بدل شكل غيمة متماسك */
+      const fx = ((k*.618)%1 - .5)*cw*1.5, fy = -Math.abs(Math.sin(k*1.7))*cw*.30 + cw*.12;
       const r = cw*(.26 + ((k*29)%5)*.05);
+      const faceSun = clamp((fx*dirToSun)/(cw*.7),-1,1);
+      const lit = .5+.5*faceSun;
+      const puffArr = mixRGB(shadeArr,litArr,lit), puffA = a*(.82+.30*lit);
+      const puffC = puffArr.join(',');
       const g=ctx.createRadialGradient(cx+fx,cy+fy,0,cx+fx,cy+fy,r);
-      g.addColorStop(0,"rgba("+top+","+a.toFixed(3)+")");
-      g.addColorStop(.55,"rgba("+top+","+(a*.55).toFixed(3)+")");
-      g.addColorStop(1,"rgba("+top+",0)");
+      g.addColorStop(0,"rgba("+puffC+","+puffA.toFixed(3)+")");
+      g.addColorStop(.55,"rgba("+puffC+","+(puffA*.55).toFixed(3)+")");
+      g.addColorStop(1,"rgba("+puffC+",0)");
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx+fx,cy+fy,r,0,TAU); ctx.fill();
     }
+    const baseC=baseLitArr.join(',');
     const bg=ctx.createRadialGradient(cx,cy+cw*.08,0,cx,cy+cw*.08,cw*.85);   /* قاعدة الغيمة الأغمق */
-    bg.addColorStop(0,"rgba("+base+","+(a*.55).toFixed(3)+")"); bg.addColorStop(1,"rgba("+base+",0)");
+    bg.addColorStop(0,"rgba("+baseC+","+(a*.55).toFixed(3)+")"); bg.addColorStop(1,"rgba("+baseC+",0)");
     ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(cx,cy+cw*.10,cw*.85,cw*.18,0,0,TAU); ctx.fill();
     ctx.restore();
   }
+  return clouds;
 }
 function mixRGB(a,b,t){ return [Math.round(a[0]+(b[0]-a[0])*t),Math.round(a[1]+(b[1]-a[1])*t),Math.round(a[2]+(b[2]-a[2])*t)]; }
+
+/* ─── طيور بعيدة: خطوط "V" رفيعة ترفرف وتنزاح بثبات عبر السما ─── */
+function drawBirds(ctx,w,gy,s,nightF,tms){
+  if(nightF>.62 || tms==null) return;                /* ما تبين إلا بالنهار والشفق */
+  const t=tms/1000, n=3;
+  ctx.save();
+  for(let i=0;i<n;i++){
+    const speed=s*(.010+h01(i,601)*.009), dir=(i%2)?-1:1;
+    const span=w+240, bx=(((h01(i,603)*span+t*speed*dir)%span)+span)%span-120;
+    const by=gy*(.10+h01(i,605)*.24)+Math.sin(t*.9+i*2.1)*s*.006;
+    const flap=Math.sin(t*9+i*3)*.5+.5;                /* رفرفة سريعة */
+    const wsz=s*(.011+h01(i,607)*.007);
+    const al=(1-nightF*.75)*(.42+.18*h01(i,609));
+    ctx.strokeStyle="rgba(42,40,36,"+al.toFixed(3)+")";
+    ctx.lineWidth=Math.max(1,s*.0015); ctx.lineCap="round";
+    ctx.beginPath();
+    ctx.moveTo(bx-wsz, by-wsz*flap*.55);
+    ctx.quadraticCurveTo(bx-wsz*.32, by+wsz*.16, bx, by);
+    ctx.quadraticCurveTo(bx+wsz*.32, by+wsz*.16, bx+wsz, by-wsz*flap*.55);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 
 /* ─── تضاريس المكان — محرّك واقعي ───
    خطوط قمم كسورية (ضجيج متعدد الطبقات)، وتظليل حسب اتجاه الشمس الفعلي: الوجه المقابل للشمس
@@ -2889,6 +3034,12 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
       return prof*.10 + rippleCoarse + rippleFine + fbm2(u*12,v*12,seed+5,2)*.07;
     }
     if(st==="mesa"||st==="escarp"||st==="qarah") return fbm2(u*18,v*55,seed+3,3)*.35;
+    if(st==="hills"){
+      /* تلال متدحرجة ناعمة — مو قمم جبال حادة (مود "mount") ولا كثبان بوجه انزلاق ("dune")،
+         نسيج تعرية عضوي متعدد الترددات بس بدون شيفرون حاد، يناسب هضبة نجدية عامة متموّجة */
+      const uv=warpUV(u,v,seed+140), uw=uv[0], vw=uv[1];
+      return fbm2(uw*2.4,vw*2.4,seed+41,4)*.62 + fbm2(u*18,v*18,seed+9,3)*.14 + fbm2(u*55,v*55,seed+17,2)*.05;
+    }
     return fbm2(u*10,v*10,seed+2,3)*.5;
   }
   const Gs=.075*q*s;
@@ -2935,6 +3086,17 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
       if(st==="qarah"){
         if(vn2(u*38,v*2.4,seed+33)>.68) dark+=.18;
         if(dMain>.3 && vn2(u*26,v*9,seed+31)>.80) dark+=.46;
+      }
+    } else if(st==="hills"){
+      /* تلال متدحرجة بغطاء شجيرات متناثر خفيف — أخف بكثير من غابة الجبال، يناسب هضبة عامة */
+      bright += (fbm2(u*40,v*40,seed+27,2)-.5)*.11;
+      rockMix = clamp(Math.abs(nxS)*.7+dMain*-.15+.08,0,.4);
+      if(treeRGB && fi>.30 && dMain>.04){
+        const patch=vn2(u*2.4,v*2.4,seed+63), patchF=clamp((patch-.38)/.20,0,1);
+        if(patchF>.02){
+          const tn=vn2(u*70,v*70,seed+19), th=.72-fi*.08-patchF*.22;
+          if(tn>th) mixTree=clamp((tn-th)*4.2,0,.5)*patchF;             /* شجيرات متناثرة، مو غابة كثيفة */
+        }
       }
     }
     const lf=nx*Lx;
@@ -3543,11 +3705,16 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small){
       const an=i/blobs*TAU+rnd()*.5, rr=crownR*(.50+rnd()*.44);
       const bx=cx+Math.cos(an)*crownR*(style==="spread"?.72:.52)+sway*s*.004;
       const by=crownY+Math.sin(an)*crownR*(style==="spread"?.30:.44);
-      /* كل كتلة كرة لها وجه مضاء ووجه مظلم — هذا اللي يعطي التاج حجماً */
-      const rg=ctx.createRadialGradient(bx-rr*.44,by-rr*.48,rr*.06,bx,by,rr*1.10);
-      rg.addColorStop(0, shade(canopyCol2,.22));
-      rg.addColorStop(.50, i%2?canopyCol:canopyCol2);
-      rg.addColorStop(1, shade(canopyCol,-.32));
+      /* كل كتلة كرة لها وجه مضاء ووجه مظلم — هذا اللي يعطي التاج حجماً. نقطة الإضاءة قديماً
+         كانت ثابتة بأعلى-يسار كل كتلة بلا علاقة بموقع الشمس الفعلي — بينما الورق المحيط فعلياً
+         يستخدم litness(LIGHT_ANG). الحين تتبع نفس اتجاه الضوء فعلياً، فالتاج كامل يحس بإضاءة
+         متماسكة مع بقية المشهد بدل ما يبين "مضاء من فوق دايماً" حتى وقت الغروب */
+      const hlx=Math.cos(LIGHT_ANG)*rr*.46, hly=Math.sin(LIGHT_ANG)*rr*.46;
+      const rg=ctx.createRadialGradient(bx+hlx,by+hly,rr*.06,bx,by,rr*1.10);
+      const jit=(rnd()-.5)*.16;                      /* تفاوت لوني عضوي بين الكتل بدل تبديل ثنائي بحت */
+      rg.addColorStop(0, shade(canopyCol2,.22+jit*.5));
+      rg.addColorStop(.50, shade(i%2?canopyCol:canopyCol2, jit));
+      rg.addColorStop(1, shade(canopyCol,-.32-Math.abs(jit)*.3));
       ctx.fillStyle=rg;
       ctx.globalAlpha = .90;
       ctx.beginPath(); ctx.ellipse(bx,by,rr,rr*(style==="spread"?.62:.82),an*.2,0,TAU); ctx.fill();
@@ -3980,16 +4147,33 @@ function drawSceneCore(ctx,o){
   if(!o.noClear) ctx.clearRect(0,0,w,h);
 
   if(o.glow && o.ground!==false && !o.noEnv) drawEnvironment(ctx,w,h,gy,s,mins,o.withered,o.hour,o.tms,o.mdate);
-  if(g>.05){
-    const spread = M>1 ? s*(.10+.16*fitOf(M)) : s*.05*g;
-    /* نصف الظل: واسع وخفيف */
-    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.17)" : "rgba(32,46,36,.075)";
-    ctx.beginPath(); ctx.ellipse(cx+s*.032,gy+s*.012,(spread+s*.02)*1.48,s*.021,0,0,TAU); ctx.fill();
-    /* نواة الظل: ضيّقة وأغمق، تلصق النبتة بالأرض */
-    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.32)" : "rgba(32,46,36,.155)";
-    ctx.beginPath(); ctx.ellipse(cx+s*.022,gy+s*.010,spread+s*.02,s*.014,0,0,TAU); ctx.fill();
-  }
   if(o.ground!==false && !o.noGround) drawGround(ctx,cx,gy,w,s,rnd);
+  /* ظل النبتة فوق التربة (بعد drawGround لا قبله) — قبل كذا كان يترسم قبل بقعة التربة فتغطّيه
+     بقعة التربة العلوية بالكامل ويختفي بصرياً، فيبين النبات "طايف" بلا أي ارتباط فعلي بالأرض
+     مهما كانت زاوية الشمس. اتجاهه وطوله يتبعان LIGHT_ANG الفعلي: ظل طويل منزاح وقت الشمس
+       المنخفضة (شروق/غروب)، وقصير شبه تحت النبتة وقت الظهر. */
+  if(g>.05){
+    /* ظل يمتد من جذع النبتة بعيداً عن الشمس — طويل ومنحرف وقت الشروق/الغروب، شبه دائري
+       تحتها مباشرة وقت الظهر. أول نسخة كانت بيضاوية تتزحزح مركزها بس بلا تغيّر حقيقي
+       بالشكل، ونصف قطرها الأفقي كان ضخم جداً (يفوق نص عرض اللوحة) فتبقى تغطي كامل بقعة
+       التربة بالاتجاهين دايماً — فتضيع الإزاحة بصرياً رغم إنها صحيحة رياضياً. الحل: طرف
+       الظل البعيد فقط هو اللي يتحرك بعيداً عن النبتة (tipX)، وقاعدته تضل قريبة من الجذع،
+       فيبين فرق واضح بين ظل الصبح/العصر الطويل المائل وظل الظهيرة القصير تحت النبتة مباشرة. */
+    const spread = M>1 ? s*(.10+.16*fitOf(M)) : s*.05*g;
+    const sunDirX = Math.cos(LIGHT_ANG);
+    const lowSun = clamp(1-eK,0,1);                   /* ٠ وقت الظهر، ١ عند خط الأفق */
+    const throwLen = spread*(.12+lowSun*lowSun*2.3);   /* طول امتداد الظل بعيداً عن الجذع */
+    const tipX = -sunDirX*throwLen;
+    const midX = cx + tipX*.5;
+    const radX = Math.abs(tipX)*.5 + spread*.50;
+    const squishY = lerp(1,.78,lowSun);
+    /* نصف الظل: واسع وخفيف */
+    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.24)" : "rgba(26,38,30,.21)";
+    ctx.beginPath(); ctx.ellipse(midX,gy+s*.013,radX*1.08,s*.027*squishY,0,0,TAU); ctx.fill();
+    /* نواة الظل: ضيّقة وأغمق، تلصق النبتة بالأرض */
+    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.42)" : "rgba(26,38,30,.36)";
+    ctx.beginPath(); ctx.ellipse(cx+tipX*.22,gy+s*.010,radX*.60,s*.017*lerp(1,.62,lowSun),0,0,TAU); ctx.fill();
+  }
 
   if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); return; }
 
