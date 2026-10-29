@@ -203,6 +203,16 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .chip.tag[aria-pressed="true"]::before{background:rgba(255,255,255,.85)}
 .chip.ghost{border-style:dashed;color:var(--ink-3)}
 
+/* عداد رقمي (− / رقم / +) — يستخدم لأي قيمة يحددها المستخدم بحرية بدل خيارات
+   جاهزة محدودة، زي عدد الاستراحات */
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden;width:max-content}
+.stepper button{width:40px;height:38px;border:none;background:transparent;color:var(--ink-2);
+  font-size:19px;font-weight:600;line-height:1;cursor:pointer;transition:background .16s,color .16s}
+.stepper button:hover:not(:disabled){background:var(--line);color:var(--ink)}
+.stepper button:active:not(:disabled){background:var(--viridian);color:#fff}
+.stepper button:disabled{opacity:.32;cursor:default}
+.stepper-val{min-width:46px;padding:0 4px;text-align:center;font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+
 .switch-row{display:flex;align-items:center;gap:12px;padding:13px 15px;margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m)}
 .switch-row .txt{flex:1;min-width:0}
 .switch-row strong{display:block;font-size:14.5px;font-weight:600}
@@ -805,9 +815,24 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
         <div class="chips" id="modeChips"></div>
         <div id="durPanel" hidden>
           <span class="g-label" style="margin-top:14px">مدة التركيز <span class="hint">أقل شي ٣٠ دقيقة — النبتة تكمل نموها بالضبط وقت ما يخلص المؤقت</span></span>
-          <div class="chips" id="durChips"></div>
+          <div class="stepper" id="durStepper">
+            <button type="button" id="durMinus" aria-label="إنقاص">−</button>
+            <span class="stepper-val" id="durVal">30 دقيقة</span>
+            <button type="button" id="durPlus" aria-label="زيادة">+</button>
+          </div>
           <span class="g-label" style="margin-top:14px">مدة الاستراحة بعدها</span>
-          <div class="chips" id="breakChips"></div>
+          <div class="stepper" id="breakStepper">
+            <button type="button" id="breakMinus" aria-label="إنقاص">−</button>
+            <span class="stepper-val" id="breakVal">بلا استراحة</span>
+            <button type="button" id="breakPlus" aria-label="زيادة">+</button>
+          </div>
+          <span class="g-label" style="margin-top:14px">عدد الاستراحات <span class="hint">كل استراحة بينها جولة تركيز كاملة — والنبتة تتحصد جولة جولة</span></span>
+          <div class="stepper" id="roundsStepper">
+            <button type="button" id="roundsMinus" aria-label="إنقاص">−</button>
+            <span class="stepper-val" id="roundsVal">0</span>
+            <button type="button" id="roundsPlus" aria-label="زيادة">+</button>
+          </div>
+          <span class="hint" id="roundsNote" style="display:block;margin-top:6px"></span>
         </div>
       </section>
 
@@ -1950,7 +1975,26 @@ const DICT = {
  "جامعة جازان":"Jazan University",
  "جامعة نجران":"Najran University",
  "جامعة الباحة":"Al Baha University",
- "جامعة الجوف":"Jouf University"
+ "جامعة الجوف":"Jouf University",
+
+ /* تخصيص جولات المؤقت: عدد الاستراحات بين الجولات */
+ "30 دقيقة":"30 minutes",
+ "عدد الاستراحات":"Number of breaks",
+ "كل استراحة بينها جولة تركيز كاملة — والنبتة تتحصد جولة جولة":"Each break separates a full focus round — your plant is harvested round by round",
+ "يعني ":"That's ",
+ " جولة تركيز كاملة خلال الجلسة":" full focus rounds in this session",
+ "جولة تركيز وحدة، بلا أي تكرار":"A single focus round, no repeats",
+ " · جولة ":" · round ",
+ "أكملت كل جولاتك (":"You finished all your rounds (",
+ ")! عمل رائع 🏆":")! Great work 🏆",
+ "خلصت الجولة. بدأت الجولة ":"Round finished. Starting round ",
+ " بدون استراحة.":" with no break.",
+ "بعدها جولة ":"then round ",
+ "رجّع نشاطك بعد الاستراحة":"Resume your activity after the break",
+ "نبتتك محفوظة بأمان بالمزرعة. ":"Your plant is safely saved in the farm. ",
+ "خلصت الاستراحة. ":"The break is over. ",
+ "تم تخطّي الاستراحة. ":"Break skipped. ",
+ "بدأت الجولة ":"Started round "
 };
 let LANG = "ar";
 try{ const v = localStorage.getItem("hasad.lang"); if(v==="en"||v==="ar") LANG=v; }catch(e){}
@@ -4978,7 +5022,7 @@ function pinHash(pin, salt){
 }
 const DEFAULTS = {
   v:2, plants:[], ach:[], theme:null, strict:true, grace:10000,
-  timerMode:"count", timerMins:30, breakMins:5,
+  timerMode:"count", timerMins:30, breakMins:5, breakCount:0,
   seed:"basil", tag:"study", active:null,
   tags:[
     { id:"study",  n:"دراسة",  c:"#2F6B4F" },
@@ -5035,6 +5079,7 @@ function normalize(d){
   if(o.timerMode!=="timer") o.timerMode="count";
   if(!(Number.isFinite(o.timerMins) && o.timerMins>=30)) o.timerMins=30;
   if(!(Number.isFinite(o.breakMins) && o.breakMins>=0)) o.breakMins=5;
+  if(!(Number.isFinite(o.breakCount) && o.breakCount>=0)) o.breakCount=0;
   return o;
 }
 let DB = normalize(null);
@@ -5066,20 +5111,15 @@ const TIMER_MODES = [
   { v:"count", n:"عداد وقت" },
   { v:"timer", n:"مؤقت" }
 ];
-const TIMER_DURATIONS = [
-  { m:30,  n:"٣٠ دقيقة" },
-  { m:45,  n:"٤٥ دقيقة" },
-  { m:60,  n:"ساعة" },
-  { m:90,  n:"ساعة ونصف" },
-  { m:120, n:"ساعتين" }
-];
-const BREAK_DURATIONS = [
-  { m:0,  n:"بلا استراحة" },
-  { m:5,  n:"٥ دقائق" },
-  { m:10, n:"١٠ دقائق" },
-  { m:15, n:"١٥ دقيقة" },
-  { m:20, n:"٢٠ دقيقة" }
-];
+/* مدة التركيز والاستراحة: عدّادان رقميان حرّان (− رقم +) بخطوة ٥ دقايق —
+   المستخدم يحدد أي مدة يبيها بنفسه بدل خيارات جاهزة محدودة */
+const TIMER_MIN=30, TIMER_MAX=480, TIMER_STEP=5;      /* ٣٠ دقيقة → ٨ ساعات */
+const BREAK_MIN=0, BREAK_MAX=180, BREAK_STEP=5;        /* بلا استراحة → ٣ ساعات */
+/* عدد الاستراحات = عدد جولات التركيز ناقص واحد (كل استراحة بينها جولة كاملة،
+   وآخر جولة لسا تاخذ استراحتها العادية لو محدّدة، بس بدون جولة تلقائية بعدها).
+   ٠ = جولة وحدة بس، زي وضع المؤقت الأصلي بدون أي تكرار — نفس السلوك القديم
+   تماماً. عداد رقمي حر بدل خيارات جاهزة — المستخدم يحدد أي عدد يبيه بنفسه. */
+const BREAK_COUNT_MAX = 12;
 /* أحجام المزرعة حسب الرتبة */
 /* [عرض، ارتفاع، مرجع الحجم] — الشتلة نحيلة والشجرة عريضة فتتجاور بلا فراغ */
 const SIZES = [
@@ -5088,6 +5128,10 @@ const SIZES = [
 ];
 
 let sess = null, anim = null, rafOn = false, hiddenAt = null, brk = null;
+/* تسلسل جولات وضع المؤقت: يحمل رقم الجولة الجاية وعددها الكلي عبر الفجوة
+   بين انتهاء جلسة (sess تتصفّر) وبداية التالية تلقائياً بعد الاستراحة —
+   null يعني ما فيه جولة قادمة مجدولة (إما وضع عداد، أو جولة وحدة، أو آخر جولة خلصت) */
+let nextCycle = null;
 let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30, drawCost = 6, STAGE_RC = 0, CUR_DOME = 0;
 
 const el = {
@@ -5095,7 +5139,10 @@ const el = {
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
   setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
   seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
-  modeChips:$("#modeChips"), durPanel:$("#durPanel"), durChips:$("#durChips"), breakChips:$("#breakChips"),
+  modeChips:$("#modeChips"), durPanel:$("#durPanel"),
+  durVal:$("#durVal"), durMinus:$("#durMinus"), durPlus:$("#durPlus"),
+  breakVal:$("#breakVal"), breakMinus:$("#breakMinus"), breakPlus:$("#breakPlus"),
+  roundsVal:$("#roundsVal"), roundsMinus:$("#roundsMinus"), roundsPlus:$("#roundsPlus"), roundsNote:$("#roundsNote"),
   toast:$("#toast"), toastTxt:$("#toastTxt"), toastIc:$("#toastIc"),
   sheet:$("#sheet"), sheetBg:$("#sheetBg"), sheetBody:$("#sheetBody"),
   garden:$("#gardenBody"), gardenSub:$("#gardenSub"), islandBar:$("#islandBar"),
@@ -5530,8 +5577,12 @@ function setRunTitle(){
 function startSession(){
   if(sess) return;
   anim=null;
+  const carried = nextCycle; nextCycle=null;
+  const roundsTotal = carried ? carried.roundsTotal : (DB.timerMode==="timer" ? (DB.breakCount||0)+1 : 1);
+  const roundIndex  = carried ? carried.roundIndex  : 1;
   sess={ id:uid(), startedAt:Date.now(), seed:DB.seed, tagId:DB.tag, tier:0, hb:0, paused:false, pausedAt:null,
-          mode:DB.timerMode, targetMins:(DB.timerMode==="timer"?DB.timerMins:null), breakMins:(DB.timerMode==="timer"?DB.breakMins:null) };
+          mode:DB.timerMode, targetMins:(DB.timerMode==="timer"?DB.timerMins:null), breakMins:(DB.timerMode==="timer"?DB.breakMins:null),
+          roundIndex, roundsTotal };
   DB.active=sess; writeStore();
   el.setup.style.display="none"; el.run.style.display="";
   const sp=SPECIES[sess.seed], tg=DB.tags.find(t=>t.id===sess.tagId);
@@ -5540,8 +5591,9 @@ function startSession(){
     ? TR("خلّ الصفحة مفتوحة. إذا غبت أكثر من ") + TR(graceName()) + TR(" تذبل النبتة.")
     : TR("الوضع الصارم مقفل. اقعد براحتك، والنبتة تكبر ما دام العدّاد ماشي.");
   const brkLine = sess.breakMins>0 ? (TR("، وبعدها استراحة ")+hhmm(sess.breakMins)) : TR("، وبعدها بلا استراحة");
+  const roundLine = roundsTotal>1 ? (TR(" · جولة ")+roundIndex+TR(" من ")+roundsTotal) : "";
   el.runNote.textContent = sess.mode==="timer"
-    ? TR("المؤقت على ")+hhmm(sess.targetMins)+brkLine+TR(". ")+graceLine
+    ? TR("المؤقت على ")+hhmm(sess.targetMins)+brkLine+roundLine+TR(". ")+graceLine
     : graceLine;
   if("Notification" in window && Notification.permission==="default") Notification.requestPermission().catch(()=>{});
   const pb=$("#pauseBtn");
@@ -5605,13 +5657,24 @@ function wither(reason){
 function finishTimerSession(){
   if(!sess || sess.mode!=="timer" || sess.timerDoneFlag) return;
   sess.timerDoneFlag = true;
-  const brkMins = sess.breakMins;
+  const brkMins = sess.breakMins, roundIndex=sess.roundIndex||1, roundsTotal=sess.roundsTotal||1;
   keep();
+  if(roundsTotal>1 && roundIndex<roundsTotal){
+    /* لسا فيه جولات باقية: نجدول الجولة الجاية وتبدأ تلقائياً بعد الاستراحة
+       (أو فوراً لو ما فيه استراحة محدّدة) — بنفس النوع والتصنيف اللي اختارهم المستخدم */
+    nextCycle = { roundIndex: roundIndex+1, roundsTotal };
+  } else {
+    /* آخر جولة (أو جولة وحدة بلا تكرار): ما فيه جولة تالية تلقائية، بس الاستراحة
+       نفسها لسا تنعرض عادي لو المستخدم حدّد مدة لها — فقط بدون أي جدولة بعدها */
+    nextCycle = null;
+    if(roundsTotal>1) toast(TR("أكملت كل جولاتك (")+roundsTotal+TR(")! عمل رائع 🏆"),"🏆");
+  }
   startBreak(brkMins);
 }
 function startBreak(mins){
   clearInterval(brk && brk.timer);
   if(!mins || mins<=0){
+    if(nextCycle){ const c=nextCycle; startSession(); toast(TR("خلصت الجولة. بدأت الجولة ")+c.roundIndex+TR(" من ")+c.roundsTotal+TR(" بدون استراحة."),"🎉"); return; }
     toast(TR("خلص وقت التركيز. ما عندك استراحة محدّدة — جاهز لجلسة جديدة."),"🎉");
     return;
   }
@@ -5630,9 +5693,10 @@ function updateBreakClock(leftMs){
   const c=$("#brkClock"); if(c) c.textContent=fmt2(m)+":"+fmt2(s);
 }
 function renderBreakSheet(){
+  const roundLine = nextCycle ? (TR("بعدها جولة ")+nextCycle.roundIndex+TR(" من ")+nextCycle.roundsTotal) : TR("رجّع نشاطك بعد الاستراحة");
   el.sheetBody.innerHTML =
     '<h3 style="margin:0 0 3px">'+TR("وقت الاستراحة ☕")+'</h3>'+
-    '<p class="gsub" style="margin:0 0 14px">'+TR("نبتتك محفوظة بأمان بالمزرعة. رجّع نشاطك بعد الاستراحة.")+'</p>'+
+    '<p class="gsub" style="margin:0 0 14px">'+TR("نبتتك محفوظة بأمان بالمزرعة. ")+roundLine+TR(".")+'</p>'+
     '<div class="clock" id="brkClock" style="text-align:center;margin:10px 0">00:00</div>'+
     '<div class="row-actions" style="margin-top:10px">'+
       '<button class="btn btn-quiet" id="brkSkip">'+TR("تخطّي الاستراحة")+'</button>'+
@@ -5645,6 +5709,12 @@ function endBreak(natural){
   if(!brk) return;
   clearInterval(brk.timer); brk=null;
   closeSheet();
+  if(nextCycle){
+    const c=nextCycle;
+    startSession();
+    toast((natural?TR("خلصت الاستراحة. "):TR("تم تخطّي الاستراحة. "))+TR("بدأت الجولة ")+c.roundIndex+TR(" من ")+c.roundsTotal+".", natural?"⏰":"⏭️");
+    return;
+  }
   toast(natural?TR("خلصت الاستراحة. جاهز لجلسة جديدة؟"):TR("تم تخطّي الاستراحة."), natural?"⏰":"⏭️");
 }
 function graceName(){ const g=GRACES.find(x=>x.ms===DB.grace); return g?g.n:TR("١٠ ثوانٍ"); }
@@ -5772,22 +5842,32 @@ function renderSetup(){
     el.modeChips.appendChild(b);
   });
   el.durPanel.hidden = DB.timerMode!=="timer";
-  el.durChips.innerHTML="";
-  TIMER_DURATIONS.forEach(d=>{
-    const b=document.createElement("button");
-    b.className="chip"; b.textContent=TR(d.n);
-    b.setAttribute("aria-pressed", DB.timerMins===d.m);
-    b.onclick=()=>{ DB.timerMins=d.m; writeStore(); renderSetup(); };
-    el.durChips.appendChild(b);
-  });
-  el.breakChips.innerHTML="";
-  BREAK_DURATIONS.forEach(d=>{
-    const b=document.createElement("button");
-    b.className="chip"; b.textContent=TR(d.n);
-    b.setAttribute("aria-pressed", DB.breakMins===d.m);
-    b.onclick=()=>{ DB.breakMins=d.m; writeStore(); renderSetup(); };
-    el.breakChips.appendChild(b);
-  });
+  if(el.durVal){
+    el.durVal.textContent = hhmm(DB.timerMins);
+    if(el.durMinus){ el.durMinus.disabled = DB.timerMins<=TIMER_MIN;
+      el.durMinus.onclick=()=>{ DB.timerMins=Math.max(TIMER_MIN,DB.timerMins-TIMER_STEP); writeStore(); renderSetup(); }; }
+    if(el.durPlus){ el.durPlus.disabled = DB.timerMins>=TIMER_MAX;
+      el.durPlus.onclick=()=>{ DB.timerMins=Math.min(TIMER_MAX,DB.timerMins+TIMER_STEP); writeStore(); renderSetup(); }; }
+  }
+  if(el.breakVal){
+    el.breakVal.textContent = DB.breakMins<=0 ? TR("بلا استراحة") : hhmm(DB.breakMins);
+    if(el.breakMinus){ el.breakMinus.disabled = DB.breakMins<=BREAK_MIN;
+      el.breakMinus.onclick=()=>{ DB.breakMins=Math.max(BREAK_MIN,DB.breakMins-BREAK_STEP); writeStore(); renderSetup(); }; }
+    if(el.breakPlus){ el.breakPlus.disabled = DB.breakMins>=BREAK_MAX;
+      el.breakPlus.onclick=()=>{ DB.breakMins=Math.min(BREAK_MAX,DB.breakMins+BREAK_STEP); writeStore(); renderSetup(); }; }
+  }
+  /* عدد الاستراحات: عداد رقمي حر (− رقم +) بدل خيارات جاهزة — المستخدم يحدد
+     أي عدد يبيه بنفسه، من صفر (جولة وحدة بلا تكرار) لحد BREAK_COUNT_MAX */
+  if(el.roundsVal){
+    el.roundsVal.textContent = DB.breakCount;
+    if(el.roundsMinus){ el.roundsMinus.disabled = DB.breakCount<=0;
+      el.roundsMinus.onclick=()=>{ DB.breakCount=Math.max(0,DB.breakCount-1); writeStore(); renderSetup(); }; }
+    if(el.roundsPlus){ el.roundsPlus.disabled = DB.breakCount>=BREAK_COUNT_MAX;
+      el.roundsPlus.onclick=()=>{ DB.breakCount=Math.min(BREAK_COUNT_MAX,DB.breakCount+1); writeStore(); renderSetup(); }; }
+    if(el.roundsNote) el.roundsNote.textContent = DB.breakCount>0
+      ? (TR("يعني ")+(DB.breakCount+1)+TR(" جولة تركيز كاملة خلال الجلسة"))
+      : TR("جولة تركيز وحدة، بلا أي تكرار");
+  }
 
   el.graceChips.innerHTML="";
   GRACES.forEach(g=>{
@@ -5947,6 +6027,32 @@ const ISO_TW=60, ISO_TH=32;               /* أبعاد البلاطة قبل أ
 const ISO_COLS=7, ISO_ROWS=7;             /* كل واحة أرضها ٧×٧ = ٤٩ خانة ثابتة — كل خانة نبتة وحدة بالضبط */
 function isoGridDims(){ return { cols:ISO_COLS, rows:ISO_ROWS }; }
 function isoPt(col,row,tw,th){ return { x:(col-row)*(tw/2), y:(col+row)*(th/2) }; }
+
+/* ترتيب تعبئة الخانات: حلزون مربّع يبدأ من خانة الوسط بالضبط ويتوسّع بحلقات
+   كاملة حولها — كل حلقة (مسافة تشيبيشيف) توزَّع بالتساوي على محيط مربّع حول
+   المركز، فيطلع شكل متمركز ومتوازن بصرياً دايماً (زي معين يكبر من نقطة وسطه)
+   مهما كان عدد النباتات، وبترتيب ثابت ومتسلسل — مو عشوائي ولا من ركن واحد.
+   كل خانة لسا تاخذ نبتتها بالضبط بمنتصفها (isoPt(c+.5,r+.5,...)) — هذا الترتيب
+   يغيّر بس *أي* خانة تاخذها كل نبتة جديدة، مو موضعها داخل خانتها. */
+function spiralFillOrder(cols,rows){
+  const cx=Math.round((cols-1)/2), cy=Math.round((rows-1)/2);
+  const maxRing=Math.max(cx,cy,(cols-1)-cx,(rows-1)-cy);
+  const out=[], seen=new Set();
+  const put=(c,r)=>{
+    if(c<0||r<0||c>=cols||r>=rows) return;
+    const k=c+","+r; if(seen.has(k)) return;
+    seen.add(k); out.push({c,r});
+  };
+  put(cx,cy);
+  for(let ring=1; ring<=maxRing; ring++){
+    const x0=cx-ring, x1=cx+ring, y0=cy-ring, y1=cy+ring;
+    for(let x=x0;x<=x1;x++) put(x,y0);
+    for(let y=y0+1;y<=y1;y++) put(x1,y);
+    for(let x=x1-1;x>=x0;x--) put(x,y1);
+    for(let y=y1-1;y>=y0+1;y--) put(x0,y);
+  }
+  return out;
+}
 
 /* سما الجزيرة: نفس محرّك الوقت الحقيقي (skyAt) المستخدم بباقي المشهد، بس بلا أفق ولا
    تضاريس — الجزيرة طايفة بالفضاء مو واقفة على سهل. */
@@ -6183,9 +6289,7 @@ function renderIsoFarm(ps, islandId){
 
   const tiles=[];
   for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) tiles.push({c,r,depth:c+r});
-  /* ترتيب تعبئة ثابت: يبدأ من أعلى ركن بالجزيرة (الأبعد) وينزل صف-صف —
-     كل نبتة جديدة تاخذ المربع التالي بالضبط، وكل نبتة بالضبط بنص مربعها */
-  const fillOrder=tiles.slice();
+  const fillOrder=spiralFillOrder(cols,rows);            /* حلزون ثابت من منتصف الجزيرة للخارج — متوازن بصرياً ومتسلسل بنفس الوقت */
   tiles.sort((a,b)=>a.depth-b.depth || a.c-b.c);         /* ترتيب الرسم: خلف → قدّام (للتراكب الصحيح فقط) */
 
   const slots=document.createElement("div"); slots.className="iso-slots";
