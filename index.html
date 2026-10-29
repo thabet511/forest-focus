@@ -5956,6 +5956,15 @@ $("#hClock").onclick=()=>{
 };
 paintHeaderClock();
 setInterval(()=>{ paintHeaderClock(); updatePlaceBadge(); }, 5000);
+/* المتصفحات تجمّد setInterval وهي بالخلفية (تبويب مطفي أو تطبيق مصغّر) —
+   فلما ترجع، الساعة والتاريخ يطلعون واقفين على آخر وقت قبل ما تختفي، وما
+   يتحدّثون غير لما يجي أول تكة بعد الرجوع (ممكن تتأخر ثواني أو أكثر حسب
+   المتصفح). نفس الشي ينطبق على شارة المكان (الجو/القمر) لأنها مبنية على
+   الوقت الحالي. نرسمهم فوراً لحظة رجوع الصفحة عشان ما تبين متوقفة. */
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden) return;
+  paintHeaderClock(); paintHeaderDate(); updatePlaceBadge();
+});
 document.addEventListener("pointerdown", e=>{
   if(reduceMotion) return;
   const b=e.target.closest(".btn,.chip,.nav-btn,.icon-btn"); if(!b) return;
@@ -6027,32 +6036,6 @@ const ISO_TW=60, ISO_TH=32;               /* أبعاد البلاطة قبل أ
 const ISO_COLS=7, ISO_ROWS=7;             /* كل واحة أرضها ٧×٧ = ٤٩ خانة ثابتة — كل خانة نبتة وحدة بالضبط */
 function isoGridDims(){ return { cols:ISO_COLS, rows:ISO_ROWS }; }
 function isoPt(col,row,tw,th){ return { x:(col-row)*(tw/2), y:(col+row)*(th/2) }; }
-
-/* ترتيب تعبئة الخانات: حلزون مربّع يبدأ من خانة الوسط بالضبط ويتوسّع بحلقات
-   كاملة حولها — كل حلقة (مسافة تشيبيشيف) توزَّع بالتساوي على محيط مربّع حول
-   المركز، فيطلع شكل متمركز ومتوازن بصرياً دايماً (زي معين يكبر من نقطة وسطه)
-   مهما كان عدد النباتات، وبترتيب ثابت ومتسلسل — مو عشوائي ولا من ركن واحد.
-   كل خانة لسا تاخذ نبتتها بالضبط بمنتصفها (isoPt(c+.5,r+.5,...)) — هذا الترتيب
-   يغيّر بس *أي* خانة تاخذها كل نبتة جديدة، مو موضعها داخل خانتها. */
-function spiralFillOrder(cols,rows){
-  const cx=Math.round((cols-1)/2), cy=Math.round((rows-1)/2);
-  const maxRing=Math.max(cx,cy,(cols-1)-cx,(rows-1)-cy);
-  const out=[], seen=new Set();
-  const put=(c,r)=>{
-    if(c<0||r<0||c>=cols||r>=rows) return;
-    const k=c+","+r; if(seen.has(k)) return;
-    seen.add(k); out.push({c,r});
-  };
-  put(cx,cy);
-  for(let ring=1; ring<=maxRing; ring++){
-    const x0=cx-ring, x1=cx+ring, y0=cy-ring, y1=cy+ring;
-    for(let x=x0;x<=x1;x++) put(x,y0);
-    for(let y=y0+1;y<=y1;y++) put(x1,y);
-    for(let x=x1-1;x>=x0;x--) put(x,y1);
-    for(let y=y1-1;y>=y0+1;y--) put(x0,y);
-  }
-  return out;
-}
 
 /* سما الجزيرة: نفس محرّك الوقت الحقيقي (skyAt) المستخدم بباقي المشهد، بس بلا أفق ولا
    تضاريس — الجزيرة طايفة بالفضاء مو واقفة على سهل. */
@@ -6289,7 +6272,10 @@ function renderIsoFarm(ps, islandId){
 
   const tiles=[];
   for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) tiles.push({c,r,depth:c+r});
-  const fillOrder=spiralFillOrder(cols,rows);            /* حلزون ثابت من منتصف الجزيرة للخارج — متوازن بصرياً ومتسلسل بنفس الوقت */
+  /* ترتيب تعبئة ثابت: يبدأ من أعلى ركن بالجزيرة (الأبعد) وينزل صف-صف — كل نبتة
+     جديدة تاخذ المربع التالي بالضبط، وكل نبتة توضع بالضبط بمنتصف مربّعها هي
+     (isoPt(c+.5,r+.5,...))، مو بمنتصف الجزيرة كلها. */
+  const fillOrder=tiles.slice();
   tiles.sort((a,b)=>a.depth-b.depth || a.c-b.c);         /* ترتيب الرسم: خلف → قدّام (للتراكب الصحيح فقط) */
 
   const slots=document.createElement("div"); slots.className="iso-slots";
