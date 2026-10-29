@@ -6037,6 +6037,36 @@ const ISO_COLS=7, ISO_ROWS=7;             /* كل واحة أرضها ٧×٧ = �
 function isoGridDims(){ return { cols:ISO_COLS, rows:ISO_ROWS }; }
 function isoPt(col,row,tw,th){ return { x:(col-row)*(tw/2), y:(col+row)*(th/2) }; }
 
+/* ترتيب تعبئة متوازن: بأي عدد نباتات، توزيعها يغطي الجزيرة كلها بالتساوي —
+   مو متكتلة بركن وحدة (زي ترتيب صف-صف البسيط) ولا متكوّمة بالنص وتتوسّع
+   كحلقات (زي الحلزون القديم). كل خانة جديدة تُختار بحيث تكون أبعد ما يمكن
+   عن كل الخانات المشغولة قبلها (خوارزمية "أبعد نقطة" — نفس فكرة توزيع
+   النقاط المتباعدة بصرياً اللي كانت بصورة واحة العدزة). النتيجة: بأي لحظة
+   أثناء التعبئة، النباتات موزّعة بانتظام على كامل الجزيرة بدل ما تبين فاضية
+   من نص أو مكدّسة بجهة. كل خانة لسا تاخذ نبتتها بالضبط بمنتصفها
+   (isoPt(c+.5,r+.5,...)) — هذا الترتيب يغيّر بس *أي* خانة تاخذها كل نبتة
+   جديدة، مو موضعها داخل خانتها. */
+function evenFillOrder(cols,rows){
+  const cells=[]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) cells.push({c,r});
+  const cx=(cols-1)/2, cy=(rows-1)/2;
+  const remaining=cells.slice().sort((a,b)=>
+    Math.hypot(a.c-cx,a.r-cy)-Math.hypot(b.c-cx,b.r-cy) || a.r-b.r || a.c-b.c);
+  const chosen=[remaining.shift()];
+  while(remaining.length){
+    let bestIdx=0, bestD=-1;
+    for(let i=0;i<remaining.length;i++){
+      const cell=remaining[i];
+      let minD=Infinity;
+      for(const ch of chosen){ const d=Math.hypot(cell.c-ch.c,cell.r-ch.r); if(d<minD) minD=d; }
+      const curBest=remaining[bestIdx];
+      const curBestDist=Math.hypot(curBest.c-cx,curBest.r-cy), cellDist=Math.hypot(cell.c-cx,cell.r-cy);
+      if(minD>bestD || (minD===bestD && cellDist>curBestDist)){ bestD=minD; bestIdx=i; }
+    }
+    chosen.push(remaining.splice(bestIdx,1)[0]);
+  }
+  return chosen;
+}
+
 /* سما الجزيرة: نفس محرّك الوقت الحقيقي (skyAt) المستخدم بباقي المشهد، بس بلا أفق ولا
    تضاريس — الجزيرة طايفة بالفضاء مو واقفة على سهل. */
 function paintIsoSky(ctx,W,H,hr){
@@ -6272,10 +6302,7 @@ function renderIsoFarm(ps, islandId){
 
   const tiles=[];
   for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) tiles.push({c,r,depth:c+r});
-  /* ترتيب تعبئة ثابت: يبدأ من أعلى ركن بالجزيرة (الأبعد) وينزل صف-صف — كل نبتة
-     جديدة تاخذ المربع التالي بالضبط، وكل نبتة توضع بالضبط بمنتصف مربّعها هي
-     (isoPt(c+.5,r+.5,...))، مو بمنتصف الجزيرة كلها. */
-  const fillOrder=tiles.slice();
+  const fillOrder=evenFillOrder(cols,rows);               /* توزيع متوازن على كامل الجزيرة بأي عدد — راجع evenFillOrder() */
   tiles.sort((a,b)=>a.depth-b.depth || a.c-b.c);         /* ترتيب الرسم: خلف → قدّام (للتراكب الصحيح فقط) */
 
   const slots=document.createElement("div"); slots.className="iso-slots";
