@@ -800,6 +800,17 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
     </div>
 
     <div id="setupBlock">
+      <section class="panel" id="modePanel">
+        <h3>طريقة العدّ</h3>
+        <div class="chips" id="modeChips"></div>
+        <div id="durPanel" hidden>
+          <span class="g-label" style="margin-top:14px">مدة التركيز <span class="hint">أقل شي ٣٠ دقيقة — النبتة تكمل نموها بالضبط وقت ما يخلص المؤقت</span></span>
+          <div class="chips" id="durChips"></div>
+          <span class="g-label" style="margin-top:14px">مدة الاستراحة بعدها</span>
+          <div class="chips" id="breakChips"></div>
+        </div>
+      </section>
+
       <section class="panel">
         <h3>وش تزرع اليوم؟ <span class="hint" id="seedHint"></span></h3>
         <div class="chips" id="seedChips"></div>
@@ -1179,34 +1190,20 @@ const DICT = {
  "تم الاستحقاق":"Achieved",
  "لم يتم الاستحقاق":"Not achieved yet",
  'افتح الرابط اللي وصلك على الإيميل، وبيرجّعك هنا تحط كلمة سر جديدة.':'Open the link we emailed you — it brings you back here to set a new password.',
- 'أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز.':'We emailed you a link. Open it on this device.',
- 'انتهت صلاحية الرابط. اطلب واحداً جديداً.':'The link has expired. Request a new one.',
- 'نسيت كلمة السر؟':'Forgot your password?',
- 'استرجاع كلمة السر':'Reset your password',
- 'كلمة السر الجديدة':'New password',
- 'تغيّرت كلمة السر ودخلناك.':"Password changed — you're in.",
- 'أرسل مرة ثانية':'Send again',
- 'أرسلناه مرة ثانية.':'Sent again.',
- 'كلمة السر الحالية':'Current password',
- 'نسيتها؟':'Forgot it?',
- 'اكتب كلمة السر الحالية.':'Enter your current password.',
- 'كلمة السر الحالية غلط.':'Current password is wrong.',
- 'جارٍ الإرسال…':'Sending…',
- 'جارٍ التأكيد…':'Verifying…',
- 'سجّل دخولك عشان تشوف تقدّمك':'Sign in to see your progress',
- 'الأرقام تُحسب من جلساتك المحفوظة، ووضع الضيف ما يحفظ شي. أنشئ حساب وكل شي بيبان هنا.':"Stats are built from saved sessions, and guest mode saves nothing. Create an account and it'll all show up here.",
- 'أنشئ حساب':'Create an account',
- 'عندي حساب — سجّل دخول':'I have an account — sign in',
- 'جرّب كضيف':'Try as guest',
- 'بدون حساب — التقدّم ما ينحفظ':"No account — progress isn't saved",
- 'أنت داخل كضيف':"You're browsing as a guest",
- 'وضع تجربة. أول ما تقفل الصفحة يروح كل شي. سجّل حساب عشان تحفظ مزرعتك.':'Trial mode. Everything goes when you close the page. Sign up to keep your farm.',
- 'أنشئ حساب واحفظ مزرعتي':'Create an account',
- 'جرّب براحتك. مزرعتك ما تنحفظ في وضع الضيف.':'Look around. Nothing is saved in guest mode.',
- 'ضيف':'Guest',
- 'اخرج من وضع الضيف':'Leave guest mode',
- 'إيقاف':'Pause',
- 'استئناف':'Resume',
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  'متوقّفة':'Paused',
  "تعديل بيانات الحساب":"Edit account details",
  "كلمة سر جديدة":"New password",
@@ -1357,12 +1354,10 @@ const DICT = {
  "قبل الفجر":"Before Dawn",
  "بعد منتصف الليل":"After Midnight",
  "عشرة أنواع":"Ten Species",
- "ليل":"Night",
  "شروق":"Sunrise",
  "صباح":"Morning",
  "ظهر":"Noon",
  "عصر":"Afternoon",
- "غروب":"Sunset",
  "محاق":"New Moon",
  "هلال":"Waxing Crescent",
  "تربيع أول":"First Quarter",
@@ -1750,7 +1745,212 @@ const DICT = {
  "منطقة جازان":"Jazan Region",
  "منطقة نجران":"Najran Region",
  "منطقة الباحة":"Al Bahah Region",
- "منطقة الجوف":"Al Jouf Region"
+ "منطقة الجوف":"Al Jouf Region",
+
+ /* طريقة العدّ: عداد وقت / مؤقت + الاستراحة */
+ "طريقة العدّ":"Counting method",
+ "عداد وقت":"Stopwatch",
+ "مؤقت":"Timer",
+ "مدة التركيز":"Focus duration",
+ "أقل شي ٣٠ دقيقة — النبتة تكمل نموها بالضبط وقت ما يخلص المؤقت":"At least 30 minutes — the plant finishes growing exactly when the timer ends",
+ "مدة الاستراحة بعدها":"Break duration after it",
+ "٣٠ دقيقة":"30 minutes",
+ "٤٥ دقيقة":"45 minutes",
+ "ساعة":"1 hour",
+ "ساعة ونصف":"1.5 hours",
+ "ساعتين":"2 hours",
+ "بلا استراحة":"No break",
+ "١٠ دقائق":"10 minutes",
+ "١٥ دقيقة":"15 minutes",
+ "٢٠ دقيقة":"20 minutes",
+ "المؤقت على ":"Timer set to ",
+ "، وبعدها استراحة ":", then a break of ",
+ "، وبعدها بلا استراحة":", then no break",
+ "خلص وقت التركيز. ما عندك استراحة محدّدة — جاهز لجلسة جديدة.":"Focus time's up. You have no break set — ready for a new session.",
+ "وقت الاستراحة ☕":"Break time ☕",
+ "نبتتك محفوظة بأمان بالمزرعة. رجّع نشاطك بعد الاستراحة.":"Your plant is safely saved in the farm. Resume your activity after the break.",
+ "تخطّي الاستراحة":"Skip the break",
+ "خلصت الاستراحة. جاهز لجلسة جديدة؟":"Break's over. Ready for a new session?",
+ "تم تخطّي الاستراحة.":"Break skipped.",
+
+ /* إنجازات جديدة */
+ "مئتا نبتة":"200 Plants",
+ "اجمع 200 نبتة حيّة بحديقتك.":"Collect 200 living plants in your garden.",
+ "خمسمئة نبتة":"500 Plants",
+ "اجمع 500 نبتة حيّة بحديقتك.":"Collect 500 living plants in your garden.",
+ "خمس ساعات":"5 Hours",
+ "اجمع 5 ساعات تركيز من مجموع كل جلساتك الناجحة.":"Accumulate 5 hours of focus across all your successful sessions.",
+ "٧٥ بلا ذبول":"75 Without Wilting",
+ "أنهِ 75 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم.":"Complete 75 sessions in a row successfully, without a single plant wilting.",
+ "مئة بلا ذبول":"100 Without Wilting",
+ "أنهِ 100 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم.":"Complete 100 sessions in a row successfully, without a single plant wilting.",
+ "شهرين تتابع":"2-Month Streak",
+ "ركّز 60 يوم متتالية بدون ما تفوّت يوم.":"Focus for 60 days in a row without missing a day.",
+ "٢٠٠ يوم تتابع":"200-Day Streak",
+ "ركّز 200 يوم متتالية بدون ما تفوّت يوم.":"Focus for 200 days in a row without missing a day.",
+ "٢٠٠ يوم استخدام":"200 Days of Use",
+ "سجّل جلسة تركيز (نجحت أو ذبلت) في 200 يوم مختلف.":"Log a focus session (succeeded or wilted) on 200 different days.",
+ "٥٠٠ محاولة":"500 Tries",
+ "جرّب 500 جلسة تركيز، نجحت أو ذبلت.":"Try 500 focus sessions, whether they succeeded or wilted.",
+ "ألف محاولة":"1,000 Tries",
+ "جرّب 1000 جلسة تركيز، نجحت أو ذبلت.":"Try 1,000 focus sessions, whether they succeeded or wilted.",
+ "٥٠ جلسة جماعية":"50 Group Sessions",
+ "أكمل 50 جلسة جماعية ونبتتك حيّة بكل وحدة منها.":"Complete 50 group sessions with your plant alive in every one.",
+ "عشرين نوع":"20 Species",
+ "ازرع 20 نوع مختلف من النباتات بنجاح.":"Successfully grow 20 different plant species.",
+ "يوم مثمر":"Fruitful Day",
+ "أنهِ 5 جلسات تركيز ناجحة في نفس اليوم.":"Complete 5 successful focus sessions in the same day.",
+ "يوم استثنائي":"Exceptional Day",
+ "اجمع ":"Accumulate ",
+ " تركيز بيوم واحد.":" of focus in a single day.",
+ "عشر جلسات مؤقت":"Ten Timer Sessions",
+ "أكمل 10 جلسات بوضع المؤقت بنجاح.":"Complete 10 timer-mode sessions successfully.",
+
+ /* نباتات جديدة */
+ "قرنفل":"Carnation",
+ "ورق رمادي رفيع وزهرة مكرمشة الحواف.":"Slender gray leaves and a ruffle-edged flower.",
+ "زعفران":"Saffron",
+ "ورق كالعشب وزهرة بنفسجية بخيوط حمراء ثمينة.":"Grass-like leaves and a purple flower with precious red threads.",
+ "حنّاء":"Henna",
+ "ورق بيضاوي صغير وعناقيد زهر بيضاء عطرة.":"Small oval leaves and fragrant clusters of white flowers.",
+ "رمث":"Remth",
+ "شجيرة البادية شبه الورقية، تصمد بأقسى الجفاف.":"A near-leafless desert shrub that endures the harshest drought.",
+ "خروب":"Carob",
+ "ورق لمّاع داكن وقرون بنيّة حلوة المذاق.":"Glossy dark leaves and sweet brown pods.",
+ "توت":"Mulberry",
+ "ورق قلبي كثيف وحبّات توت داكنة تحلو بالصيف.":"Dense heart-shaped leaves and dark berries that sweeten in summer.",
+ "تنّوب أزرق":"Blue Spruce",
+ "إبَر فضّية مزرقّة تلمع وقت الشمس.":"Silvery-blue needles that shimmer in the sun.",
+
+ /* أماكن الزراعة اللي كانت ناقصة ترجمة */
+ "الغضا":"Al-Ghadha",
+ "عنيزة":"Unaizah",
+
+ /* الواحات (إنشاء/تعديل/حذف) */
+ "واحتي الأولى":"My First Oasis",
+ "واحة جديدة ":"New Oasis ",
+ "تعديل الواحة":"Edit Oasis",
+ "+ واحة جديدة":"+ New Oasis",
+ "واحة جديدة":"New Oasis",
+ "اسم الواحة":"Oasis Name",
+ "مثلاً: واحة الدراسة":"e.g. Study Oasis",
+ "التصنيف (اختياري)":"Category (optional)",
+ "إنشاء":"Create",
+ "حذف الواحة":"Delete Oasis",
+ "حذف هذي الواحة؟ نباتاتها بتنتقل تلقائياً لأول واحة.":"Delete this oasis? Its plants will automatically move to your first oasis.",
+ "كل نبتة حفظتها تطلع كبلاطة فوق جزيرة «":"Every plant you save becomes a tile on the island «",
+ "». ارجع لصفحة النبتة وابدأ العدّاد — أول نبتة تنزل هنا.":"». Go back to the Plant tab and start the timer — your first plant will land here.",
+ " · الواحة اكتملت (٤٩/٤٩)":" · Oasis complete (49/49)",
+
+ /* جلسات جماعية ناقصة */
+ "سلايد ":"Slide ",
+ "ما قدرنا نرسل الرسالة":"Couldn't send the message",
+ "وصل ":"Reached ",
+ "نبتتك بهالجلسة":"Your plant in this session",
+ "ذبول نبتتك لو طلعت من التطبيق":"Your plant wilting if you leave the app",
+ "الجلسة مفتوحة بلا مدة — تبدأ لما تمتلي (٨ أشخاص) أو لما تضغط ابدأ بنفسك. وكل واحد يحدد الذبول عنده بنفسه، وتقدر تغيّره أي وقت من داخل الجلسة.":"The session is open-ended — it starts when it's full (8 people) or when you press start yourself. Everyone sets their own wilting grace period, and you can change yours anytime from inside the session.",
+ "رجوع لنبتتك":"Back to your plant",
+ "استئناف ▶":"Resume ▶",
+ "إيقاف مؤقت ⏸":"Pause ⏸",
+ "لو غبت أطول من ":"If you're away for more than ",
+ "نبتتك محمية — ما تذبل حتى لو طلعت من التطبيق.":"Your plant is protected — it won't wilt even if you leave the app.",
+ "كل شي جاهز؟ ابدأ الجلسة، أو انتظرها تبدأ لحالها لما تمتلي (٨ أشخاص).":"Everything ready? Start the session, or wait for it to start on its own once it's full (8 people).",
+
+ /* المظهر وزر الإيقاف/الاستئناف بالجلسة الفردية */
+ "المظهر: تلقائي (يتبع جهازك) — اضغط للتبديل":"Appearance: Automatic (follows your device) — tap to switch",
+ "المظهر: داكن — اضغط للتبديل":"Appearance: Dark — tap to switch",
+ "المظهر: فاتح — اضغط للتبديل":"Appearance: Light — tap to switch",
+ "استئناف":"Resume",
+ "إيقاف":"Pause",
+
+ /* الحساب وكلمة السر والضيف */
+ "جارٍ الإرسال…":"Sending…",
+ "أرسلناه مرة ثانية.":"Sent again.",
+ "أرسلنا لك رابطاً على الإيميل. افتحه من نفس الجهاز.":"We emailed you a link. Open it on this device.",
+ "جارٍ التأكيد…":"Confirming…",
+ "تغيّرت كلمة السر ودخلناك.":"Password changed, and you're signed in.",
+ "ضيف":"Guest",
+ "جرّب براحتك. مزرعتك ما تنحفظ في وضع الضيف.":"Take your time. Your farm isn't saved in guest mode.",
+ "اسم المستخدم مطلوب.":"Username is required.",
+ "أنت داخل كضيف":"You're in as a guest",
+ "وضع تجربة. أول ما تقفل الصفحة يروح كل شي. سجّل حساب عشان تحفظ مزرعتك.":"Trial mode. Everything is lost as soon as you close the page. Create an account to save your farm.",
+ "أنشئ حساب واحفظ مزرعتي":"Create an account and save my farm",
+ "اخرج من وضع الضيف":"Leave guest mode",
+ "كلمة السر الحالية":"Current password",
+ "اكتب كلمة سرك الحالية":"Enter your current password",
+ "نسيتها؟":"Forgot it?",
+ "استرجاع كلمة السر":"Recover password",
+ "أرسل مرة ثانية":"Send again",
+ "اكتب كلمة السر الحالية.":"Enter your current password.",
+ "كلمة السر الحالية غلط.":"Current password is wrong.",
+ "انتهت صلاحية الرابط. اطلب واحداً جديداً.":"The link has expired. Request a new one.",
+
+ /* نصوص ثابتة بالصفحة الرئيسية وشاشات الدخول كانت ناقصة ترجمة */
+ "أو دخول كضيف":"Or continue as a guest",
+ "صنع بحب من حصاد الإنتاجية 🤍🍃":"Made with love by Hasad Productivity 🤍🍃",
+ "سجّل دخولك عشان تشوف تقدّمك":"Log in to see your progress",
+ "الأرقام تُحسب من جلساتك المحفوظة، ووضع الضيف ما يحفظ شي. أنشئ حساب وكل شي بيبان هنا.":"Your stats are calculated from your saved sessions, and guest mode doesn't save anything. Create an account and everything will show up here.",
+ "أنشئ حساب":"Create account",
+ "عندي حساب — سجّل دخول":"I have an account — log in",
+ "للتواصل:":"Contact:",
+ "الإيميل أو اسم المستخدم":"Email or username",
+ "نسيت كلمة السر؟":"Forgot your password?",
+ "كلمة السر الجديدة":"New password",
+ "جرّب كضيف":"Try as a guest",
+ "بدون حساب — التقدّم ما ينحفظ":"No account — progress isn't saved",
+ "الساعة — اضغط للتبديل بين ١٢ و٢٤ ساعة":"Clock — tap to switch between 12h and 24h",
+ "التاريخ — اضغط للتبديل بين الهجري والميلادي":"Date — tap to switch between Hijri and Gregorian",
+ "مكان الزراعة":"Planting location",
+ "تشغيل الفانوس":"Turn on the lantern",
+ "you@mail.com أو username":"you@mail.com or username",
+ "عرض كلمة السر":"Show password",
+
+ /* أسماء الجامعات السعودية — ما كانت متصلة بدالة الترجمة إطلاقاً بقائمة الاختيار */
+ "جامعة الملك سعود":"King Saud University",
+ "جامعة الإمام محمد بن سعود الإسلامية":"Imam Muhammad ibn Saud Islamic University",
+ "جامعة الأميرة نورة بنت عبدالرحمن":"Princess Nourah bint Abdulrahman University",
+ "جامعة الملك سعود بن عبدالعزيز للعلوم الصحية":"King Saud bin Abdulaziz University for Health Sciences",
+ "جامعة الأمير مساعد بن عبدالرحمن":"Prince Musaed bin Abdulrahman University",
+ "جامعة نايف العربية للعلوم الأمنية":"Naif Arab University for Security Sciences",
+ "جامعة الأمير سطام بن عبدالعزيز":"Prince Sattam bin Abdulaziz University",
+ "جامعة شقراء":"Shaqra University",
+ "جامعة المجمعة":"Majmaah University",
+ "جامعة الأمير سلطان":"Prince Sultan University",
+ "جامعة الفيصل":"Alfaisal University",
+ "جامعة اليمامة":"Yamamah University",
+ "جامعة رياض العلم":"Riyadh Al-Elm University",
+ "جامعة دار العلوم":"Dar Al Uloom University",
+ "الجامعة العربية المفتوحة":"Arab Open University",
+ "المؤسسة العامة للتدريب التقني والمهني":"Technical and Vocational Training Corporation",
+ "جامعة أم القرى":"Umm Al-Qura University",
+ "جامعة الملك عبدالعزيز":"King Abdulaziz University",
+ "جامعة الطائف":"Taif University",
+ "جامعة جدة":"University of Jeddah",
+ "جامعة الملك عبدالله للعلوم والتقنية":"King Abdullah University of Science and Technology",
+ "جامعة عفت":"Effat University",
+ "جامعة الأعمال والتكنولوجيا":"University of Business and Technology",
+ "جامعة دار الحكمة":"Dar Al-Hekma University",
+ "الجامعة الإسلامية بالمدينة المنورة":"Islamic University of Madinah",
+ "جامعة طيبة":"Taibah University",
+ "جامعة الأمير مقرن بن عبدالعزيز":"Prince Mugrin University",
+ "جامعة الملك فهد للبترول والمعادن":"King Fahd University of Petroleum and Minerals",
+ "جامعة الملك فيصل":"King Faisal University",
+ "جامعة الإمام عبدالرحمن بن فيصل":"Imam Abdulrahman Bin Faisal University",
+ "جامعة حفر الباطن":"University of Hafr Al-Batin",
+ "جامعة الأمير محمد بن فهد":"Prince Mohammad Bin Fahd University",
+ "جامعة الملك خالد":"King Khalid University",
+ "جامعة بيشة":"University of Bisha",
+ "جامعة القصيم":"Qassim University",
+ "جامعة المستقبل":"Al-Mustaqbal University",
+ "جامعة سليمان الراجحي":"Sulaiman Al Rajhi University",
+ "جامعة حائل":"University of Hail",
+ "جامعة تبوك":"University of Tabuk",
+ "جامعة فهد بن سلطان":"Fahad Bin Sultan University",
+ "جامعة الحدود الشمالية":"Northern Border University",
+ "جامعة جازان":"Jazan University",
+ "جامعة نجران":"Najran University",
+ "جامعة الباحة":"Al Baha University",
+ "جامعة الجوف":"Jouf University"
 };
 let LANG = "ar";
 try{ const v = localStorage.getItem("hasad.lang"); if(v==="en"||v==="ar") LANG=v; }catch(e){}
@@ -1805,6 +2005,7 @@ function setLang(l){
   try{ localStorage.setItem("hasad.lang", LANG); }catch(e){}
   try{ const h = document.documentElement; h.lang = LANG; h.dir = (LANG==="ar") ? "rtl" : "ltr"; }catch(e){}
   applyI18N();
+  refreshRegionUniSelects();
   const lb = $("#langBtn");
   if(lb) lb.textContent = (LANG==="ar") ? "EN" : "\u0639";
   if(typeof paintHeaderDate==="function") paintHeaderDate();
@@ -1813,7 +2014,7 @@ function setLang(l){
   document.title = TR("\u062d\u0635\u0627\u062f \u0627\u0644\u0625\u0646\u062a\u0627\u062c\u064a\u0629 \u00b7 \u0648\u0642\u062a\u0643 \u064a\u0635\u064a\u0631 \u0645\u0632\u0631\u0639\u0629");
   if(CURRENT && !onGateScreen()){
     renderAll();
-    paintClock(sess ? elapsedMin() : 0);
+    paintClock(sess ? sessGrowMins(elapsedMin()) : 0);
     if(sess) setRunTitle();
   }
 }
@@ -1914,6 +2115,22 @@ function milestone(mins){
   while(mins >= a*2) a *= 2;
   return { next:a*2, name:TR("الرتبة اللي بعدها"), prev:a };
 }
+/* دقائق "النمو" (مو دقائق التركيز الحقيقية) اللي توصل بالضبط لأعلى رتبة ثابتة
+   (شجرة أسطورية) بلا ما تزيد لرتبة "أسطورية +١" — تُستخدم لمزامنة وضع المؤقت
+   بحيث تصير النبتة شجرة مكتملة بالضبط وقت ما يخلص وقته، بدل منحنى النمو
+   الطبيعي البطيء. */
+const COMPLETE_GROW_MINS = TIERS[TIERS.length-1].at / GROWTH_SPEED;
+/* يرجّع دقائق النمو المناسبة للعرض: بوضع المؤقت تتناسب مع نسبة الوقت المنقضي
+   من هدف المؤقت (فتوصل "مكتملة" بالضبط عند الهدف)، وبعداد الوقت العادي
+   ترجع الدقائق الحقيقية بدون أي تغيير. */
+function sessGrowMins(realMins){
+  if(sess && sess.mode==="timer" && sess.targetMins>0)
+    return Math.min(1, realMins/sess.targetMins) * COMPLETE_GROW_MINS;
+  return realMins;
+}
+/* نفس الفكرة لنبتة محفوظة بالمزرعة: نستخدم p.growMinutes (محسوبة وقت الحفظ)
+   لو موجودة، وإلا نرجع لدقائقها الحقيقية (p.minutes) كالمعتاد. */
+function gMinsOf(p){ return (p && p.growMinutes!=null) ? p.growMinutes : (p?p.minutes:0); }
 
 /* ─── ٣. الأنواع: ٣٦ نوعاً، كلها مفتوحة ───────────────────────
    kind = شكل الطور الأول · mat = شكل ما بعد الشجرة
@@ -1967,6 +2184,14 @@ const SPECIES = {
     leaf:"#7C9456", leaf2:"#8FA868", stem:"#84985E", flower:"#E0C24A", core:"#8A6A28", pairs:6, lw:.20, ll:.78, th:.7, fl:.55 },
   esparto:{ n:"حلفا", fam:"herbflower", kind:"spike", mat:"clump", note:"عشب البادية الصلب، يعيش بأقل ماء.",
     leaf:"#A0A468", leaf2:"#B4B87C", stem:"#A8AC70", flower:"#C8BE7A", core:"#A89858" },
+  carnation:{ n:"قرنفل", fam:"herbflower", kind:"bell", mat:"clump", note:"ورق رمادي رفيع وزهرة مكرمشة الحواف.",
+    leaf:"#7A9B7E", leaf2:"#8FB092", stem:"#7E9B80", flower:"#D8486E", core:"#F0A8BC", pairs:3, lw:.20, ll:1.2, th:.85, fl:1.3 },
+  saffron:{ n:"زعفران", fam:"herbflower", kind:"bell", mat:"clump", note:"ورق كالعشب وزهرة بنفسجية بخيوط حمراء ثمينة.",
+    leaf:"#4C8A54", leaf2:"#5E9E66", stem:"#5A9460", flower:"#7B5AA8", core:"#C8402A", pairs:2, lw:.18, ll:1.1, th:.7, fl:.75 },
+  henna:{ n:"حنّاء", fam:"herbflower", kind:"herb", mat:"clump", note:"ورق بيضاوي صغير وعناقيد زهر بيضاء عطرة.",
+    leaf:"#4A8F52", leaf2:"#5EA564", stem:"#5C9060", flower:"#F0EAC8", core:"#D8CC8E", pairs:8, lw:.38, ll:.70, th:.85 },
+  remth:{ n:"رمث", fam:"herbflower", kind:"herb", mat:"clump", note:"شجيرة البادية شبه الورقية، تصمد بأقسى الجفاف.",
+    leaf:"#8CA074", leaf2:"#9FB386", stem:"#93A47C", flower:"#D4CC7A", core:"#A89A5C", pairs:4, lw:.14, ll:.52, th:.55, fl:.6 },
 
   /* ─ صبّار وصحراء ─ */
   cactus:{ n:"صبّار عمودي", fam:"desert", kind:"cactus", mat:"column", note:"ما يحتاج أحد، ويطلع أذرعه بالوقت.",
@@ -2017,6 +2242,10 @@ const SPECIES = {
     leaf:"#3C7A46", leaf2:"#4E8E56", stem:"#4A7A4C", flower:"#D8C858", core:"#E8DC8A", bark:"#6A5C42", fruit:true, pairs:6, lw:.44, ll:.98, th:1.1, fl:1.3 },
   guava:{ n:"جوافة", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"ورق عريض وريحة قوية بمجرد ما ينضج.",
     leaf:"#437A48", leaf2:"#568E5A", stem:"#4E7A50", flower:"#E8E0C8", core:"#D89A5A", bark:"#7A6850", fruit:true, pairs:5, lw:.60, ll:1.05, th:1.2, fl:1.35 },
+  carob:{ n:"خروب", fam:"fruit", kind:"fruit", mat:"tree", canopy:"spread", note:"ورق لمّاع داكن وقرون بنيّة حلوة المذاق.",
+    leaf:"#2F6B3E", leaf2:"#3F8250", stem:"#5A4A36", flower:"#4A2E1C", core:"#6E3F24", bark:"#6B5A42", fruit:true, pairs:8, lw:.30, ll:.85, th:1, fl:1 },
+  mulberry:{ n:"توت", fam:"fruit", kind:"fruit", mat:"tree", canopy:"round", note:"ورق قلبي كثيف وحبّات توت داكنة تحلو بالصيف.",
+    leaf:"#3E7A48", leaf2:"#509060", stem:"#4E7A50", flower:"#4A2458", core:"#2E1A3A", bark:"#6B5A42", fruit:true, pairs:6, lw:.56, ll:1, th:1.15, fl:1.3 },
 
   /* ─ أشجار كبيرة ─ */
   oak:{ n:"بلوط", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"جذع ضخم وتاج عريض.",
@@ -2038,12 +2267,13 @@ const SPECIES = {
   willow:{ n:"صفصاف", fam:"big", kind:"leafy", mat:"tree", canopy:"spread", note:"أغصانه تنسدل فوق الماء بهدوء.",
     leaf:"#5E8A5A", leaf2:"#74A06E", stem:"#6E6248", flower:"#9AA872", core:"#7E8C58", bark:"#6E6248", pairs:9, lw:.20, ll:1.3, th:.85 },
   sequoia:{ n:"سكويا", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"من أطول الأشجار، تعيش آلاف السنين.",
-    leaf:"#2A4E36", leaf2:"#385E44", stem:"#5A4834", flower:"#6B5438", core:"#4E3C24", bark:"#5A4834" }
+    leaf:"#2A4E36", leaf2:"#385E44", stem:"#5A4834", flower:"#6B5438", core:"#4E3C24", bark:"#5A4834" },
+  bluespruce:{ n:"تنّوب أزرق", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"إبَر فضّية مزرقّة تلمع وقت الشمس.",
+    leaf:"#4A6E82", leaf2:"#5E8698", stem:"#5A4A38", flower:"#6E5438", core:"#8A6A42", bark:"#5A4A38" }
 };
-/* أنواع مخفية من القوائم فقط — تعريفها باقي عشان النبتات المحفوظة قديماً تنرسم عادي */
-const HIDDEN_SPECIES = new Set(["thyme","sage","tulip","poppy","narcissus","hibiscus","dill","lily",
-  "strawberry","esparto","agave","goldenbarrel","yucca","royalpalm","areca","apple","orange","apricot",
-  "pear","guava","cedar","sakura","jacaranda","laurel","willow","sequoia"]);
+/* كانت فيه مجموعة أنواع مخفية من قائمة الاختيار (بس تعريفها موجود عشان النبتات
+   المحفوظة قديماً تنرسم عادي) — فتحناها كلها الحين، فالمجموعة صارت أكبر وأغنى. */
+const HIDDEN_SPECIES = new Set([]);
 const SP_ORDER = Object.keys(SPECIES).filter(k=>!HIDDEN_SPECIES.has(k));
 const GUEST_SEEDS = ["basil","cactus","palm","olive","oak"];  /* نوع واحد من كل فئة للضيف */
 const HUSK = "#8A6A4F";
@@ -4478,10 +4708,19 @@ function fillUniSelect(regionId, selector, selected){
   sel.disabled=false;
   const list=(UNIVERSITIES[regionId]||[]);
   sel.innerHTML = '<option value="">'+TR("اختر جامعتك")+'</option>'+
-    list.map(u=>'<option value="'+u.id+'"'+(u.id===selected?" selected":"")+'>'+u.n+'</option>').join("")+
+    list.map(u=>'<option value="'+u.id+'"'+(u.id===selected?" selected":"")+'>'+TR(u.n)+'</option>').join("")+
     '<option value="school"'+(selected==="school"?" selected":"")+'>'+TR("طالب مدرسة")+'</option>'+
     '<option value="employee"'+(selected==="employee"?" selected":"")+'>'+TR("موظف")+'</option>'+
     '<option value="not_student"'+(selected==="not_student"?" selected":"")+'>'+TR("لست طالب")+'</option>';
+}
+/* سلكتات المنطقة/الجامعة تتولّد بجافاسكربت ومو جزء من النصوص الساكنة اللي يلتقطها
+   collectI18N()، فلازم نعيد تعبئتها يدوياً عند تبديل اللغة عشان ما تضل عالقة بلغتها
+   الأولى. */
+function refreshRegionUniSelects(){
+  const sr=$("#sRegion"), su=$("#sUni");
+  if(sr){ const rv=sr.value, uv=su?su.value:""; fillRegionSelect("#sRegion", rv); fillUniSelect(rv, "#sUni", uv); }
+  const er=$("#eRegion"), eu=$("#eUni");
+  if(er){ const rv=er.value, uv=eu?eu.value:""; fillRegionSelect("#eRegion", rv); fillUniSelect(rv, "#eUni", uv); }
 }
 
 const CLOUD_KEY = "hasad.cloud";
@@ -4739,6 +4978,7 @@ function pinHash(pin, salt){
 }
 const DEFAULTS = {
   v:2, plants:[], ach:[], theme:null, strict:true, grace:10000,
+  timerMode:"count", timerMins:30, breakMins:5,
   seed:"basil", tag:"study", active:null,
   tags:[
     { id:"study",  n:"دراسة",  c:"#2F6B4F" },
@@ -4792,6 +5032,9 @@ function normalize(d){
   o.islands = o.islands.filter(x=>x && x.id && x.name);
   if(!o.islands.length) o.islands=JSON.parse(JSON.stringify(DEFAULTS.islands));   /* يحافظ على نباتات المستخدم القديمة — تنتسب تلقائياً لأول واحة */
   if(!o.activeIsland || !o.islands.some(x=>x.id===o.activeIsland)) o.activeIsland=o.islands[0].id;
+  if(o.timerMode!=="timer") o.timerMode="count";
+  if(!(Number.isFinite(o.timerMins) && o.timerMins>=30)) o.timerMins=30;
+  if(!(Number.isFinite(o.breakMins) && o.breakMins>=0)) o.breakMins=5;
   return o;
 }
 let DB = normalize(null);
@@ -4819,6 +5062,24 @@ const GRACES = [
   { ms:300000, n:"٥ دقائق" },
   { ms:Infinity, n:"بلا مهلة" }
 ];
+const TIMER_MODES = [
+  { v:"count", n:"عداد وقت" },
+  { v:"timer", n:"مؤقت" }
+];
+const TIMER_DURATIONS = [
+  { m:30,  n:"٣٠ دقيقة" },
+  { m:45,  n:"٤٥ دقيقة" },
+  { m:60,  n:"ساعة" },
+  { m:90,  n:"ساعة ونصف" },
+  { m:120, n:"ساعتين" }
+];
+const BREAK_DURATIONS = [
+  { m:0,  n:"بلا استراحة" },
+  { m:5,  n:"٥ دقائق" },
+  { m:10, n:"١٠ دقائق" },
+  { m:15, n:"١٥ دقيقة" },
+  { m:20, n:"٢٠ دقيقة" }
+];
 /* أحجام المزرعة حسب الرتبة */
 /* [عرض، ارتفاع، مرجع الحجم] — الشتلة نحيلة والشجرة عريضة فتتجاور بلا فراغ */
 const SIZES = [
@@ -4826,7 +5087,7 @@ const SIZES = [
   [92,106,0.98],[108,124,0.98],[124,142,0.98],[140,158,0.98],[156,174,0.98]
 ];
 
-let sess = null, anim = null, rafOn = false, hiddenAt = null;
+let sess = null, anim = null, rafOn = false, hiddenAt = null, brk = null;
 let heroW = 0, heroH = 0, lastDraw = 0, ghostAlpha = .30, drawCost = 6, STAGE_RC = 0, CUR_DOME = 0;
 
 const el = {
@@ -4834,6 +5095,7 @@ const el = {
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
   setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
   seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
+  modeChips:$("#modeChips"), durPanel:$("#durPanel"), durChips:$("#durChips"), breakChips:$("#breakChips"),
   toast:$("#toast"), toastTxt:$("#toastTxt"), toastIc:$("#toastIc"),
   sheet:$("#sheet"), sheetBg:$("#sheetBg"), sheetBody:$("#sheetBody"),
   garden:$("#gardenBody"), gardenSub:$("#gardenSub"), islandBar:$("#islandBar"),
@@ -4852,10 +5114,16 @@ const ACH = [
     d:"اجمع 50 نبتة حيّة بحديقتك." },
   { id:"hundredp", ic:"🌻", n:"مئة نبتة",      t:s=>s.alive>=100,
     d:"اجمع 100 نبتة حيّة بحديقتك." },
+  { id:"twohundredp", ic:"🪴", n:"مئتا نبتة",   t:s=>s.alive>=200,
+    d:"اجمع 200 نبتة حيّة بحديقتك." },
+  { id:"fivehundredp", ic:"🌵", n:"خمسمئة نبتة", t:s=>s.alive>=500,
+    d:"اجمع 500 نبتة حيّة بحديقتك." },
   { id:"thousandp", ic:"🌍", n:"ألف نبتة",     t:s=>s.alive>=1000,
     d:"اجمع 1000 نبتة حيّة بحديقتك." },
   { id:"hour",   ic:"⏳", n:"ساعة تركيز",      t:s=>s.minutes>=60,
     d:"اجمع ساعة تركيز كاملة من مجموع كل جلساتك الناجحة." },
+  { id:"fivehours", ic:"⌛", n:"خمس ساعات",    t:s=>s.minutes>=300,
+    d:"اجمع 5 ساعات تركيز من مجموع كل جلساتك الناجحة." },
   { id:"tenh",   ic:"🕰️", n:"عشر ساعات",      t:s=>s.minutes>=600,
     d:"اجمع 10 ساعات تركيز من مجموع كل جلساتك الناجحة." },
   { id:"cent",   ic:"🏔️", n:"مئة ساعة",       t:s=>s.minutes>=6000,
@@ -4880,8 +5148,12 @@ const ACH = [
     d:"ركّز 14 يوم متتالية بدون ما تفوّت يوم." },
   { id:"st30",   ic:"🌕", n:"شهر تتابع",       t:s=>s.bestStreak>=30,
     d:"ركّز 30 يوم متتالية بدون ما تفوّت يوم." },
+  { id:"st60",   ic:"🌔", n:"شهرين تتابع",     t:s=>s.bestStreak>=60,
+    d:"ركّز 60 يوم متتالية بدون ما تفوّت يوم." },
   { id:"st100",  ic:"🏆", n:"مئة يوم تتابع",   t:s=>s.bestStreak>=100,
     d:"ركّز 100 يوم متتالية بدون ما تفوّت يوم." },
+  { id:"st200",  ic:"🏵️", n:"٢٠٠ يوم تتابع",  t:s=>s.bestStreak>=200,
+    d:"ركّز 200 يوم متتالية بدون ما تفوّت يوم." },
   { id:"st365",  ic:"🎖️", n:"سنة تتابع",      t:s=>s.bestStreak>=365,
     d:"ركّز 365 يوم متتالية بدون ما تفوّت يوم." },
   { id:"clean",  ic:"🛡️", n:"١٠ بلا ذبول",    t:s=>s.cleanRun>=10,
@@ -4890,6 +5162,10 @@ const ACH = [
     d:"أنهِ 25 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم." },
   { id:"clean50", ic:"🥇", n:"٥٠ بلا ذبول",    t:s=>s.cleanRun>=50,
     d:"أنهِ 50 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم." },
+  { id:"clean75", ic:"🥉", n:"٧٥ بلا ذبول",    t:s=>s.cleanRun>=75,
+    d:"أنهِ 75 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم." },
+  { id:"clean100", ic:"🏅", n:"مئة بلا ذبول",  t:s=>s.cleanRun>=100,
+    d:"أنهِ 100 جلسة متتالية بنجاح، بدون ما تذبل ولا نبتة بينهم." },
   { id:"dawn",   ic:"🌄", n:"قبل الفجر",       t:s=>s.dawn,
     d:"ابدأ جلسة تركيز تنتهي بنجاح بين الساعة 4 و7 صباحاً." },
   { id:"owl",    ic:"🌙", n:"بعد منتصف الليل", t:s=>s.owl,
@@ -4900,40 +5176,59 @@ const ACH = [
     d:"أنهِ جلسات تركيز تغطي أيام الأسبوع السبعة كلها، ولو على فترات متفرقة." },
   { id:"kinds",  ic:"🧺", n:"عشرة أنواع",      t:s=>s.kinds>=10,
     d:"ازرع 10 أنواع مختلفة من النباتات بنجاح." },
+  { id:"manykinds", ic:"🧬", n:"عشرين نوع",    t:s=>s.kinds>=20,
+    d:"ازرع 20 نوع مختلف من النباتات بنجاح." },
   { id:"allspecies", ic:"🗺️", n:"مجموعة كاملة", t:s=>s.kinds>=SP_ORDER.length,
     d:"ازرع كل الأنواع المتاحة بنجاح ("+SP_ORDER.length+" نوع)، نوع نوع." },
   { id:"days30", ic:"📔", n:"شهر استخدام",     t:s=>s.daysUsed>=30,
     d:"سجّل جلسة تركيز (نجحت أو ذبلت) في 30 يوم مختلف." },
   { id:"days100", ic:"📚", n:"مئة يوم استخدام", t:s=>s.daysUsed>=100,
     d:"سجّل جلسة تركيز (نجحت أو ذبلت) في 100 يوم مختلف." },
+  { id:"days200", ic:"🗂️", n:"٢٠٠ يوم استخدام", t:s=>s.daysUsed>=200,
+    d:"سجّل جلسة تركيز (نجحت أو ذبلت) في 200 يوم مختلف." },
   { id:"days365", ic:"📜", n:"سنة استخدام",    t:s=>s.daysUsed>=365,
     d:"سجّل جلسة تركيز (نجحت أو ذبلت) في 365 يوم مختلف." },
   { id:"persist", ic:"💪", n:"مئة محاولة",     t:s=>s.total>=100,
     d:"جرّب 100 جلسة تركيز، نجحت أو ذبلت." },
+  { id:"persist500", ic:"🔥", n:"٥٠٠ محاولة",  t:s=>s.total>=500,
+    d:"جرّب 500 جلسة تركيز، نجحت أو ذبلت." },
+  { id:"persist1000", ic:"⚡", n:"ألف محاولة", t:s=>s.total>=1000,
+    d:"جرّب 1000 جلسة تركيز، نجحت أو ذبلت." },
   { id:"perfect", ic:"🎯", n:"معدّل مثالي",    t:s=>s.total>=20 && s.rate===100,
     d:"أنهِ 20 جلسة تركيز على الأقل بمعدّل نجاح 100% — بدون ولا نبتة ذابلة." },
   { id:"g1",     ic:"🤝", n:"أول جلسة جماعية",  t:s=>s.gDone>=1,
     d:"أكمل أول جلسة جماعية ونبتتك حيّة لين آخر الوقت." },
   { id:"g10",    ic:"👥", n:"عشر جلسات جماعية", t:s=>s.gDone>=10,
     d:"أكمل 10 جلسات جماعية ونبتتك حيّة بكل وحدة منها." },
+  { id:"g50",    ic:"🎪", n:"٥٠ جلسة جماعية",  t:s=>s.gDone>=50,
+    d:"أكمل 50 جلسة جماعية ونبتتك حيّة بكل وحدة منها." },
   { id:"ghost",  ic:"🧭", n:"قائد المجموعة",    t:s=>s.gHost>=1,
     d:"أنشئ جلسة جماعية بنفسك، وأكملها ونبتتك حيّة." },
   { id:"gclean", ic:"🌳", n:"ولا واحد ذبل",     t:s=>s.gClean>=1,
     d:"أكمل جلسة جماعية ما ذبلت فيها ولا نبتة من نباتات المشاركين." },
   { id:"gfull",  ic:"🎉", n:"فريق كامل",        t:s=>s.gFull>=1,
-    d:"أكمل جلسة جماعية فيها 8 أشخاص (العدد الكامل) ونبتتك حيّة." }
+    d:"أكمل جلسة جماعية فيها 8 أشخاص (العدد الكامل) ونبتتك حيّة." },
+  { id:"fruitful", ic:"📈", n:"يوم مثمر",       t:s=>s.maxDaySessions>=5,
+    d:"أنهِ 5 جلسات تركيز ناجحة في نفس اليوم." },
+  { id:"bestday", ic:"🌟", n:"يوم استثنائي",    t:s=>s.maxDayMinutes>=240,
+    d:()=>TR("اجمع ")+hhmm(240)+TR(" تركيز بيوم واحد.") },
+  { id:"timerfan", ic:"⏱️", n:"عشر جلسات مؤقت", t:s=>s.timerDone>=10,
+    d:"أكمل 10 جلسات بوضع المؤقت بنجاح." }
 ];
 
 function computeStats(){
   const ps = DB.plants, live = ps.filter(p=>p.survived);
   const minutes = live.reduce((a,p)=>a+p.minutes,0);
-  const byDay={}, byTag={}, byHour=new Array(24).fill(0), kinds={};
+  const byDay={}, byDaySessions={}, byTag={}, byHour=new Array(24).fill(0), kinds={};
   live.forEach(p=>{
     byDay[dayKey(p.endedAt)] = (byDay[dayKey(p.endedAt)]||0)+p.minutes;
+    byDaySessions[dayKey(p.endedAt)] = (byDaySessions[dayKey(p.endedAt)]||0)+1;
     byTag[p.tagId] = (byTag[p.tagId]||0)+p.minutes;
     byHour[new Date(p.startedAt).getHours()] += p.minutes;
     kinds[p.species]=1;
   });
+  const maxDayMinutes = Object.keys(byDay).length ? Math.max.apply(null, Object.values(byDay)) : 0;
+  const maxDaySessions = Object.keys(byDaySessions).length ? Math.max.apply(null, Object.values(byDaySessions)) : 0;
   const keys=Object.keys(byDay).sort();
   let bestStreak=0, run=0, prev=null;
   keys.forEach(k=>{
@@ -4969,7 +5264,9 @@ function computeStats(){
     gClean: live.filter(p=>p.group&&p.group.allAlive&&p.group.size>=2).length,
     gFull:  live.filter(p=>p.group&&p.group.size>=8).length,
     dawn: live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=4&&h<7;}),
-    owl:  live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=0&&h<4;})
+    owl:  live.some(p=>{const h=new Date(p.startedAt).getHours(); return h>=0&&h<4;}),
+    maxDaySessions, maxDayMinutes,
+    timerDone: live.filter(p=>p.mode==="timer").length
   };
 }
 
@@ -4993,14 +5290,14 @@ function pauseSession(){
   if(!sess || sess.paused) return;
   sess.paused=true; sess.pausedAt=Date.now();
   sess.hb=0; beat();                 /* احفظ حالة الإيقاف فوراً */
-  renderAll(); paintClock(elapsedMin());
+  renderAll(); paintClock(sessGrowMins(elapsedMin()));
 }
 function resumeSession(){
   if(!sess || !sess.paused) return;
   sess.startedAt += Date.now()-sess.pausedAt;   /* أزح البداية بقدر الاستراحة */
   sess.paused=false; sess.pausedAt=null;
   sess.hb=0; beat();
-  renderAll(); paintClock(elapsedMin()); lastDraw=0; startLoop();
+  renderAll(); paintClock(sessGrowMins(elapsedMin())); lastDraw=0; startLoop();
 }
 function sizeHero(){
   const box=$(".stage").clientWidth||340;
@@ -5125,9 +5422,9 @@ function drawHeroCore(){
     return;
   }
   if(sess){
-    const m=elapsedMin();
-    drawScene(ctx,Object.assign({},base,{ minutes:m, sway:swayNow }));   /* الريح ما تسكن أبداً */
-    heroMotes(ctx,tNow,species,m);
+    const gm=sessGrowMins(elapsedMin());
+    drawScene(ctx,Object.assign({},base,{ minutes:gm, sway:swayNow }));   /* الريح ما تسكن أبداً */
+    heroMotes(ctx,tNow,species,gm);
     return;
   }
   const over = { glow:false, noEnv:true, noGround:true, noClear:true };
@@ -5141,7 +5438,8 @@ function drawHeroCore(){
 
 function paintClock(mins){
   updateDayPart();
-  const secs = sess ? Math.floor((sessNow()-sess.startedAt)/1000) : 0;
+  let secs = sess ? Math.floor((sessNow()-sess.startedAt)/1000) : 0;
+  if(sess && sess.mode==="timer") secs = Math.max(0, Math.round(sess.targetMins*60) - secs);
   const h=Math.floor(secs/3600), m=Math.floor(secs%3600/60), s2=secs%60;
   const txt = h ? h+":"+fmt2(m)+":"+fmt2(s2) : fmt2(m)+":"+fmt2(s2);
   el.clock.textContent = txt;
@@ -5168,8 +5466,8 @@ function paintClock(mins){
 function loop(){
   if(!rafOn) return;
   if(sess){
-    const m=elapsedMin();
-    paintClock(m);
+    const m=elapsedMin(), gm=sessGrowMins(m);
+    paintClock(gm);
     const now=performance.now();
     /* الفجوة تتكيّف مع كلفة الرسمة: نبتة بسيطة تصل ١٢٠ إطار/ثانية، ومعقّدة تخفّ تلقائياً بلا تهنيج */
     const gap = reduceMotion ? 2000 : drawCost*1.05;
@@ -5182,7 +5480,8 @@ function loop(){
       const t0=performance.now(); drawHero();
       drawCost = drawCost*.82 + (performance.now()-t0)*.18;
     }
-    beat(); checkTier(m);
+    beat(); checkTier(gm, m);
+    if(sess && sess.mode==="timer" && !sess.timerDoneFlag && m>=sess.targetMins) finishTimerSession();
   } else if(anim){
     drawHero();
     if(performance.now()-anim.t0>anim.dur){ anim=null; rafOn=false; drawHero(); return; }
@@ -5211,13 +5510,14 @@ function beat(){
   writeStore();
   liveSync();
 }
-function checkTier(m){
+function checkTier(m, realM){
+  if(realM==null) realM=m;
   const t=tierOf(m);
   if(sess.tier==null){ sess.tier=t; return; }
   if(t>sess.tier){
     sess.tier=t;
     const nm=TR(tierName(m));
-    toast(TR("نبتتك صارت ")+nm+" · "+hhmm(m),"🌿");
+    toast(TR("نبتتك صارت ")+nm+" · "+hhmm(realM),"🌿");
     notify(TR("حصاد الإنتاجية"),TR((SPECIES[sess.seed]||SPECIES.basil).n)+TR(" صارت ")+nm+".");
     lastDraw=0;
   }
@@ -5230,14 +5530,19 @@ function setRunTitle(){
 function startSession(){
   if(sess) return;
   anim=null;
-  sess={ id:uid(), startedAt:Date.now(), seed:DB.seed, tagId:DB.tag, tier:0, hb:0, paused:false, pausedAt:null };
+  sess={ id:uid(), startedAt:Date.now(), seed:DB.seed, tagId:DB.tag, tier:0, hb:0, paused:false, pausedAt:null,
+          mode:DB.timerMode, targetMins:(DB.timerMode==="timer"?DB.timerMins:null), breakMins:(DB.timerMode==="timer"?DB.breakMins:null) };
   DB.active=sess; writeStore();
   el.setup.style.display="none"; el.run.style.display="";
   const sp=SPECIES[sess.seed], tg=DB.tags.find(t=>t.id===sess.tagId);
   setRunTitle();
-  el.runNote.textContent = DB.strict
+  const graceLine = DB.strict
     ? TR("خلّ الصفحة مفتوحة. إذا غبت أكثر من ") + TR(graceName()) + TR(" تذبل النبتة.")
     : TR("الوضع الصارم مقفل. اقعد براحتك، والنبتة تكبر ما دام العدّاد ماشي.");
+  const brkLine = sess.breakMins>0 ? (TR("، وبعدها استراحة ")+hhmm(sess.breakMins)) : TR("، وبعدها بلا استراحة");
+  el.runNote.textContent = sess.mode==="timer"
+    ? TR("المؤقت على ")+hhmm(sess.targetMins)+brkLine+TR(". ")+graceLine
+    : graceLine;
   if("Notification" in window && Notification.permission==="default") Notification.requestPermission().catch(()=>{});
   const pb=$("#pauseBtn");
   if(pb) pb.onclick=()=>{ if(sess.paused) resumeSession(); else pauseSession(); };
@@ -5272,13 +5577,15 @@ function ensureIslandRoom(){
 function keep(){
   if(!sess || sess.paused) return;
   const mins=Math.max(.2, elapsedMin());
+  const gMins=sessGrowMins(mins);  /* بوضع المؤقت: نسبة الوقت المنقضي من الهدف — تصل "مكتملة" بالضبط عند الهدف */
   ensureIslandRoom();
   const p={ id:sess.id, species:sess.seed, tagId:sess.tagId, minutes:Math.round(mins*10)/10,
-            startedAt:sess.startedAt, endedAt:Date.now(), survived:true, islandId:DB.activeIsland };
+            startedAt:sess.startedAt, endedAt:Date.now(), survived:true, islandId:DB.activeIsland,
+            mode:sess.mode||"count", growMinutes:gMins };
   DB.plants.push(p);
-  anim={ kind:"bloom", t0:performance.now(), dur:1300, seedStr:p.id, species:p.species, mins:p.minutes };
+  anim={ kind:"bloom", t0:performance.now(), dur:1300, seedStr:p.id, species:p.species, mins:gMins };
   endCommon(); writeStore(); startLoop();
-  toast(TR(SPECIES[p.species].n)+TR(" دخلت المزرعة · ")+TR(tierName(p.minutes))+" · "+hhmm(p.minutes),"✅");
+  toast(TR(SPECIES[p.species].n)+TR(" دخلت المزرعة · ")+TR(tierName(gMins))+" · "+hhmm(p.minutes),"✅");
   checkAch();
   if(CURRENT && CURRENT.cloud) pushNow(true);
 }
@@ -5287,11 +5594,58 @@ function wither(reason){
   const mins=Math.max(.2, elapsedMin());
   ensureIslandRoom();
   const p={ id:sess.id, species:sess.seed, tagId:sess.tagId, minutes:Math.round(mins*10)/10,
-            startedAt:sess.startedAt, endedAt:Date.now(), survived:false, islandId:DB.activeIsland };
+            startedAt:sess.startedAt, endedAt:Date.now(), survived:false, islandId:DB.activeIsland,
+            mode:sess.mode||"count" };
   DB.plants.push(p);
   anim={ kind:"wither", t0:performance.now(), dur:1100, seedStr:p.id, species:p.species, mins:p.minutes };
   endCommon(); writeStore(); startLoop();
   toast(TR("ذبلت ")+TR(SPECIES[p.species].n)+(reason?" — "+reason:"")+TR(". راحت ")+hhmm(mins)+".","🥀");
+}
+/* انتهاء وضع المؤقت تلقائياً: يحفظ النبتة بنفس مسار "احفظها بالمزرعة" ثم يفتح شاشة استراحة */
+function finishTimerSession(){
+  if(!sess || sess.mode!=="timer" || sess.timerDoneFlag) return;
+  sess.timerDoneFlag = true;
+  const brkMins = sess.breakMins;
+  keep();
+  startBreak(brkMins);
+}
+function startBreak(mins){
+  clearInterval(brk && brk.timer);
+  if(!mins || mins<=0){
+    toast(TR("خلص وقت التركيز. ما عندك استراحة محدّدة — جاهز لجلسة جديدة."),"🎉");
+    return;
+  }
+  brk = { endsAt: Date.now() + mins*60000, timer:null };
+  renderBreakSheet();
+  brk.timer = setInterval(()=>{
+    if(!brk) return;
+    const left = brk.endsAt - Date.now();
+    if(left<=0){ endBreak(true); return; }
+    updateBreakClock(left);
+  }, 1000);
+}
+function updateBreakClock(leftMs){
+  const secs=Math.max(0,Math.round(leftMs/1000));
+  const m=Math.floor(secs/60), s=secs%60;
+  const c=$("#brkClock"); if(c) c.textContent=fmt2(m)+":"+fmt2(s);
+}
+function renderBreakSheet(){
+  el.sheetBody.innerHTML =
+    '<h3 style="margin:0 0 3px">'+TR("وقت الاستراحة ☕")+'</h3>'+
+    '<p class="gsub" style="margin:0 0 14px">'+TR("نبتتك محفوظة بأمان بالمزرعة. رجّع نشاطك بعد الاستراحة.")+'</p>'+
+    '<div class="clock" id="brkClock" style="text-align:center;margin:10px 0">00:00</div>'+
+    '<div class="row-actions" style="margin-top:10px">'+
+      '<button class="btn btn-quiet" id="brkSkip">'+TR("تخطّي الاستراحة")+'</button>'+
+    '</div>';
+  const skipBtn=$("#brkSkip"); if(skipBtn) skipBtn.onclick=()=>endBreak(false);
+  el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
+  updateBreakClock(brk.endsAt-Date.now());
+}
+function endBreak(natural){
+  if(!brk) return;
+  clearInterval(brk.timer); brk=null;
+  closeSheet();
+  toast(natural?TR("خلصت الاستراحة. جاهز لجلسة جديدة؟"):TR("تم تخطّي الاستراحة."), natural?"⏰":"⏭️");
 }
 function graceName(){ const g=GRACES.find(x=>x.ms===DB.grace); return g?g.n:TR("١٠ ثوانٍ"); }
 
@@ -5408,6 +5762,32 @@ function renderSetup(){
     DB.tag=id; writeStore(); renderSetup();
   };
   el.tagChips.appendChild(add);
+
+  el.modeChips.innerHTML="";
+  TIMER_MODES.forEach(m=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.textContent=TR(m.n);
+    b.setAttribute("aria-pressed", DB.timerMode===m.v);
+    b.onclick=()=>{ DB.timerMode=m.v; writeStore(); renderSetup(); };
+    el.modeChips.appendChild(b);
+  });
+  el.durPanel.hidden = DB.timerMode!=="timer";
+  el.durChips.innerHTML="";
+  TIMER_DURATIONS.forEach(d=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.textContent=TR(d.n);
+    b.setAttribute("aria-pressed", DB.timerMins===d.m);
+    b.onclick=()=>{ DB.timerMins=d.m; writeStore(); renderSetup(); };
+    el.durChips.appendChild(b);
+  });
+  el.breakChips.innerHTML="";
+  BREAK_DURATIONS.forEach(d=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.textContent=TR(d.n);
+    b.setAttribute("aria-pressed", DB.breakMins===d.m);
+    b.onclick=()=>{ DB.breakMins=d.m; writeStore(); renderSetup(); };
+    el.breakChips.appendChild(b);
+  });
 
   el.graceChips.innerHTML="";
   GRACES.forEach(g=>{
@@ -5817,7 +6197,7 @@ function renderIsoFarm(ps, islandId){
     const tl=fillOrder[i]; if(!tl) return;
     const ctr=isoPt(tl.c+.5,tl.r+.5,tw,th);
     const fx=ctr.x+originX, fy=ctr.y+originY+th*.30;    /* نقطة ملامسة الأرض */
-    const sz=SIZES[clamp(tierOf(p.minutes),0,SIZES.length-1)];
+    const sz=SIZES[clamp(tierOf(gMinsOf(p)),0,SIZES.length-1)];
     let sw=sz[0]*spScale, sh=sz[1]*spScale;
     if(sw>maxSpW){ const k=maxSpW/sw; sw*=k; sh*=k; }
     sw=Math.round(sw); sh=Math.round(sh);
@@ -5840,7 +6220,7 @@ function renderIsoFarm(ps, islandId){
     btn.setAttribute("aria-label",SPECIES[p.species].n+" · "+hhmm(p.minutes)+(p.survived?"":TR(" (ذبلت)")));
     const spCv=document.createElement("canvas");
     btn.appendChild(spCv); slots.appendChild(btn);
-    paint(spCv,sw,sh,{ species:p.species, minutes:p.minutes, withered:!p.survived,
+    paint(spCv,sw,sh,{ species:p.species, minutes:gMinsOf(p), withered:!p.survived,
       seedStr:p.id, glow:false, ground:false, sizeRef:sh*sz[2] });
     btn.onclick=()=>openPlant(p);
   });
@@ -5865,7 +6245,7 @@ function renderIslandBar(){
     const cat = isl.category ? DB.tags.find(t=>t.id===isl.category) : null;
     const wrapEl=document.createElement("div"); wrapEl.className="island-chip"+(active?" has-edit":"");
     const b=document.createElement("button");
-    b.type="button"; b.className="chip"+(cat?" tag":""); b.textContent=isl.name;
+    b.type="button"; b.className="chip"+(cat?" tag":""); b.textContent=TR(isl.name);
     if(cat) b.style.setProperty("--tagc",cat.c);
     b.setAttribute("aria-pressed", active);
     b.onclick=()=>{ if(DB.activeIsland===isl.id) return; DB.activeIsland=isl.id; writeStore(); renderGarden(); };
@@ -5947,23 +6327,23 @@ function renderGarden(){
   const activeIsl = DB.islands.find(x=>x.id===DB.activeIsland) || DB.islands[0];
   const ps = DB.plants.filter(p=>plantIsland(p)===activeIsl.id).sort((a,b)=>a.endedAt-b.endedAt);
   if(!ps.length){
-    el.gardenSub.textContent=TR("كل نبتة حفظتها تطلع كبلاطة فوق جزيرة «")+activeIsl.name+TR("». ارجع لصفحة النبتة وابدأ العدّاد — أول نبتة تنزل هنا.");
+    el.gardenSub.textContent=TR("كل نبتة حفظتها تطلع كبلاطة فوق جزيرة «")+TR(activeIsl.name)+TR("». ارجع لصفحة النبتة وابدأ العدّاد — أول نبتة تنزل هنا.");
     renderIsoFarm([], activeIsl.id);
     return;
   }
   const live=ps.filter(p=>p.survived);
   const mins=live.reduce((a,p)=>a+p.minutes,0);
-  const biggest=ps.reduce((a,p)=>Math.max(a,p.minutes),0);
+  const biggest=ps.reduce((a,p)=>Math.max(a,gMinsOf(p)),0);
   el.gardenSub.textContent = live.length+TR(" نبتة حيّة · ")+(ps.length-live.length)+TR(" ذبلت · ")+
     hhmm(mins)+TR(" · أكبر وحدة: ")+TR(tierName(biggest))+
     (ps.length>=49?TR(" · الواحة اكتملت (٤٩/٤٩)"):" · "+ps.length+"/49");
   renderIsoFarm(ps, activeIsl.id);
 }
 function openPlant(p){
-  const sp=SPECIES[p.species], tg=DB.tags.find(t=>t.id===p.tagId), { M }=grow(p.minutes);
+  const sp=SPECIES[p.species], tg=DB.tags.find(t=>t.id===p.tagId), gm=gMinsOf(p), { M }=grow(gm);
   el.sheetBody.innerHTML=
     '<h3>'+TR(sp.n)+(p.survived?"":TR(" (ذبلت)"))+'</h3>'+
-    '<p class="meta">'+TR(tierName(p.minutes))+(M>1.001?TR(" · قوة النمو ×")+M.toFixed(2):"")+'</p>'+
+    '<p class="meta">'+TR(tierName(gm))+(M>1.001?TR(" · قوة النمو ×")+M.toFixed(2):"")+'</p>'+
     '<div id="sheetCv" style="display:grid;place-items:center;margin-top:12px"></div>'+
     '<div class="kv">'+
       TR('<div><span>الوقت</span><b>')+hhmm(p.minutes)+'</b></div>'+
@@ -5975,11 +6355,14 @@ function openPlant(p){
     '</div>';
   const cv=document.createElement("canvas");
   $("#sheetCv").appendChild(cv);
-  paint(cv,210,230,{ species:p.species, minutes:p.minutes, withered:!p.survived,
+  paint(cv,210,230,{ species:p.species, minutes:gm, withered:!p.survived,
     seedStr:p.id, glow:true });
   el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
 }
-function closeSheet(){ el.sheetBg.classList.remove("on"); el.sheet.classList.remove("on"); }
+function closeSheet(){
+  el.sheetBg.classList.remove("on"); el.sheet.classList.remove("on");
+  if(brk){ clearInterval(brk.timer); brk=null; }
+}
 el.sheetBg.onclick=closeSheet;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
 
