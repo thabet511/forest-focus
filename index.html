@@ -275,11 +275,19 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .iso-stage{position:relative;margin:0 auto}
 .iso-land{display:block}
 .iso-slots{position:absolute;inset:0;pointer-events:none}
-.iso-slot{position:absolute;border:0;padding:0;margin:0;line-height:0;background:transparent;
-  cursor:pointer;pointer-events:auto;transform:translate(-50%,-100%);
-  transition:transform .16s,filter .16s;filter:drop-shadow(0 3px 4px rgba(10,20,10,.32))}
-.iso-slot:hover,.iso-slot:focus-visible{transform:translate(-50%,-100%) translateY(-4px)}
-.iso-slot canvas{display:block;pointer-events:none}
+/* الرسم: صندوق يحمل كانڤاس النبتة فوق قاعدتها (نص خانتها بالضبط) ويطلع للأعلى — ما يستقبل ضغط */
+.iso-vis{position:absolute;transform:translate(-50%,-100%);transition:transform .16s,filter .16s;
+  filter:drop-shadow(0 3px 4px rgba(10,20,10,.32));pointer-events:none;line-height:0}
+.iso-vis.hover{transform:translate(-50%,-100%) translateY(-4px)}
+.iso-vis canvas{display:block;pointer-events:none}
+/* زر الضغط: مربّع صغير بحجم الخانة ومقصوص بشكل المعين (clip-path) فيصير الضغط يمشي
+   بس داخل حدود المربع الهندسية للخانة — ما تتصيّد ضغطة جارتها بالخطأ، وما تلتقط
+   ضغطات على المسافة الفاضية حوالين النبتة (اللي كان الزر الكبير قبل كذا يلتقطها) */
+.iso-tap{position:absolute;border:0;padding:0;margin:0;background:transparent;cursor:pointer;
+  pointer-events:auto;transform:translate(-50%,-50%);
+  clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  -webkit-tap-highlight-color:transparent}
+.iso-tap:focus-visible{outline:2px solid var(--viridian);outline-offset:-2px}
 .empty-note{text-align:center;padding:34px 20px;color:var(--ink-2);border:1px dashed var(--line);border-radius:var(--r-m);margin-top:14px;background:var(--paper)}
 .empty-note b{display:block;font-family:var(--kufi);font-size:16px;color:var(--ink);margin-bottom:5px}
 
@@ -6055,14 +6063,35 @@ function rtlFillOrder(cols,rows){
 }
 
 /* سما الجزيرة: نفس محرّك الوقت الحقيقي (skyAt) المستخدم بباقي المشهد، بس بلا أفق ولا
-   تضاريس — الجزيرة طايفة بالفضاء مو واقفة على سهل. */
-function paintIsoSky(ctx,W,H,hr){
+   تضاريس — الجزيرة طايفة بالفضاء مو واقفة على سهل.
+   moonTopY (اختياري): الحد الأدنى من y لمنطقة السما الصافية (يوازي أعلى الجزيرة)؛
+   يستخدم لتحديد الحد السفلي لمنطقة القرص (الشمس/القمر) عشان ما ينزل تحتها ويلامس
+   الأرض. لو ما تم تمريره، نستخدم نسبة من H كاحتياط. */
+function paintIsoSky(ctx,W,H,hr,moonTopY){
   const K=skyAt(hr), nightF=clamp(K.stars,0,1);
   const sky=ctx.createLinearGradient(0,0,0,H);
   sky.addColorStop(0,K.sky[0]); sky.addColorStop(.55,K.sky[1]); sky.addColorStop(1,K.sky[2]);
   ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
 
-  const sx=W*.74, sy=H*.20, dR=Math.min(W,H)*.072;
+  const dR=Math.min(W,H)*.072;
+  /* موقع القرص (شمس/قمر): يستخدم الحسابات الفلكية الحقيقية حسب موقع المستخدم
+     (azimuth → x، altitude → y) إن توفّرت. وإلا، يرجع للموقع الاحتياطي الثابت.
+     - sunX2 ∈ [~.12, ~.88]: الشرق يمين، الغرب يسار (azToX).
+     - elev2 ∈ [-.14, 1]: صفر = الأفق، واحد = السمت (فوق الرأس).
+     منطقة السما الصافية: من ٠ (قمة الشاشة) حتى moonTopY (قمة الجزيرة). */
+  const skyBottom = (moonTopY!=null && moonTopY>0) ? moonTopY : H*.30;
+  const pad = dR*1.3;         /* نترك فراغ حول القرص عشان ما يلتصق بالحواف */
+  let sx, sy;
+  if(K.sunX2!=null && K.elev2!=null){
+    sx = clamp(K.sunX2, .08, .92) * W;
+    /* y = (1-elev) * (skyBottom - pad) + pad*.3 : elev=1 → قريب للقمة، elev=0 → قريب للأفق */
+    const elev = clamp(K.elev2, 0, 1);
+    sy = pad*.3 + (1-elev) * (skyBottom - pad*1.3);
+  } else {
+    sx = W*.74; sy = H*.20;
+  }
+  sx = clamp(sx, pad, W-pad);
+  sy = clamp(sy, pad, skyBottom-pad*.6);
   if(nightF>.03){                                    /* نجوم بتوزيع أهدأ وأقل ازدحاماً حول القمر */
     const srnd=mulberry(hashStr("isofarm-stars"));
     for(let i=0;i<24;i++){
@@ -6283,7 +6312,15 @@ function renderIsoFarm(ps, islandId){
   const cv=document.createElement("canvas"); cv.className="iso-land";
   stage.appendChild(cv);
   const ctx=fitCanvas(cv,W,H);
-  const sunPos=paintIsoSky(ctx,W,H,hourOf());
+  /* نمرّر null بدل الساعة المحلية البحتة عشان skyAt() يستخدم solarState/moonState
+     المبنية على إحداثيات موقع المستخدم الفعلية (siteLatLon من المكان المختار،
+     أو موقع GPS محفوظ، أو ولو ما شيء منهم فمن إحداثيات timezone-based تلقائياً).
+     هذا يحل مشكلة: الساعة ٢:٥٠ ص والسما تطلع "فجر"/"غروب" ملوّن دافئ (ميل بين
+     مفاتيح SKY_KEYS الزمنية الثابتة) — بدل كذا، الفلك الحقيقي يحدد: الشمس تحت
+     الأفق فعلياً → القمر الحقيقي بموقعه الفعلي بالسما.
+     moonTopY = padTop (أعلى حد لسطح الجزيرة): يحدد منطقة السما الصافية فوق الجزيرة،
+     عشان القرص (قمر/شمس) ينطبع بالمكان الفلكي الصحيح داخل هالمنطقة ما يطلع تحتها. */
+  const sunPos=paintIsoSky(ctx,W,H,null,padTop);
   const rnd=mulberry(hashStr("isofarm-"+(islandId||"x")));     /* بذرة لكل واحة — تضاريس ثابتة ومختلفة بين الواحات */
   paintIsoIsland(ctx,cols,rows,tw,th,originX,originY,skirtH,rnd,sunPos.sx,sunPos.sy);
 
@@ -6317,16 +6354,31 @@ function renderIsoFarm(ps, islandId){
     ctx.beginPath(); ctx.ellipse(fx,fy+th*.09,mr*.92,th*.16,0,0,TAU); ctx.fill();
     ctx.restore();
 
-    const btn=document.createElement("button");
-    btn.className="iso-slot"; btn.type="button";
-    btn.style.left=fx+"px"; btn.style.top=fy+"px";
-    btn.style.zIndex=String(1000+tl.depth*100+tl.c);
-    btn.setAttribute("aria-label",SPECIES[p.species].n+" · "+hhmm(p.minutes)+(p.survived?"":TR(" (ذبلت)")));
+    /* فصلنا الرسم عن الضغط عشان الضغط يصير دقيق على الخانة فعلياً مو على
+       مستطيل الكانڤاس (اللي كان يمتد لعرض/ارتفاع كامل النبتة فيلتقط ضغطات
+       بالمسافات الفاضية حوالينها، أو يتداخل مع جيرانها): */
+    const vis=document.createElement("div"); vis.className="iso-vis";
+    vis.style.left=fx+"px"; vis.style.top=fy+"px";
+    vis.style.zIndex=String(1000+tl.depth*100+tl.c);
     const spCv=document.createElement("canvas");
-    btn.appendChild(spCv); slots.appendChild(btn);
+    vis.appendChild(spCv); slots.appendChild(vis);
     paint(spCv,sw,sh,{ species:p.species, minutes:gMinsOf(p), withered:!p.survived,
       seedStr:p.id, glow:false, ground:false, sizeRef:sh*sz[2] });
+
+    const btn=document.createElement("button");
+    btn.className="iso-tap"; btn.type="button";
+    btn.style.left=(ctr.x+originX)+"px"; btn.style.top=(ctr.y+originY)+"px";
+    btn.style.width=Math.round(tw)+"px"; btn.style.height=Math.round(th)+"px";
+    /* زر الضغط فوق كل الرسوم (z-index أعلى) عشان يستقبل الضغطة أول — وهو مقصوص
+       بشكل معين فيوصل الضغط بس من داخل حدود الخانة، لا تطفح لجاراتها */
+    btn.style.zIndex=String(5000+tl.depth*100+tl.c);
+    btn.setAttribute("aria-label",SPECIES[p.species].n+" · "+hhmm(p.minutes)+(p.survived?"":TR(" (ذبلت)")));
     btn.onclick=()=>openPlant(p);
+    btn.onmouseenter=()=>vis.classList.add("hover");
+    btn.onmouseleave=()=>vis.classList.remove("hover");
+    btn.addEventListener("focus",()=>vis.classList.add("hover"));
+    btn.addEventListener("blur",()=>vis.classList.remove("hover"));
+    slots.appendChild(btn);
   });
 
   /* أول مرة تفتح: تتمركز على وسط الجزيرة وتثبت. بعدها، أي إعادة رسم تحافظ على
@@ -6863,10 +6915,14 @@ function gUpdateChatDot(){
   const dot=$("#gChatDot"); if(!dot) return;
   dot.hidden = !G.chatUnread;
 }
-/* ─── الودجت العائم: يظهر طول ما انت داخل غرفة (منتظر أو شغّال) ─── */
+/* ─── الودجت العائم: يظهر بس بتبويب "الجلسات الجماعية" وأنت داخل غرفة. طلب
+   صريح من المستخدم: ما يبيه يظهر فوق باقي الصفحات (المزرعة، النبتة، الخ)
+   حتى لو هو داخل غرفة بالفعل — المحادثة سياقها الجماعة بس. */
 function gSyncChatFab(){
   const fab=$("#gChatFab"); if(!fab) return;
-  fab.hidden = !G.code;
+  const curV=document.querySelector(".view.on");
+  const inGroupTab = !!(curV && curV.id==="view-group");
+  fab.hidden = !G.code || !inGroupTab;
 }
 function gOpenChatPanel(open){
   const panel=$("#gChatPanel"); if(!panel) return;
@@ -7269,6 +7325,7 @@ function goCore(name){
   if(name==="seeds")  renderGallery();
   if(name==="uni")    renderUniBoard();
   if(name==="group")  renderGroup();
+  gSyncChatFab();     /* الشات العائم يظهر بتبويب الجماعية بس — نحدّثه مع كل تبديل تبويب */
   if(name==="home")   window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"});
   if(name==="plant"){ setTimeout(sizeHero,20); window.scrollTo({top:0,behavior:reduceMotion?"auto":"smooth"}); }
   /* ترتيب الجامعات يتحدّث تلقائياً كل ٣٠ ثانية ما دام المستخدم بصفحته، ويتوقف لما يطلع منها */
