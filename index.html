@@ -270,9 +270,11 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 
 /* ── المزرعة: جزيرة آيزومترية طايفة ───────────────────── */
 .isofarm{position:relative;margin-top:10px;border:1px solid var(--line);border-radius:var(--r-m);
-  overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow-1);background:#0B1322;
-  -webkit-overflow-scrolling:touch;scrollbar-width:thin}
-.iso-stage{position:relative;margin:0 auto}
+  overflow:hidden;box-shadow:var(--shadow-1);background:#0B1322;
+  cursor:grab;user-select:none;-webkit-user-select:none;
+  touch-action:pan-y pinch-zoom}   /* نسمح بالتمرير العمودي للصفحة ونحنا نتحكم بالأفقي */
+.isofarm.panning{cursor:grabbing}
+.iso-stage{position:relative;margin:0 auto;will-change:transform}
 .iso-land{display:block}
 .iso-slots{position:absolute;inset:0;pointer-events:none}
 /* الرسم: صندوق يحمل كانڤاس النبتة فوق قاعدتها (نص خانتها بالضبط) ويطلع للأعلى — ما يستقبل ضغط */
@@ -284,7 +286,7 @@ html[lang="en"] .disp{letter-spacing:-.01em}
    بس داخل حدود المربع الهندسية للخانة — ما تتصيّد ضغطة جارتها بالخطأ، وما تلتقط
    ضغطات على المسافة الفاضية حوالين النبتة (اللي كان الزر الكبير قبل كذا يلتقطها) */
 .iso-tap{position:absolute;border:0;padding:0;margin:0;background:transparent;cursor:pointer;
-  pointer-events:auto;transform:translate(-50%,-50%);
+  pointer-events:auto;transform:translate(-50%,-50%);touch-action:auto;
   clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   -webkit-tap-highlight-color:transparent}
 .iso-tap:focus-visible{outline:2px solid var(--viridian);outline-offset:-2px}
@@ -6275,16 +6277,24 @@ function paintIsoIsland(ctx,cols,rows,tw,th,originX,originY,skirtH,rnd,sunX,sunY
    (الأقدم بالخلف، الأحدث بالواجهة)، والضغط عليها يفتح تفاصيلها الحقيقية.
    الجزيرة أكبر من عرض الشاشة غالباً فتتفرّج عليها بالتمرير الأفقي، وتبدأ
    ممركزة تلقائياً على وسطها (أكثر جزء مزروع). */
+/* نحفظ موضع التمرير الأفقي للمزرعة هنا عشان يبقى ثابتاً عبر إعادة الرسم —
+   بدل scrollLeft (اللي ما نستخدمه بعد) نحفظ panX المحسوب من JS مباشرة */
+let _isoFarmPanX = null;   /* null = أول مرة تفتح → نتوسّط، بعدها نحافظ على الموضع */
+
 function renderIsoFarm(ps, islandId){
-  /* نحافظ على موضع التمرير اللي كان عليه المستخدم عبر أي إعادة رسم لاحقة
-     (تغيير حجم الشاشة، تبديل المظهر، رجوع المتصفح من إخفاء شريط العنوان...) —
-     وإلا تحس إن المزرعة "ترجع تتحرك" وحدها كل ما صار أي تحديث بسيط */
-  const prevWrap = el.garden.querySelector(".isofarm");
+  /* prevFrac من panX المحفوظ بدل scrollLeft (اللي ما عاد موجود بعد التحول لـtransform) */
   let prevFrac = null;
-  if(prevWrap){
-    const dir0 = getComputedStyle(prevWrap).direction==="rtl" ? -1 : 1;
-    const maxPrev = prevWrap.scrollWidth - prevWrap.clientWidth;
-    if(maxPrev > 1) prevFrac = clamp((prevWrap.scrollLeft*dir0)/maxPrev, 0, 1);
+  if(_isoFarmPanX !== null){
+    /* نحسب الـ fraction من الـ panX المحفوظ — نحتاج maxScroll بس ما عندنا بعد،
+       نحسبه مؤقتاً من العرض الحالي */
+    const prevWrap = el.garden.querySelector(".isofarm");
+    if(prevWrap){
+      const prevStage = prevWrap.querySelector(".iso-stage");
+      if(prevStage){
+        const prevMax = Math.max(0, prevStage.offsetWidth - prevWrap.clientWidth);
+        if(prevMax > 1) prevFrac = clamp(-_isoFarmPanX / prevMax, 0, 1);
+      }
+    }
   }
   el.garden.innerHTML="";
   const wrap=document.createElement("div"); wrap.className="isofarm";
@@ -6388,7 +6398,75 @@ function renderIsoFarm(ps, islandId){
      تلقائياً ويبقى العرض عالق بالحافة. */
   const maxScroll = Math.max(0, W-availW);
   const frac = prevFrac==null ? .5 : prevFrac;
-  wrap.scrollLeft = (getComputedStyle(wrap).direction==="rtl" ? -1 : 1) * (frac*maxScroll);
+  /* نحسب offsetX من prevFrac — نستخدمها في المنطق الجديد للـ pan */
+  let _panX = -(frac * maxScroll);    /* سالب = تحريك المحتوى يسار (نظرة المستخدم تتحرك يمين) */
+
+  /* ── تطبيق موضع التمرير على الـ stage باستخدام transform بدل scrollLeft
+     عشان يكون أسرع وأسلس (GPU layer) وما يحتاج overflow ──────────── */
+  function _applyPan(){
+    _panX = clamp(_panX, -maxScroll, 0);
+    stage.style.transform = "translateX("+_panX+"px)";
+    _isoFarmPanX = _panX;   /* نحفظ الموضع عشان يبقى عبر إعادة الرسم */
+  }
+  _applyPan();
+
+  /* ── Pan بالإصبع أو الماوس مع Momentum/Inertia ───────────────────── */
+  let _startX=0, _lastX=0, _velX=0, _rafId=0, _isPanning=false, _hasDragged=false;
+  const _VEL_ALPHA=0.78;     /* تنعيم السرعة (moving average) */
+  const _FRICTION=0.88;      /* تباطؤ Momentum بعد رفع الإصبع */
+  const _DRAG_THRESH=6;      /* بكسل قبل ما نعتبره تحريك لا ضغطة */
+
+  function _cancelMomentum(){ cancelAnimationFrame(_rafId); _rafId=0; }
+
+  function _momentum(){
+    _velX *= _FRICTION;
+    _panX += _velX;
+    _applyPan();
+    /* نوقف لو وصلنا الحافة أو السرعة راحت */
+    const atEdge = (_panX+maxScroll <= 0 && _velX < 0) || (_panX >= 0 && _velX > 0);
+    if(atEdge){ _velX=0; return; }
+    if(Math.abs(_velX)>0.4) _rafId=requestAnimationFrame(_momentum);
+  }
+
+  wrap.addEventListener("pointerdown", e=>{
+    if(maxScroll<=0) return;                  /* لو الجزيرة تكفي بالعرض، ما نحتاج تحريك */
+    _cancelMomentum();
+    _startX=e.clientX; _lastX=e.clientX; _velX=0; _isPanning=true; _hasDragged=false;
+    wrap.setPointerCapture(e.pointerId);
+    wrap.classList.add("panning");
+    /* نوقف أحداث الأزرار بس لو فعلاً سار التحريك */
+  }, {passive:true});
+
+  wrap.addEventListener("pointermove", e=>{
+    if(!_isPanning) return;
+    const dx = e.clientX - _lastX;
+    const totalDx = e.clientX - _startX;
+    if(!_hasDragged && Math.abs(totalDx)<_DRAG_THRESH) return;   /* لسا ما تحرك كفاية */
+    _hasDragged=true;
+    _velX = _velX*_VEL_ALPHA + dx*(1-_VEL_ALPHA);                 /* moving average للسرعة */
+    _panX += dx;
+    _lastX = e.clientX;
+    _applyPan();
+    /* نمنع الـ buttons من تفعيل onclick لو كان في حركة */
+    e.stopPropagation();
+  }, {passive:true});
+
+  function _endPan(e){
+    if(!_isPanning) return;
+    _isPanning=false;
+    wrap.classList.remove("panning");
+    if(_hasDragged && Math.abs(_velX)>1){
+      /* نبدأ momentum بالسرعة الأخيرة */
+      _rafId=requestAnimationFrame(_momentum);
+    }
+  }
+  wrap.addEventListener("pointerup",   _endPan, {passive:true});
+  wrap.addEventListener("pointercancel",_endPan, {passive:true});
+
+  /* لو المستخدم سحب، نمنع onclick للأزرار عشان ما تنفتح نبتة بالغلط */
+  wrap.addEventListener("click", e=>{
+    if(_hasDragged){ e.stopPropagation(); e.preventDefault(); _hasDragged=false; }
+  }, true);
 }
 
 /* شريط الواحات فوق الجزيرة: تبديل بينها، تعديل اسم/تصنيف الحالية، وإنشاء وحدة جديدة.
