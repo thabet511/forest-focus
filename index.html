@@ -6277,25 +6277,12 @@ function paintIsoIsland(ctx,cols,rows,tw,th,originX,originY,skirtH,rnd,sunX,sunY
    (الأقدم بالخلف، الأحدث بالواجهة)، والضغط عليها يفتح تفاصيلها الحقيقية.
    الجزيرة أكبر من عرض الشاشة غالباً فتتفرّج عليها بالتمرير الأفقي، وتبدأ
    ممركزة تلقائياً على وسطها (أكثر جزء مزروع). */
-/* نحفظ موضع التمرير الأفقي للمزرعة هنا عشان يبقى ثابتاً عبر إعادة الرسم —
-   بدل scrollLeft (اللي ما نستخدمه بعد) نحفظ panX المحسوب من JS مباشرة */
-let _isoFarmPanX = null;   /* null = أول مرة تفتح → نتوسّط، بعدها نحافظ على الموضع */
+/* نحفظ موضع التمرير الأفقي للمزرعة كـ fraction (0..1) عشان يبقى صحيحاً
+   حتى لو تغيّر عرض الشاشة أو أُعيد رسم الجزيرة بأبعاد مختلفة */
+let _isoFarmFrac = null;   /* null = أول مرة تفتح → نتوسّط */
 
 function renderIsoFarm(ps, islandId){
-  /* prevFrac من panX المحفوظ بدل scrollLeft (اللي ما عاد موجود بعد التحول لـtransform) */
-  let prevFrac = null;
-  if(_isoFarmPanX !== null){
-    /* نحسب الـ fraction من الـ panX المحفوظ — نحتاج maxScroll بس ما عندنا بعد،
-       نحسبه مؤقتاً من العرض الحالي */
-    const prevWrap = el.garden.querySelector(".isofarm");
-    if(prevWrap){
-      const prevStage = prevWrap.querySelector(".iso-stage");
-      if(prevStage){
-        const prevMax = Math.max(0, prevStage.offsetWidth - prevWrap.clientWidth);
-        if(prevMax > 1) prevFrac = clamp(-_isoFarmPanX / prevMax, 0, 1);
-      }
-    }
-  }
+  const prevFrac = _isoFarmFrac;   /* نحافظ على الـ fraction المحفوظ */
   el.garden.innerHTML="";
   const wrap=document.createElement("div"); wrap.className="isofarm";
   el.garden.appendChild(wrap);
@@ -6406,7 +6393,8 @@ function renderIsoFarm(ps, islandId){
   function _applyPan(){
     _panX = clamp(_panX, -maxScroll, 0);
     stage.style.transform = "translateX("+_panX+"px)";
-    _isoFarmPanX = _panX;   /* نحفظ الموضع عشان يبقى عبر إعادة الرسم */
+    /* نحفظ الـ fraction (0..1) عشان يبقى صحيحاً حتى لو تغيّرت الأبعاد */
+    if(maxScroll > 0) _isoFarmFrac = clamp(-_panX / maxScroll, 0, 1);
   }
   _applyPan();
 
@@ -6429,43 +6417,45 @@ function renderIsoFarm(ps, islandId){
   }
 
   wrap.addEventListener("pointerdown", e=>{
-    if(maxScroll<=0) return;                  /* لو الجزيرة تكفي بالعرض، ما نحتاج تحريك */
+    if(maxScroll<=0) return;
     _cancelMomentum();
     _startX=e.clientX; _lastX=e.clientX; _velX=0; _isPanning=true; _hasDragged=false;
-    wrap.setPointerCapture(e.pointerId);
-    wrap.classList.add("panning");
-    /* نوقف أحداث الأزرار بس لو فعلاً سار التحريك */
+    /* لا نسرق الـ pointer هنا — نأجّله لـ pointermove عشان الأزرار تشتغل */
   }, {passive:true});
 
   wrap.addEventListener("pointermove", e=>{
     if(!_isPanning) return;
     const dx = e.clientX - _lastX;
     const totalDx = e.clientX - _startX;
-    if(!_hasDragged && Math.abs(totalDx)<_DRAG_THRESH) return;   /* لسا ما تحرك كفاية */
-    _hasDragged=true;
-    _velX = _velX*_VEL_ALPHA + dx*(1-_VEL_ALPHA);                 /* moving average للسرعة */
+    if(!_hasDragged){
+      if(Math.abs(totalDx) < _DRAG_THRESH) return;   /* لسا ما تحرك كفاية */
+      /* الآن متأكدين إنه سحب — نقفل الـ pointer عشان ما يضيع لو طلع من حدود wrap */
+      try{ wrap.setPointerCapture(e.pointerId); }catch(_){}
+      wrap.classList.add("panning");
+      _hasDragged=true;
+    }
+    _velX = _velX*_VEL_ALPHA + dx*(1-_VEL_ALPHA);
     _panX += dx;
     _lastX = e.clientX;
     _applyPan();
-    /* نمنع الـ buttons من تفعيل onclick لو كان في حركة */
-    e.stopPropagation();
   }, {passive:true});
 
-  function _endPan(e){
+  function _endPan(){
     if(!_isPanning) return;
     _isPanning=false;
     wrap.classList.remove("panning");
-    if(_hasDragged && Math.abs(_velX)>1){
-      /* نبدأ momentum بالسرعة الأخيرة */
+    if(_hasDragged && Math.abs(_velX) > 1){
       _rafId=requestAnimationFrame(_momentum);
     }
+    /* نصفّر الـ flag بعد فترة قصيرة — يكفي لمنع click الخاطئ بعد السحب */
+    if(_hasDragged) setTimeout(()=>{ _hasDragged=false; }, 120);
   }
-  wrap.addEventListener("pointerup",   _endPan, {passive:true});
+  wrap.addEventListener("pointerup",    _endPan, {passive:true});
   wrap.addEventListener("pointercancel",_endPan, {passive:true});
 
-  /* لو المستخدم سحب، نمنع onclick للأزرار عشان ما تنفتح نبتة بالغلط */
+  /* نمنع click يوصل للأزرار لو كان المستخدم يسحب */
   wrap.addEventListener("click", e=>{
-    if(_hasDragged){ e.stopPropagation(); e.preventDefault(); _hasDragged=false; }
+    if(_hasDragged){ e.stopPropagation(); e.preventDefault(); }
   }, true);
 }
 
