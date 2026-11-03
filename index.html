@@ -1096,6 +1096,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
       <p class="g-note">ملاحظة: إذا كنت غير طالب بجامعة أو مدرسة، اختر (موظف) أو (لست طالب).</p>
       <button class="btn btn-primary" id="cUpBtn" style="width:100%">إنشاء الحساب</button>
       <p class="gswap">عندك حساب؟ <button type="button" id="goLogin">سجّل دخول</button></p>
+      <p style="text-align:center;margin:10px 0 0;font-size:12px;color:var(--ink-3)">بإنشاء حساب توافق على <button type="button" id="signupPrivacy" style="color:var(--viridian);font-size:12px;font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer;padding:0">سياسة الخصوصية</button></p>
     </div>
 
     <div class="gguest">
@@ -7701,6 +7702,7 @@ async function doSignup(){
 }
 $("#cInBtn").onclick = doLogin;
 $("#cUpBtn").onclick = doSignup;
+if($("#signupPrivacy")) $("#signupPrivacy").onclick = openPrivacyPolicy;
 $("#cEmail").onkeydown = e=>{ if(e.key==="Enter") $("#cPass").focus(); };
 $("#cPass").onkeydown  = e=>{ if(e.key==="Enter") doLogin(); };
 $("#sName").onkeydown  = e=>{ if(e.key==="Enter") $("#sUser").focus(); };
@@ -7739,12 +7741,14 @@ function openAccountSheet(){
       TR('<button class="btn btn-quiet" id="acSwitch">تبديل الحساب</button>')+
       TR('<button class="btn btn-danger" id="acOut">تسجيل خروج</button>')+
       TR('<button class="btn btn-danger" id="acDel">احذف هذا الحساب نهائياً</button>')+
+      '<button class="btn btn-quiet" id="acPrivacy" style="font-size:12px;opacity:.7">سياسة الخصوصية</button>'+
     '</div>';
   if($("#acPin")) $("#acPin").onclick=changePin;
   $("#acSwitch").onclick=()=>leaveAccount(false);
   $("#acOut").onclick=()=>leaveAccount(true);
   $("#acDel").onclick=deleteAccount;
   $("#acEdit").onclick=openAccountEdit;
+  $("#acPrivacy").onclick=openPrivacyPolicy;
   el.sheetBg.classList.add("on"); el.sheet.classList.add("on");
 }
 async function refreshMyUsername(){
@@ -8159,15 +8163,27 @@ function changePin(){
   ACC.users[i]=CURRENT; writeAcc(); closeSheet();
   toast(np?TR("تغيّر الرمز السري."):TR("شلت الرمز السري."),"🔑");
 }
-function deleteAccount(){
+async function deleteAccount(){
   if(busyGuard()) return;
   if(CURRENT.cloud){
-    if(!confirm(TR("هذا يمسح نسخة هذا الجهاز فقط. المزرعة تبقى على السحابة وترجع لك أول ما تسجّل دخول. أكمل؟"))) return;
-    try{ localStorage.removeItem(userKey(CURRENT.id)); }catch(e){}
+    /* حساب سحابي: نحذف كل البيانات من الخادم عبر الدالة الآمنة */
+    if(!confirm(TR("هذا يمسح حسابك وكل بياناتك من الخادم نهائياً ولا يمكن التراجع. تأكيد؟"))) return;
+    if(!confirm(TR("آخر تأكيد: كل المزارع والجلسات والأصدقاء ستُحذف إلى الأبد."))) return;
+    try{
+      await ensureToken();
+      /* استدعاء دالة delete_my_account() من Supabase */
+      await api("/rest/v1/rpc/delete_my_account", { method:"POST", body:{} }, true);
+      toast(TR("تم حذف حسابك نهائياً."),"🗑️");
+    } catch(e){
+      toast(TR("فشل حذف الحساب: ")+e.message,"⚠️");
+      return;
+    }
+    try{ localStorage.removeItem(userKey(CURRENT.id)); }catch(e2){}
     TOK=null; writeTok(null); ACC.stay=null; ACC.last=null; writeAcc(); closeSheet();
     CURRENT=null; DB=normalize(null); $("#userInitial").textContent="·"; setSync("off");
     showGate(); return;
   }
+  /* حساب محلي */
   if(!confirm(TR("هذا يمسح حساب ")+CURRENT.name+TR(" وكل مزرعته نهائياً. أكمل؟"))) return;
   if(!confirm(TR("آخر تأكيد: ما فيه رجعة."))) return;
   try{ localStorage.removeItem(userKey(CURRENT.id)); }catch(e){}
@@ -8178,6 +8194,36 @@ function deleteAccount(){
   CURRENT=null; DB=normalize(null); $("#userInitial").textContent="·";
   showGate();
 }
+function openPrivacyPolicy(){
+  closeSheet();
+  const overlay=document.createElement("div");
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+  const box=document.createElement("div");
+  box.style.cssText="background:var(--paper);border-radius:var(--r-m);max-width:540px;width:100%;max-height:82vh;overflow-y:auto;padding:24px;position:relative;font-size:14px;line-height:1.75;color:var(--ink-2)";
+  const isAr = (document.documentElement.lang||"ar").startsWith("ar");
+  box.innerHTML=`
+    <button onclick="this.closest('[style*=fixed]').remove()" style="position:absolute;top:12px;inset-inline-end:14px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-3)">✕</button>
+    <h2 style="font-family:var(--kufi);font-size:18px;font-weight:700;color:var(--ink);margin:0 0 16px">${isAr?"سياسة الخصوصية — حصاد الإنتاجية":"Privacy Policy — Hasad Productivity"}</h2>
+    <p><strong>${isAr?"آخر تحديث:":"Last updated:"}</strong> ${new Date().toLocaleDateString(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"})}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"ما الذي نجمعه؟":"What We Collect"}</h3>
+    <p>${isAr?"نجمع فقط البيانات الضرورية لتشغيل التطبيق: عنوان البريد الإلكتروني (للحسابات السحابية)، الاسم وتفاصيل الجامعة إذا اخترت إضافتها، وبيانات الجلسات والمزارع.":"We collect only what is needed to run the app: email address (cloud accounts), display name and university details if you choose to add them, and session/farm data."}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"كيف نستخدم بياناتك؟":"How We Use Your Data"}</h3>
+    <p>${isAr?"بياناتك تُستخدم حصراً لتقديم خدمة التطبيق: حفظ مزرعتك، عرض إحصائياتك، والجلسات الجماعية. لا نبيع بياناتك ولا نشاركها مع أي طرف ثالث.":"Your data is used exclusively to provide the app service: saving your farm, showing your stats, and group sessions. We never sell or share your data with third parties."}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"التخزين والأمان":"Storage & Security"}</h3>
+    <p>${isAr?"البيانات السحابية مخزّنة على Supabase مع تفعيل حماية Row-Level Security، أي كل مستخدم لا يصل إلا لبياناته. الحسابات المحلية تبقى على جهازك فقط.":"Cloud data is stored on Supabase with Row-Level Security enabled — each user can only access their own data. Local accounts stay on your device only."}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"حقك في حذف بياناتك":"Your Right to Deletion"}</h3>
+    <p>${isAr?"يمكنك حذف حسابك وجميع بياناتك بشكل نهائي في أي وقت من إعدادات الحساب. الحذف فوري وغير قابل للتراجع.":"You can permanently delete your account and all associated data at any time from account settings. Deletion is immediate and irreversible."}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"ملفات تعريف الارتباط":"Cookies"}</h3>
+    <p>${isAr?"نستخدم localStorage لحفظ إعداداتك محلياً فقط. لا نستخدم ملفات تتبع أو تحليلات خارجية.":"We use localStorage for local settings only. No tracking cookies or external analytics."}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"التواصل":"Contact"}</h3>
+    <p>${isAr?"لأي استفسار حول بياناتك، تواصل معنا عبر:":"For any questions about your data, contact us via:"} <a href="mailto:privacy@hasad-productivity.com" style="color:var(--viridian)">privacy@hasad-productivity.com</a></p>
+    <button onclick="this.closest('[style*=fixed]').remove()" style="margin-top:20px;width:100%" class="btn btn-primary">${isAr?"حسناً":"Got it"}</button>
+  `;
+  overlay.appendChild(box);
+  overlay.addEventListener("click",e=>{ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 function exportBackup(){
   const payload={ app:"hasad", v:2, account:CURRENT?CURRENT.name:"", at:Date.now(), data:DB };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
