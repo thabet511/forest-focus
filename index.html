@@ -272,9 +272,11 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .isofarm{position:relative;margin-top:10px;border:1px solid var(--line);border-radius:var(--r-m);
   overflow:hidden;box-shadow:var(--shadow-1);background:#0B1322;
   cursor:grab;user-select:none;-webkit-user-select:none;
-  touch-action:pan-y pinch-zoom}   /* نسمح بالتمرير العمودي للصفحة ونحنا نتحكم بالأفقي */
+  touch-action:pan-y pinch-zoom;
+  display:flex;justify-content:center}   /* توسيط المزرعة لما ما تحتاج تمرير */
+.isofarm.scrollable{justify-content:flex-start}  /* لما المزرعة أكبر من الحاوية نشيل التوسيط */
 .isofarm.panning{cursor:grabbing}
-.iso-stage{position:relative;margin:0 auto;will-change:transform}
+.iso-stage{position:relative;flex:none;will-change:transform}
 .iso-land{display:block}
 .iso-slots{position:absolute;inset:0;pointer-events:none}
 /* الرسم: صندوق يحمل كانڤاس النبتة فوق قاعدتها (نص خانتها بالضبط) ويطلع للأعلى — ما يستقبل ضغط */
@@ -6384,6 +6386,8 @@ function renderIsoFarm(ps, islandId){
      (الصفر عند الحافة اليمنى) — لازم نعكس الإشارة وإلا القيمة الموجبة تنقص لصفر
      تلقائياً ويبقى العرض عالق بالحافة. */
   const maxScroll = Math.max(0, W-availW);
+  /* إذا المزرعة أكبر من الحاوية، نفعّل class التمرير (يشيل flex center ويخلي العرض يبدأ من اليسار) */
+  if(maxScroll > 0) wrap.classList.add("scrollable");
   const frac = prevFrac==null ? .5 : prevFrac;
   /* نحسب offsetX من prevFrac — نستخدمها في المنطق الجديد للـ pan */
   let _panX = -(frac * maxScroll);    /* سالب = تحريك المحتوى يسار (نظرة المستخدم تتحرك يمين) */
