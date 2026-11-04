@@ -273,17 +273,22 @@ html[lang="en"] .disp{letter-spacing:-.01em}
   overflow:hidden;box-shadow:var(--shadow-1);background:#0B1322;
   cursor:grab;user-select:none;-webkit-user-select:none;
   touch-action:pan-y pinch-zoom;
-  display:flex;justify-content:center}   /* توسيط المزرعة لما ما تحتاج تمرير */
-.isofarm.scrollable{justify-content:flex-start}  /* لما المزرعة أكبر من الحاوية نشيل التوسيط */
+  direction:ltr}   /* اتجاه ثابت داخل المزرعة: بالـRTL كان المسرح الأعرض من الحاوية ينلصق باليمين
+                      ويطفح لليسار، فيطلع منزاح ومقصوص مهما كان موضع التمرير */
 .isofarm.panning{cursor:grabbing}
-.iso-stage{position:relative;flex:none;will-change:transform}
+.iso-stage{position:relative;margin:0;will-change:transform}
 .iso-land{display:block}
 .iso-slots{position:absolute;inset:0;pointer-events:none}
 /* الرسم: صندوق يحمل كانڤاس النبتة فوق قاعدتها (نص خانتها بالضبط) ويطلع للأعلى — ما يستقبل ضغط */
-.iso-vis{position:absolute;transform:translate(-50%,-100%);transition:transform .16s,filter .16s;
-  filter:drop-shadow(0 3px 4px rgba(10,20,10,.32));pointer-events:none;line-height:0}
+/* بلا drop-shadow عام: الظل الحقيقي ينرسم على الأرض نفسها باتجاه الشمس (paintPlantShadow) */
+.iso-vis{position:absolute;transform:translate(-50%,-100%);transition:transform .16s;pointer-events:none;line-height:0}
 .iso-vis.hover{transform:translate(-50%,-100%) translateY(-4px)}
-.iso-vis canvas{display:block;pointer-events:none}
+.iso-vis canvas{display:block;pointer-events:none;transform-origin:50% 96.5%}
+/* تمايل مع الهوا: ميلان خفيف من الساق (أصل التحويل عند قاعدة النبتة) — سعته من نوع النبتة والرياح */
+.iso-vis.sway canvas{animation:isoSway var(--sd,4s) ease-in-out var(--sdl,0s) infinite alternate}
+@keyframes isoSway{from{transform:skewX(calc(var(--sa,1) * -1deg))}to{transform:skewX(calc(var(--sa,1) * 1deg))}}
+@media (prefers-reduced-motion: reduce){.iso-vis.sway canvas{animation:none}}
+.iso-atm{position:absolute;left:0;top:0;z-index:4000;pointer-events:none}
 /* زر الضغط: مربّع صغير بحجم الخانة ومقصوص بشكل المعين (clip-path) فيصير الضغط يمشي
    بس داخل حدود المربع الهندسية للخانة — ما تتصيّد ضغطة جارتها بالخطأ، وما تلتقط
    ضغطات على المسافة الفاضية حوالين النبتة (اللي كان الزر الكبير قبل كذا يلتقطها) */
@@ -1689,6 +1694,12 @@ const DICT = {
  "صار المشهد على موقعك بالضبط.":"The scene now uses your exact location.",
  "ما قدرنا نحدد موقعك. نكمّل على منطقتك الزمنية.":"Couldn't get your location. Using your time zone.",
  "جبال طويق":"Tuwaiq Mountains", "الرياض":"Riyadh",
+ "اسم المستخدم أو كلمة السر غلط.":"Wrong username or password.",
+ "محاولات خاطئة كثيرة. انتظر ربع ساعة وجرّب.":"Too many wrong attempts. Wait 15 minutes and try again.",
+ "حافة العالم":"Edge of the World", "الدرعية":"Diriyah",
+ "رجال ألمع":"Rijal Almaa", "غابة رغدان":"Raghadan Forest", "الباحة":"Al-Baha",
+ "الحِجر":"Hegra", "وادي الديسة":"Wadi Disah", "نيوم":"NEOM", "خليج العقبة":"Gulf of Aqaba",
+ "دومة الجندل":"Dumat Al-Jandal", "الجوف":"Al-Jouf", "جبال أجا":"Aja Mountains", "جزر فرسان":"Farasan Islands",
  "اسم المستخدم":"Username",
  "بيانات شخصية":"Personal info",
  "حفظ":"Save",
@@ -2328,9 +2339,20 @@ const SPECIES = {
   bluespruce:{ n:"تنّوب أزرق", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"إبَر فضّية مزرقّة تلمع وقت الشمس.",
     leaf:"#4A6E82", leaf2:"#5E8698", stem:"#5A4A38", flower:"#6E5438", core:"#8A6A42", bark:"#5A4A38" }
 };
-/* كانت فيه مجموعة أنواع مخفية من قائمة الاختيار (بس تعريفها موجود عشان النبتات
-   المحفوظة قديماً تنرسم عادي) — فتحناها كلها الحين، فالمجموعة صارت أكبر وأغنى. */
-const HIDDEN_SPECIES = new Set([]);
+/* أنواع مخفية من قائمة الاختيار — تعريفها باقي عشان النبتات المحفوظة قديماً تنرسم عادي.
+   أخفينا المكرر بصرياً (نفس الشكل بلون مختلف) وغير المعروف محلياً، وأبقينا الأشهر:
+   - أعشاب متشابهة: إكليل الجبل، مريمية، شبت، حنّاء، رمث
+   - زهور جرسية متشابهة/غير مألوفة: خشخاش، نرجس، قرنفل، زعفران · وحلفا (نسخة من القمح)
+   - صبّار وردي متشابه: أغاف، يوكا · نخيل متكرر: ملكية، أريكا
+   - مثمرة بنفس التاج المدوّر: تفاح، برتقال، مشمش، كمثرى، جوافة، خروب، توت
+   - أشجار غير محلية/مكررة: أرز، غار، صفصاف، سكويا، تنّوب أزرق */
+const HIDDEN_SPECIES = new Set([
+  "rosemary","sage","dill","henna","remth",
+  "poppy","narcissus","carnation","saffron","esparto",
+  "agave","yucca","royalpalm","areca",
+  "apple","orange","apricot","pear","guava","carob","mulberry",
+  "cedar","laurel","willow","sequoia","bluespruce"
+]);
 const SP_ORDER = Object.keys(SPECIES).filter(k=>!HIDDEN_SPECIES.has(k));
 const GUEST_SEEDS = ["basil","cactus","palm","olive","oak"];  /* نوع واحد من كل فئة للضيف */
 const HUSK = "#8A6A4F";
@@ -2486,16 +2508,26 @@ const PLACES = [
     hill:["#C9A876","#AD8759","#8E6C47"], soil:"#B38E60", trees:"#5B6B3E" },
   { id:"soudah",    n:"السودة",        sub:"عسير",     ll:[18.27,42.36], terr:"mount",   clim:"sw",    fog:.55,
     hill:["#7C9479","#56744F","#3B5A37"], soil:"#6A5A45", trees:"#1C3A20" },
+  { id:"rijal",     n:"رجال ألمع",     sub:"عسير",     ll:[18.21,42.27], terr:"mount",   clim:"sw",    fog:.30,
+    hill:["#7B8A70","#58694E","#3F523A"], soil:"#6C5C48", trees:"#24421F", terraces:true },
   { id:"hada",      n:"الهدا",         sub:"الطائف",   ll:[21.37,40.29], terr:"mount",   clim:"sw",    fog:.25,
     hill:["#94937D","#737C60","#58664A"], soil:"#7C6650", trees:"#3A4A2A" },
+  { id:"raghadan",  n:"غابة رغدان",    sub:"الباحة",   ll:[20.02,41.45], terr:"mount",   clim:"sw",    fog:.45,
+    hill:["#6E8B66","#4B6D44","#33542F"], soil:"#62523E", trees:"#1A3A1E" },
   { id:"thuwairat", n:"الثويرات",      sub:"الزلفي",   ll:[26.30,44.80], terr:"dune",    clim:"najd",
     hill:["#DDA673","#CB8651","#B96E3D"], soil:"#C98A55" },
   { id:"rubkhali",  n:"الربع الخالي",  sub:"صحراء الربع الخالي", ll:[20.00,50.00], terr:"bigdune", clim:"empty",
     hill:["#EDCB93","#E0B271","#D09B57"], soil:"#DEB27C" },
   { id:"alula",     n:"العلا",         sub:"المدينة المنورة", ll:[26.61,37.92], terr:"mesa", clim:"dry",
     hill:["#CC9A6E","#B27E55","#94623F"], soil:"#BC8E65", mark:"elephant" },
+  { id:"hegra",     n:"الحِجر",        sub:"العلا",    ll:[26.79,37.95], terr:"mesa",    clim:"dry",
+    hill:["#D6A77C","#BC8860","#9C6B45"], soil:"#C69772" },
   { id:"lawz",      n:"جبل اللوز",     sub:"تبوك",     ll:[28.65,35.30], terr:"mount",   clim:"north", fog:.15,
     hill:["#A08E80","#827166","#675952"], soil:"#8C7868" },
+  { id:"disah",     n:"وادي الديسة",   sub:"تبوك",     ll:[27.62,36.47], terr:"mesa",    clim:"north",
+    hill:["#C98666","#A9684A","#8A4F36"], soil:"#B97856" },
+  { id:"neom",      n:"نيوم",          sub:"خليج العقبة", ll:[28.04,35.20], terr:"coast", clim:"north",
+    hill:["#B8A07E","#2A8FA0","#237E92"], soil:"#D8C49E", sea:["#1F7E95","#5FC6D2"] },
   { id:"jeddah",    n:"جدة",           sub:"ساحل البحر الأحمر", ll:[21.54,39.17], terr:"coast", clim:"coast",
     hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
   { id:"uqair",     n:"شاطئ العقير",   sub:"الأحساء",  ll:[25.65,50.21], terr:"coast", clim:"east",
@@ -2504,14 +2536,24 @@ const PLACES = [
     hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
   { id:"ahsa",      n:"الأحساء",       sub:"الواحة",   ll:[25.38,49.59], terr:"oasis",   clim:"east",
     hill:["#A89C7C","#5F7A4B","#4A6639"], soil:"#B89C74", mark:"qarah" },
+  { id:"dumat",     n:"دومة الجندل",   sub:"الجوف",    ll:[29.81,39.87], terr:"oasis",   clim:"north",
+    hill:["#B6A27E","#6B7E4D","#52673B"], soil:"#B39A72" },
   { id:"nafud",     n:"النفود الكبير", sub:"حائل",     ll:[28.30,41.50], terr:"dune",    clim:"najd",
     hill:["#DB8F5E","#C77443","#B05E33"], soil:"#C97C4A" },
+  { id:"aja",       n:"جبال أجا",      sub:"حائل",     ll:[27.55,41.45], terr:"mount",   clim:"najd",
+    hill:["#A47A5E","#83604A","#664B3A"], soil:"#9C7558" },
   { id:"fayfa",     n:"جبال فيفاء",    sub:"جازان",    ll:[17.26,43.12], terr:"mount",   clim:"sw",    fog:.35,
     hill:["#728F6A","#4F7446","#355A30"], soil:"#6B5840", trees:"#1D3D21", terraces:true },
+  { id:"farasan",   n:"جزر فرسان",     sub:"جازان",    ll:[16.70,41.98], terr:"coast",   clim:"coast",
+    hill:["#E8DAB4","#1F8E9A","#1A8090"], soil:"#EADCB8", sea:["#1D8796","#7BDACB"] },
   { id:"umluj",     n:"أملج",          sub:"ساحل البحر الأحمر", ll:[25.02,37.27], terr:"coast", clim:"coast",
     hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
   { id:"tuwaiq",    n:"جبال طويق",     sub:"الرياض",   ll:[24.71,46.68], terr:"escarp",  clim:"najd",
     hill:["#CDAC82","#B39066","#977750"], soil:"#B9996F" },
+  { id:"edge",      n:"حافة العالم",   sub:"الرياض",   ll:[24.95,45.99], terr:"escarp",  clim:"najd",
+    hill:["#D9BB8E","#C19C6E","#A27F56"], soil:"#C7A577" },
+  { id:"diriyah",   n:"الدرعية",       sub:"الرياض",   ll:[24.73,46.57], terr:"oasis",   clim:"najd",
+    hill:["#B89C76","#6F804F","#56693E"], soil:"#B0906A" },
   { id:"ghadha",    n:"الغضا",         sub:"عنيزة",    ll:[26.0445,43.8753], terr:"dune", clim:"najd",
     hill:["#E2B37C","#D4975A","#C07F43"], soil:"#D29860" }
 ];
@@ -4461,7 +4503,7 @@ function drawSceneCore(ctx,o){
      بقعة التربة العلوية بالكامل ويختفي بصرياً، فيبين النبات "طايف" بلا أي ارتباط فعلي بالأرض
      مهما كانت زاوية الشمس. اتجاهه وطوله يتبعان LIGHT_ANG الفعلي: ظل طويل منزاح وقت الشمس
        المنخفضة (شروق/غروب)، وقصير شبه تحت النبتة وقت الظهر. */
-  if(g>.05){
+  if(g>.05 && !o.noShadow){        /* noShadow: المزرعة ترسم ظل النبتة الحقيقي على أرضها بنفسها */
     /* ظل يمتد من جذع النبتة بعيداً عن الشمس — طويل ومنحرف وقت الشروق/الغروب، شبه دائري
        تحتها مباشرة وقت الظهر. أول نسخة كانت بيضاوية تتزحزح مركزها بس بلا تغيّر حقيقي
        بالشكل، ونصف قطرها الأفقي كان ضخم جداً (يفوق نص عرض اللوحة) فتبقى تغطي كامل بقعة
@@ -4848,7 +4890,9 @@ const cloudSignUp = (email,password,name,region,uni,username) => sbFetch("/auth/
 const cloudSignIn = (email,password) => sbFetch("/auth/v1/token?grant_type=password", { method:"POST", body:{ email, password } });
 /* استدعاءات عامة قبل تسجيل الدخول — بدون جلسة، بمفتاح anon بس */
 const checkUsernameAvailable = (username) => sbFetch("/rest/v1/rpc/username_available", { method:"POST", body:{ p_username:username } });
-const emailForUsername = (username) => sbFetch("/rest/v1/rpc/email_for_username", { method:"POST", body:{ p_username:username } });
+/* الدخول باسم المستخدم: السيرفر ما يرجّع الإيميل إلا إذا كلمة السر صحيحة (login_email)، وبحد
+   محاولات — قبل كذا email_for_username كانت تعطي إيميل أي مستخدم لأي أحد يعرف اسمه */
+const loginEmail = (username, password) => sbFetch("/rest/v1/rpc/login_email", { method:"POST", body:{ p_username:username, p_password:password } });
 
 /* ── الرجوع من رابط الإيميل: الجلسة تجي في عنوان الصفحة ── */
 function hashParams(){
@@ -5083,7 +5127,7 @@ function normalize(d){
   if(!Array.isArray(o.plants)) o.plants=[];
   if(!Array.isArray(o.ach)) o.ach=[];
   if(!Array.isArray(o.tags)||!o.tags.length) o.tags=JSON.parse(JSON.stringify(DEFAULTS.tags));
-  if(!SPECIES[o.seed]) o.seed="basil";
+  if(!SPECIES[o.seed] || HIDDEN_SPECIES.has(o.seed)) o.seed="basil";   /* بذرة صارت مخفية → نرجع للريحان */
   o.plants = o.plants.filter(p=>p && p.id && SPECIES[p.species] && isFinite(p.minutes));
   if(!Array.isArray(o.islands)) o.islands=[];
   o.islands = o.islands.filter(x=>x && x.id && x.name);
@@ -5238,7 +5282,7 @@ const ACH = [
     d:"ازرع 10 أنواع مختلفة من النباتات بنجاح." },
   { id:"manykinds", ic:"🧬", n:"عشرين نوع",    t:s=>s.kinds>=20,
     d:"ازرع 20 نوع مختلف من النباتات بنجاح." },
-  { id:"allspecies", ic:"🗺️", n:"مجموعة كاملة", t:s=>s.kinds>=SP_ORDER.length,
+  { id:"allspecies", ic:"🗺️", n:"مجموعة كاملة", t:s=>s.kindsShown>=SP_ORDER.length,
     d:"ازرع كل الأنواع المتاحة بنجاح ("+SP_ORDER.length+" نوع)، نوع نوع." },
   { id:"days30", ic:"📔", n:"شهر استخدام",     t:s=>s.daysUsed>=30,
     d:"سجّل جلسة تركيز (نجحت أو ذبلت) في 30 يوم مختلف." },
@@ -5314,6 +5358,7 @@ function computeStats(){
   return {
     alive:live.length, dead:ps.length-live.length, total:ps.length, minutes,
     byDay, byTag, kinds:Object.keys(kinds).length,
+    kindsShown:Object.keys(kinds).filter(k=>!HIDDEN_SPECIES.has(k)).length,
     longest: live.reduce((a,p)=>Math.max(a,p.minutes),0),
     streak, bestStreak, cleanRun,
     daysUsed:usedDays.size, allWeekdays:usedWeekdays.size>=7, allHours:usedHours.size>=24,
@@ -6072,9 +6117,9 @@ function rtlFillOrder(cols,rows){
    moonTopY (اختياري): الحد الأدنى من y لمنطقة السما الصافية (يوازي أعلى الجزيرة)؛
    يستخدم لتحديد الحد السفلي لمنطقة القرص (الشمس/القمر) عشان ما ينزل تحتها ويلامس
    الأرض. لو ما تم تمريره، نستخدم نسبة من H كاحتياط. */
-function paintIsoSky(ctx,W,H,hr,moonTopY){
+function paintIsoSky(ctx,W,H,hr,moonTopY,horizonY){
   const K=skyAt(hr), nightF=clamp(K.stars,0,1);
-  const sky=ctx.createLinearGradient(0,0,0,H);
+  const sky=ctx.createLinearGradient(0,0,0,horizonY||H);   /* لون الأفق عند خط الأفق الفعلي، مو أسفل اللوحة */
   sky.addColorStop(0,K.sky[0]); sky.addColorStop(.55,K.sky[1]); sky.addColorStop(1,K.sky[2]);
   ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
 
@@ -6100,7 +6145,7 @@ function paintIsoSky(ctx,W,H,hr,moonTopY){
   if(nightF>.03){                                    /* نجوم بتوزيع أهدأ وأقل ازدحاماً حول القمر */
     const srnd=mulberry(hashStr("isofarm-stars"));
     for(let i=0;i<24;i++){
-      const x=srnd()*W, y=srnd()*(H*.48);
+      const x=srnd()*W, y=srnd()*(horizonY ? horizonY*.88 : H*.48);
       const near=Math.hypot(x-sx,y-sy)<dR*2.4;
       const twk=.3+srnd()*.6;
       ctx.globalAlpha=Math.min(.72,nightF*twk*(near?.15:1));
@@ -6121,7 +6166,7 @@ function paintIsoSky(ctx,W,H,hr,moonTopY){
     disc.addColorStop(0,K.discC[0]); disc.addColorStop(.60,K.discC[1]); disc.addColorStop(1,K.discC[2]);
     ctx.fillStyle=disc; ctx.beginPath(); ctx.arc(sx,sy,dR,0,TAU); ctx.fill();
   }
-  return { sx, sy };   /* موقع الشمس/القمر على الشاشة — يرجّعه عشان العشب يضاء بنفس اتجاهه فعلياً */
+  return { sx, sy, K, dR, elev: K.elev2!=null ? K.elev2 : K.elev };   /* موقع الشمس/القمر على الشاشة + ضوء اللحظة — عشان الأرض والنبات والظلال تتبع نفس الضوء فعلياً */
 }
 
 /* سطح قمر واقعي: ظل كروي خفيف (إحساس كرة لا قرص) + بحيرات وفوهات غير منتظمة
@@ -6152,127 +6197,354 @@ function paintMoonTexture(ctx,cx,cy,R,rnd){
   ctx.restore();
 }
 
-/* جسم الجزيرة: سطح عشب بخطوط بلاطات خفيفة + "مريول" تراب متدلٍّ بحافة عشب متعرجة
-   على الوجهين الأماميين (يسار/يمين) — نفس منظور الصورة المرجعية بالضبط. */
-function paintIsoIsland(ctx,cols,rows,tw,th,originX,originY,skirtH,rnd,sunX,sunY){
-  const P=(c,r)=>{ const p=isoPt(c,r,tw,th); return { x:p.x+originX, y:p.y+originY }; };
+/* ═══ واقعية المزرعة: أرض مزروعة فعلاً بنفس المكان اللي اختاره المستخدم ═══
+   بدل جزيرة عشب خضرا ثابتة طايفة بالفراغ (نفس الشكل بالربع الخالي والسودة، ونفس الإضاءة
+   ليل ونهار)، المزرعة الحين قطعة أرض محروثة حقيقية:
+   - خلفها تضاريس المكان نفسه (نفس محرّك تضاريس صفحة النبتة: جبال عسير، كثبان النفود،
+     هضاب العلا، بحر جدة...) والسهل حولها من تربة المكان.
+   - حوض مزروع بجدار طين (نجد والصحراء) أو حجر مرصوص (مدرجات الجبال) وساقية ماء على طرفيها.
+   - كل نبتة بحوض سقي محفور، وظلها الحقيقي يطيح بعكس الشمس/القمر وطوله حسب ارتفاعها.
+   - نفس الضوء على الأرض والنبات (غروب دافي، ليل مقمر أزرق، غيم رمادي)، وفوقها طبقة الجو:
+     ظلمة الليل، ضباب، مطر — على النبات والأرض سوا، كأنها بنفس المكان واللحظة. */
+function farmGroundKind(PL){
+  const t=PL.terr;
+  if(t==="dune"||t==="bigdune"||t==="coast") return "sand";
+  if(t==="oasis") return "oasis";
+  if(t==="mount") return PL.trees ? "green" : "rock";
+  return "earth";                                            /* هضاب ومنحدرات: العلا، طويق، نجد */
+}
+/* نموذج الضوء الموحّد للمزرعة: نفس الدالة تلوّن الأرض، والنبات ينضرب بنفس اللون (multiply) */
+function farmLightOf(K,WX,sx,W,elev){
+  const nightF=clamp(K.stars,0,1);
+  const moonLight=(K.disc==="moon" && elev>.02) ? moonPhase(new Date()).illum : 0;
+  const cloud=clamp(WX.cloud||0,0,1), rain=clamp(WX.rain||0,0,1);
+  const lit=(c,extra)=>{
+    let o=mix(c, K.sky[2], (K.warmth||0)*.16);
+    if(nightF>0) o=mix(o,"#5A6E96",nightF*.30);                           /* ضوء القمر مزرق وباهت اللون */
+    if(cloud>.3) o=mix(o,"#9AA2AA",(cloud-.3)*.22*(1-nightF));             /* غيم كثيف = ألوان رمادية مطفية */
+    return shade(o,(K.gTint||0)*.9+(extra||0)-rain*.05);                   /* المطر يغمّق الأرض */
+  };
+  const lx=clamp((sx-W/2)/(W*.42),-1,1);                                    /* الشمس يمين = +١ */
+  const e=clamp(elev,0,1);
+  const shadowA = nightF>.5 ? (.06+.20*moonLight)*(1-cloud*.8) : .36*(1-cloud*.75)*(1-nightF*.5);
+  return { nightF, moonLight, cloud, rain, lit, ambRGB:hex2rgb(lit("#FFFFFF")), lx, elev:e, shadowA };
+}
+/* كاش صورة التضاريس الخلفية — بناؤها ثقيل (إضاءة لكل بكسل)، فما نعيده إلا لما يتغيّر المكان/الضوء */
+const FARM_TERR_CACHE=new Map();
+function farmTerrainImage(W,gy,s,PL,K,nightF,sx,elev){
+  const key=[PL.id,W|0,gy|0,s|0,Math.round(sx/8),Math.round(nightF*16),Math.round(clamp(elev,0,1)*20),K.sky[2],K.hills[1]].join("|");
+  let cv=FARM_TERR_CACHE.get(key);
+  if(!cv){
+    cv=renderTerrainImage(W,gy,s,PL,K,c=>c,nightF,sx,elev);
+    FARM_TERR_CACHE.set(key,cv);
+    if(FARM_TERR_CACHE.size>6) FARM_TERR_CACHE.delete(FARM_TERR_CACHE.keys().next().value);
+  }
+  return cv;
+}
+function farmBlob(ctx,cx,cy,rx,ry,rgb,a){
+  if(a<=.003 || rx<=0 || ry<=0) return;
+  ctx.save(); ctx.translate(cx,cy); ctx.scale(1,ry/rx);
+  const g=ctx.createRadialGradient(0,0,0,0,0,rx);
+  g.addColorStop(0,"rgba("+rgb+","+a.toFixed(3)+")");
+  g.addColorStop(.55,"rgba("+rgb+","+(a*.62).toFixed(3)+")");
+  g.addColorStop(1,"rgba("+rgb+",0)");
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,rx,0,TAU); ctx.fill(); ctx.restore();
+}
+/* الخلفية: تضاريس المكان + سهل ممتد من تربته بملمس يناسبه + غبشة الأفق */
+function paintFarmBackdrop(ctx,W,H,gy,PL,K,WX,L,sx,sy,dR,rnd,kind){
+  const s=Math.max(110,gy*.85);
+  drawClouds(ctx,W,gy,Math.max(s,W*.5),WX,K,L.nightF,null,sx,sy);
+  try{
+    ctx.drawImage(farmTerrainImage(W,gy,s,PL,K,L.nightF,sx,L.elev),0,0,W,Math.ceil(gy+2));
+    if(PL.terr==="coast" && PL.sea) drawSea(ctx,W,gy,s,PL,K,c=>c,L.nightF,null,sx,sy,L.elev,dR);
+  }catch(e){ /* لو فشل بناء التضاريس لأي سبب نكمل بالسهل بس — المزرعة ما تنكسر */ }
+
+  const base = kind==="green" ? mix(PL.hill[1],"#6E8F4E",.35)
+             : kind==="oasis" ? mix(PL.hill[1],"#83975A",.30)
+             : kind==="rock"  ? mix(PL.soil,PL.hill[1],.35) : PL.soil;
+  const g=ctx.createLinearGradient(0,gy,0,H);
+  g.addColorStop(0,L.lit(mix(base,K.sky[2],.32),.05)); g.addColorStop(.32,L.lit(base)); g.addColorStop(1,L.lit(shade(base,-.18)));
+  ctx.fillStyle=g; ctx.fillRect(0,gy,W,H-gy+1);
+  ctx.fillStyle = L.nightF>.5 ? "rgba(150,180,205,.16)" : "rgba(255,246,214,.38)";
+  ctx.fillRect(0,gy-1,W,Math.max(1,s*.006));
+
+  /* ملمس السهل — يصغر قرب الأفق ويكبر قدّام (منظور) */
+  const D=H-gy, N=Math.round(W*D/(kind==="sand"?520:700));
+  const shrub = L.lit(kind==="green"||kind==="oasis" ? "#3F6634" : kind==="rock" ? "#66704A" : "#6F7A45");
+  for(let i=0;i<N;i++){
+    const d=Math.pow(rnd(),.75), y=gy+d*D, x=rnd()*W, k=.30+d*.95, r=rnd();
+    if(kind==="sand"){
+      if(r<.86){                                             /* تموّجات الرمل */
+        const len=(14+rnd()*34)*k, bend=(rnd()-.5)*3*k;
+        ctx.lineWidth=Math.max(.6,k*.9); ctx.lineCap="round";
+        ctx.strokeStyle="rgba(255,248,228,"+(.10*(1-L.nightF*.6)).toFixed(3)+")";
+        ctx.beginPath(); ctx.moveTo(x,y); ctx.quadraticCurveTo(x+len*.5,y+bend,x+len,y); ctx.stroke();
+        ctx.strokeStyle="rgba(96,62,30,.10)";
+        ctx.beginPath(); ctx.moveTo(x,y+1.4*k); ctx.quadraticCurveTo(x+len*.5,y+bend+1.4*k,x+len,y+1.4*k); ctx.stroke();
+        continue;
+      }
+    } else if(kind==="green"||kind==="oasis"){
+      if(r<.80){                                             /* خصل عشب */
+        ctx.lineWidth=Math.max(.6,k*.8); ctx.lineCap="round";
+        ctx.strokeStyle = rnd()>.5 ? "rgba(255,255,230,.10)" : "rgba(24,46,16,.20)";
+        for(let b=0;b<3;b++){ const lean=(rnd()-.5)*3*k, hh=(3+rnd()*4)*k;
+          ctx.beginPath(); ctx.moveTo(x+b*1.4*k,y); ctx.quadraticCurveTo(x+b*1.4*k,y-hh*.6,x+b*1.4*k+lean,y-hh); ctx.stroke(); }
+        continue;
+      }
+    } else if(r<.90){                                        /* حصى وصخور صغيرة */
+      const rr=(kind==="rock"?1.4:1)*(1+rnd()*2.4)*k;
+      farmBlob(ctx,x-L.lx*rr*.8,y+rr*.35,rr*1.3,rr*.45,"14,10,6",L.shadowA*.55);
+      ctx.fillStyle=L.lit(mix(PL.soil,"#7A7266",.5),(rnd()-.5)*.16);
+      ctx.beginPath(); ctx.ellipse(x,y,rr,rr*.62,0,0,TAU); ctx.fill();
+      ctx.fillStyle="rgba(255,248,230,"+(.18*(1-L.nightF*.7)).toFixed(3)+")";
+      ctx.beginPath(); ctx.ellipse(x+L.lx*rr*.25,y-rr*.22,rr*.45,rr*.2,0,0,TAU); ctx.fill();
+      continue;
+    }
+    /* شجيرة برية (عرفج/رمث بالصحرا، شجيرات بالجبل) بظلها */
+    const sr=(1.8+rnd()*2.6)*k;
+    farmBlob(ctx,x-L.lx*sr*1.2,y+sr*.2,sr*1.7,sr*.45,"14,10,6",L.shadowA*.75);
+    for(let b=0;b<9;b++){                                     /* أغصان صغيرة متكتّلة: أغمق تحت وأفتح فوق جهة الضوء */
+      const up=rnd(), px=x+(rnd()-.5)*sr*1.5, py=y-sr*(.15+up*.75);
+      ctx.fillStyle=shade(shrub,-.20+up*.30+(rnd()-.5)*.10);
+      ctx.beginPath(); ctx.ellipse(px,py,sr*(.18+rnd()*.20),sr*(.14+rnd()*.14),rnd()*TAU,0,TAU); ctx.fill();
+    }
+  }
+  /* غبشة الأفق: تذوّب خط التقاء السهل بالتضاريس */
+  const hz=ctx.createLinearGradient(0,gy-s*.20,0,gy+D*.22);
+  hz.addColorStop(0,"rgba(0,0,0,0)"); hz.addColorStop(.5,K.haze); hz.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=hz; ctx.fillRect(0,gy-s*.20,W,s*.20+D*.22);
+}
+/* الحوض المزروع: ظل تماس على الأرض، جدار طين/حجر بوجهين، سطح محروث أو عشب، ساقية على الطرفين الخلفيين */
+function paintFarmPlot(ctx,cols,rows,tw,th,ox,oy,bh,PL,K,WX,L,rnd,kind){
+  const P=(c,r)=>{ const p=isoPt(c,r,tw,th); return { x:p.x+ox, y:p.y+oy }; };
   const top=P(0,0), right=P(cols,0), bottom=P(cols,rows), left=P(0,rows);
   const center={ x:(top.x+bottom.x)/2, y:(top.y+bottom.y)/2 };
+  const dpr=Math.min(3,window.devicePixelRatio||1);
+  const silhouette=()=>{ ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(right.x,right.y); ctx.lineTo(right.x,right.y+bh);
+    ctx.lineTo(bottom.x,bottom.y+bh); ctx.lineTo(left.x,left.y+bh); ctx.lineTo(left.x,left.y); ctx.closePath(); };
 
-  /* اتجاه الإضاءة الحقيقي: من مركز الجزيرة نحو موقع الشمس/القمر الفعلي المرسوم
-     بالسما — فالعشب يضاء من نفس جهة الضوء المعروض فوقه بدل تدرّج عشوائي */
-  const sunAng = (typeof sunX==="number") ? Math.atan2(sunY-center.y, sunX-center.x) : -Math.PI*.7;
-  const litOf = ang => .5+.5*Math.cos(ang-sunAng);        /* ٠=ظل · ١=مواجه الضوء، نفس فكرة litness() */
-  const ux=Math.cos(sunAng), uy=Math.sin(sunAng);
-  const half=Math.max(Math.hypot(right.x-left.x,right.y-left.y),Math.hypot(top.x-bottom.x,top.y-bottom.y))*.5;
-  const grass=ctx.createLinearGradient(center.x-ux*half,center.y-uy*half,center.x+ux*half,center.y+uy*half);
-  grass.addColorStop(0,"#9BCB7C"); grass.addColorStop(.52,"#7EB161"); grass.addColorStop(1,"#4E7A3A");
-  ctx.fillStyle=grass;
-  ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(right.x,right.y);
-  ctx.lineTo(bottom.x,bottom.y); ctx.lineTo(left.x,left.y); ctx.closePath(); ctx.fill();
-
-  ctx.save(); ctx.clip();                              /* بقع عضوية خفيفة جداً تكسر استواء اللون بلا لفت نظر */
-  for(let i=0;i<Math.round((cols+rows)*1.1);i++){
-    const c=rnd()*cols, r=rnd()*rows, p=P(c,r), rr=tw*(.55+rnd()*.75);
-    ctx.fillStyle = rnd()>.5 ? "rgba(255,255,255,.035)" : "rgba(26,48,18,.045)";
-    ctx.beginPath(); ctx.ellipse(p.x,p.y,rr,rr*.42,0,0,TAU); ctx.fill();
-  }
-  /* خصل عشب عضوية — نفس أسلوب خصل عشب قاعدة النبتة (drawGround) موزّعة فوق كامل
-     الجزيرة: ضربات منحنية قصيرة ناعمة، بلا أي نويز بكسلي، تعطي إحساس عشب حقيقي */
-  const bladeN=Math.round(cols*rows*2.2);
-  for(let i=0;i<bladeN;i++){
-    const c=rnd()*cols, r=rnd()*rows, p=P(c,r);
-    const hh=tw*(.065+rnd()*.085), lean=(rnd()-.5)*.8, tone=rnd();
-    ctx.strokeStyle = tone>.62 ? "rgba(255,255,255,.17)" : tone>.28 ? "rgba(72,112,54,.30)" : "rgba(28,52,18,.22)";
-    ctx.lineWidth=Math.max(.6,tw*.011); ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(p.x,p.y);
-    ctx.quadraticCurveTo(p.x+hh*.20,p.y-hh*.6,p.x+lean*hh,p.y-hh); ctx.stroke();
-  }
-  /* ظل تماسّ ناعم حيث يلتقي العشب بحافة التراب الأمامية — عمق بلا خط حاد */
-  [[left,bottom],[bottom,right]].forEach(([A,B])=>{
-    const mx=(A.x+B.x)/2, my=(A.y+B.y)/2;
-    const dlen=Math.hypot(center.x-mx,center.y-my)||1, inX=(center.x-mx)/dlen, inY=(center.y-my)/dlen;
-    const aoLen=th*1.15;
-    const g2=ctx.createLinearGradient(mx,my,mx+inX*aoLen,my+inY*aoLen);
-    g2.addColorStop(0,"rgba(14,26,10,.22)"); g2.addColorStop(1,"rgba(14,26,10,0)");
-    ctx.fillStyle=g2;
-    ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y);
-    ctx.lineTo(B.x+inX*aoLen,B.y+inY*aoLen); ctx.lineTo(A.x+inX*aoLen,A.y+inY*aoLen); ctx.closePath(); ctx.fill();
-  });
+  /* ١) ظل التماس على السهل: ناعم ومنزاح بعكس الضوء — المزرعة قاعدة على الأرض مو طايفة */
+  ctx.save();
+  ctx.shadowColor="rgba(12,9,5,"+clamp(L.shadowA*1.15,0,.6).toFixed(3)+")";
+  ctx.shadowBlur=th*.9*dpr;
+  ctx.shadowOffsetX=-L.lx*tw*.45*(1-L.elev*.55)*dpr; ctx.shadowOffsetY=th*(.16+.22*(1-L.elev))*dpr;
+  ctx.fillStyle=L.lit(PL.soil); silhouette(); ctx.fill();
   ctx.restore();
 
-  const gridSkip = (cols>7||rows>7) ? 2 : 1;            /* بالشبكات الكبيرة نرسم خط كل خطين بس — أقل تشويش */
-  ctx.strokeStyle="rgba(18,38,14,.085)"; ctx.lineWidth=Math.max(.6,tw*.014);   /* خطوط بلاطات تُقرأ كمربّعات بوضوح أهدأ */
-  for(let c=gridSkip;c<cols;c+=gridSkip){ const a=P(c,0), b=P(c,rows); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
-  for(let r=gridSkip;r<rows;r+=gridSkip){ const a=P(0,r), b=P(cols,r); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
-  ctx.strokeStyle="rgba(255,255,255,"+(.14+.20*litOf(Math.PI*1.25)).toFixed(3)+")"; /* حافة علوية-يسار: سطوعها يتبع زاوية الضوء فعلياً */
-  ctx.lineWidth=Math.max(1,tw*.03);
-  ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(right.x,right.y); ctx.stroke();
-  ctx.strokeStyle="rgba(255,255,255,"+(.14+.20*litOf(Math.PI*1.75)).toFixed(3)+")";
-  ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.stroke();
-
-  [[left,bottom],[bottom,right]].forEach(([A,B])=>{      /* الوجهان الأماميان: تراب طبقات واقعي بحافة متعرجة — بلا أي نويز بكسلي،
-                                                             كله أشكال وتدرّجات ناعمة (طبقات تربة + صخور مظلّلة + جذور متدلّية) */
+  /* ٢) الجداران الأماميان */
+  const stone = kind==="green"||kind==="rock";
+  const wallBase = stone ? mix("#8A8172",PL.soil,.25) : mix(PL.soil,"#A27C55",.35);
+  [[left,bottom,-1],[bottom,right,1]].forEach(([A,B,side])=>{
+    const toward = side<0 ? clamp(.5-.5*L.lx,0,1) : clamp(.5+.5*L.lx,0,1);
+    const fS = -.20 + .22*toward*(1-L.nightF*.6);
+    const wc = L.lit(wallBase,fS);
+    const face=()=>{ ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.lineTo(B.x,B.y+bh); ctx.lineTo(A.x,A.y+bh); ctx.closePath(); };
+    const g=ctx.createLinearGradient(0,Math.min(A.y,B.y),0,Math.max(A.y,B.y)+bh);
+    g.addColorStop(0,shade(wc,.05)); g.addColorStop(1,shade(wc,-.14));
+    ctx.fillStyle = stone ? shade(wc,-.34) : g; face(); ctx.fill();
+    ctx.save(); face(); ctx.clip();
     const dx=B.x-A.x, dy=B.y-A.y, len=Math.hypot(dx,dy);
-    let steps=Math.max(6,Math.round(len/(tw*.22))); if(steps%2) steps++;
-    const topPts=[];
-    for(let i=0;i<=steps;i++){
-      const t=i/steps, x=A.x+dx*t, y=A.y+dy*t;
-      const jag=(i===0||i===steps||i%2===0)?0:th*.26*(.6+rnd()*.5);
-      topPts.push({x,y:y+jag});
-    }
-    const soilPath=()=>{
-      ctx.beginPath(); ctx.moveTo(A.x,A.y+skirtH);
-      topPts.forEach(p=>ctx.lineTo(p.x,p.y));
-      ctx.lineTo(B.x,B.y+skirtH); ctx.closePath();
-    };
-
-    const soil=ctx.createLinearGradient(A.x,A.y,A.x,A.y+skirtH);   /* تربة سطحية داكنة → تحتها أفتح وأصفر قليلاً → طين عميق غامق */
-    soil.addColorStop(0,  "#7A5B3C"); soil.addColorStop(.20,"#8D6E4A");
-    soil.addColorStop(.52,"#73573A"); soil.addColorStop(.78,"#5C4530");
-    soil.addColorStop(1,  "#49341F");
-    ctx.fillStyle=soil; soilPath(); ctx.fill();
-
-    ctx.save(); soilPath(); ctx.clip();                  /* خطوط ترسّب أفقية متموّجة خفيفة — طبقات أرض حقيقية لا تشويش */
-    const bands=4;
-    for(let bi=1;bi<bands;bi++){
-      const by=skirtH*(bi/bands);
-      ctx.strokeStyle="rgba(38,26,14,"+(.12+rnd()*.05).toFixed(3)+")";
-      ctx.lineWidth=Math.max(1,th*.05);
-      ctx.beginPath();
-      for(let i=0;i<=steps;i++){
-        const t=i/steps, x=A.x+dx*t, y=A.y+dy*t+by+Math.sin(t*8+bi*1.7)*th*.07;
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    if(stone){                                             /* حجر مرصوص بلا ملاط — مدرجات عسير والباحة */
+      const courses=3, ch=bh/courses;
+      for(let k=0;k<courses;k++){
+        let t=rnd()*.05;
+        while(t<1){
+          const t2=Math.min(1,t+(tw*(.20+rnd()*.24))/len), j=ch*.10;
+          const x1=A.x+dx*t, y1=A.y+dy*t+k*ch, x2=A.x+dx*t2, y2=A.y+dy*t2+k*ch;
+          ctx.fillStyle=shade(wc,(rnd()-.5)*.20);
+          ctx.beginPath(); ctx.moveTo(x1+j,y1+j); ctx.lineTo(x2-j,y2+j); ctx.lineTo(x2-j,y2+ch-j); ctx.lineTo(x1+j,y1+ch-j); ctx.closePath(); ctx.fill();
+          ctx.fillStyle="rgba(255,248,230,"+(.10*(1-L.nightF*.7)).toFixed(3)+")";
+          ctx.beginPath(); ctx.moveTo(x1+j,y1+j); ctx.lineTo(x2-j,y2+j); ctx.lineTo(x2-j,y2+j*2.6); ctx.lineTo(x1+j,y1+j*2.6); ctx.closePath(); ctx.fill();
+          t=t2+1.6/len;
+        }
       }
-      ctx.stroke();
+    } else {                                               /* لبن طين — مزارع نجد والقصيم والأحساء */
+      const courses=4, ch=bh/courses;
+      ctx.strokeStyle="rgba(58,38,20,.26)"; ctx.lineWidth=Math.max(.6,th*.018);
+      for(let k=1;k<courses;k++){ ctx.beginPath(); ctx.moveTo(A.x,A.y+k*ch); ctx.lineTo(B.x,B.y+k*ch); ctx.stroke(); }
+      const brick=tw*.30/len;
+      for(let k=0;k<courses;k++) for(let t=(k%2?brick*.5:0);t<1;t+=brick){
+        const x=A.x+dx*t, y=A.y+dy*t+k*ch; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+ch); ctx.stroke(); }
+      for(let i=0;i<Math.round(len/3);i++){               /* تبن وحبيبات بالطين */
+        const t=rnd(), y=A.y+dy*t+rnd()*bh;
+        ctx.fillStyle = rnd()>.5 ? "rgba(230,200,150,.18)" : "rgba(60,40,20,.14)";
+        ctx.fillRect(A.x+dx*t,y,Math.max(1,th*.04),Math.max(.6,th*.012));
+      }
     }
-    const rockN=Math.max(3,Math.round(len/(tw*.42)));    /* صخور مدفونة بظل وضوء — حجم لا نقطة لونية مسطّحة */
-    for(let i=0;i<rockN;i++){
-      const t=.04+rnd()*.92, x=A.x+dx*t, y=A.y+dy*t+skirtH*(.3+rnd()*.56);
-      const rr=tw*(.05+rnd()*.055), rot=rnd()*TAU;
-      ctx.save(); ctx.translate(x,y); ctx.rotate(rot);
-      ctx.fillStyle="rgba(40,30,20,.45)";
-      ctx.beginPath(); ctx.ellipse(rr*.08,rr*.22,rr,rr*.70,0,0,TAU); ctx.fill();
-      ctx.fillStyle="rgba(118,98,75,.62)";
-      ctx.beginPath(); ctx.ellipse(0,0,rr*.86,rr*.6,0,0,TAU); ctx.fill();
-      ctx.fillStyle="rgba(188,170,142,.42)";
-      ctx.beginPath(); ctx.ellipse(-rr*.26,-rr*.2,rr*.32,rr*.2,0,0,TAU); ctx.fill();
-      ctx.restore();
-    }
+    const ao=ctx.createLinearGradient(0,Math.max(A.y,B.y)+bh*.55,0,Math.max(A.y,B.y)+bh);   /* تماس الجدار بالأرض */
+    ao.addColorStop(0,"rgba(0,0,0,0)"); ao.addColorStop(1,"rgba(10,8,4,.22)");
+    ctx.fillStyle=ao; ctx.fillRect(Math.min(A.x,B.x)-2,Math.min(A.y,B.y),Math.abs(dx)+4,Math.abs(dy)+bh+2);
     ctx.restore();
-
-    ctx.strokeStyle="rgba(96,74,50,.46)"; ctx.lineCap="round";   /* جذور متدلّية من حافة العشب داخل التراب */
-    const rootN=Math.max(4,Math.round(len/(tw*.46)));
-    for(let i=0;i<rootN;i++){
-      const t=.05+rnd()*.90, bx=A.x+dx*t, by=A.y+dy*t;
-      const nearIdx=clamp(Math.round(t*steps),0,steps), ry=topPts[nearIdx].y+th*.08;
-      const rl=th*(.55+rnd()*1.15), sway=(rnd()-.5)*tw*.09;
-      ctx.lineWidth=Math.max(.6,tw*.011)*(.55+rnd()*.7);
-      ctx.beginPath(); ctx.moveTo(bx,ry);
-      ctx.quadraticCurveTo(bx+sway*.55,ry+rl*.55,bx+sway,ry+rl);
-      ctx.stroke();
-    }
   });
+
+  /* ٣) السطح: عشب بالجبال والواحات، وتربة محروثة مسقية بالصحرا والهضاب */
+  const grassy = kind==="green"||kind==="oasis";
+  const sBase = kind==="green" ? mix(PL.hill[0],"#86B463",.55)
+              : kind==="oasis" ? mix(PL.hill[1],"#8DB565",.70)
+              : mix(PL.soil,"#5A3F27",kind==="sand"?.58:.50);   /* الأرض المسقية أغمق من الرمل/التربة حولها */
+  const sunAng=Math.atan2(-.8, L.lx*1.2);                    /* اتجاه الضوء على السطح: من جهة الشمس (ورا المزرعة ويمين/يسار) */
+  const ux=Math.cos(sunAng), uy=Math.sin(sunAng);
+  const half=Math.hypot(right.x-left.x,right.y-left.y)*.5;
+  const surf=ctx.createLinearGradient(center.x+ux*half,center.y+uy*half*.6,center.x-ux*half,center.y-uy*half*.6);
+  surf.addColorStop(0,L.lit(shade(sBase,.10))); surf.addColorStop(.5,L.lit(sBase)); surf.addColorStop(1,L.lit(shade(sBase,-.13)));
+  const plate=()=>{ ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(right.x,right.y); ctx.lineTo(bottom.x,bottom.y); ctx.lineTo(left.x,left.y); ctx.closePath(); };
+  ctx.fillStyle=surf; plate(); ctx.fill();
+  ctx.save(); plate(); ctx.clip();
+  for(let i=0;i<Math.round((cols+rows)*1.2);i++){           /* بقع عضوية تكسر استواء اللون */
+    const p=P(rnd()*cols,rnd()*rows), rr=tw*(.5+rnd()*.8);
+    ctx.fillStyle = rnd()>.5 ? "rgba(255,255,255,.025)" : "rgba(26,30,12,.028)";
+    ctx.beginPath(); ctx.ellipse(p.x,p.y,rr,rr*.45,0,0,TAU); ctx.fill();
+  }
+  if(grassy){
+    const bladeN=Math.round(cols*rows*2.4);
+    for(let i=0;i<bladeN;i++){
+      const p=P(rnd()*cols,rnd()*rows), hh=tw*(.06+rnd()*.08), lean=(rnd()-.5)*.8, tone=rnd();
+      ctx.strokeStyle = tone>.62 ? "rgba(255,255,230,.16)" : tone>.28 ? "rgba(60,98,44,.30)" : "rgba(24,46,16,.24)";
+      ctx.lineWidth=Math.max(.6,tw*.011); ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.quadraticCurveTo(p.x+hh*.2,p.y-hh*.6,p.x+lean*hh,p.y-hh); ctx.stroke();
+    }
+    if(kind==="green") for(let i=0;i<cols*rows*.7;i++){      /* زهور برية صغيرة — ربيع عسير */
+      const p=P(rnd()*cols,rnd()*rows);
+      ctx.fillStyle=["rgba(250,248,236,.75)","rgba(240,206,84,.70)","rgba(178,150,214,.65)"][Math.floor(rnd()*3)];
+      ctx.beginPath(); ctx.arc(p.x,p.y-tw*.02,Math.max(.7,tw*.012),0,TAU); ctx.fill();
+    }
+  } else {
+    /* أتلام الحراثة: خط مرتفع يمر بمنتصف كل صف (فيه النبتات) وقناة غامقة بين الصفوف */
+    const wob=(a,b,wid,col,yo)=>{
+      ctx.strokeStyle=col; ctx.lineWidth=wid; ctx.lineCap="round"; ctx.beginPath();
+      const seg=cols*4;
+      for(let i=0;i<=seg;i++){ const t=i/seg, x=a.x+(b.x-a.x)*t, y=a.y+(b.y-a.y)*t+yo+(rnd()-.5)*th*.035;
+        i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.stroke();
+    };
+    for(let r=0;r<=rows;r++) wob(P(0,r),P(cols,r),th*.14,"rgba(38,24,12,.20)",0);
+    for(let r=0;r<rows;r++){ wob(P(0,r+.5),P(cols,r+.5),th*.26,"rgba(255,232,196,.07)",-th*.02);
+                             wob(P(0,r+.5),P(cols,r+.5),th*.08,"rgba(255,236,204,.09)",-th*.07); }
+    for(let i=0;i<cols*rows*6;i++){                          /* كتل تراب */
+      const p=P(rnd()*cols,rnd()*rows), rr=tw*(.010+rnd()*.016);
+      ctx.fillStyle = rnd()>.45 ? "rgba(40,26,14,.22)" : "rgba(255,236,204,.12)";
+      ctx.beginPath(); ctx.ellipse(p.x,p.y,rr*1.4,rr*.8,0,0,TAU); ctx.fill();
+    }
+    for(let i=0;i<cols*rows*.55;i++){                        /* حشايش صغيرة طالعة بين الأتلام */
+      const p=P(rnd()*cols,rnd()*rows), hh=tw*(.03+rnd()*.04);
+      ctx.strokeStyle=L.lit(rnd()>.5?"#6E9A48":"#557E3A"); ctx.lineWidth=Math.max(.6,tw*.010);
+      for(let b=-1;b<=1;b++){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+b*hh*.5,p.y-hh); ctx.stroke(); }
+    }
+  }
+  /* ساقية ماء على الطرفين الخلفيين — مصدر السقي، بحجر/طين على حوافها */
+  const a=.06, b=.27;
+  const ch=()=>{ ctx.beginPath(); const q=[P(a,a),P(cols-.07,a),P(cols-.07,b),P(b,b),P(b,rows-.07),P(a,rows-.07)];
+    q.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath(); };
+  ctx.fillStyle=L.lit(mix(PL.soil,"#4A3624",.5)); ch(); ctx.fill();       /* قاع وحواف داكنة */
+  ctx.save(); ch(); ctx.clip();
+  const wtr=L.lit(mix(mix(K.sky[1],K.sky[2],.4),"#245F66",.58));
+  const wg=ctx.createLinearGradient(top.x,top.y,center.x,center.y);
+  wg.addColorStop(0,shade(wtr,.10)); wg.addColorStop(1,shade(wtr,-.10));
+  ctx.fillStyle=wg;
+  ctx.beginPath(); const q2=[P(a+.025,a+.025),P(cols-.09,a+.025),P(cols-.09,b-.025),P(b-.025,b-.025),P(b-.025,rows-.09),P(a+.025,rows-.09)];
+  q2.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = L.nightF>.5 ? "rgba(200,220,255,"+(.10+.30*L.moonLight).toFixed(3)+")" : "rgba(255,255,255,.30)";
+  ctx.lineWidth=Math.max(.6,th*.02); ctx.lineCap="round";
+  for(let i=0;i<14;i++){                                     /* لمعات انعكاس السما على الماء */
+    const along=rnd(), alongR=rnd()<.5;
+    const s0 = alongR ? P(.4+along*(cols-1.2),(a+b)/2) : P((a+b)/2,.4+along*(rows-1.2));
+    const s1 = alongR ? P(.4+along*(cols-1.2)+.18,(a+b)/2) : P((a+b)/2,.4+along*(rows-1.2)+.18);
+    ctx.beginPath(); ctx.moveTo(s0.x,s0.y); ctx.lineTo(s1.x,s1.y); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.strokeStyle=L.lit(stone?"#9A9284":mix(PL.soil,"#C9A57A",.4)); ctx.lineWidth=Math.max(.8,th*.04);
+  ch(); ctx.stroke();
+
+  ctx.strokeStyle="rgba(20,14,8,.06)"; ctx.lineWidth=Math.max(.5,tw*.010);   /* حدود الخانات: خفيفة جداً، بس عشان تنقرأ كمربعات */
+  for(let c=1;c<cols;c++){ const p1=P(c,b), p2=P(c,rows); ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+  if(grassy) for(let r=1;r<rows;r++){ const p1=P(b,r), p2=P(cols,r); ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+  ctx.restore();
+
+  /* ٤) حافة الجدار العلوية: تلتقط الضوء */
+  ctx.strokeStyle="rgba(255,246,222,"+(.20*(1-L.nightF*.7)).toFixed(3)+")"; ctx.lineWidth=Math.max(1,th*.05);
+  ctx.beginPath(); ctx.moveTo(left.x,left.y); ctx.lineTo(bottom.x,bottom.y); ctx.lineTo(right.x,right.y); ctx.stroke();
+  ctx.strokeStyle="rgba(255,246,222,"+(.12*(1-L.nightF*.7)).toFixed(3)+")";
+  ctx.beginPath(); ctx.moveTo(left.x,left.y); ctx.lineTo(top.x,top.y); ctx.lineTo(right.x,right.y); ctx.stroke();
+}
+/* حوض السقي المحفور حول كل نبتة: حافة تراب مرفوعة + قاع رطب غامق (الحية) أو ناشف متشقق (الذابلة) */
+function paintPlantBasin(ctx,fx,fy,tw,th,sizeF,alive,L,PL,kind,rnd){
+  const rx=tw*(.12+.17*sizeF), ry=rx*(th/tw);
+  const soil = kind==="sand" ? mix(PL.soil,"#7A5634",.45) : mix(PL.soil,"#5E4329",.50);
+  const wet = alive ? (kind==="green"||kind==="oasis" ? .55 : .80) : 0;
+  const rim=L.lit(shade(soil,alive?.05:.16)), inner=L.lit(shade(soil,-.10-.24*wet));
+  farmBlob(ctx,fx,fy+ry*.25,rx*1.5,ry*1.4,"14,10,6",L.shadowA*.35);
+  ctx.fillStyle=rim; ctx.beginPath(); ctx.ellipse(fx,fy,rx*1.22,ry*1.22,0,0,TAU); ctx.fill();
+  ctx.strokeStyle="rgba(255,240,210,"+(.22*(1-L.nightF*.7)).toFixed(3)+")";     /* الحافة الأمامية تلقط الضوء */
+  ctx.lineWidth=Math.max(.7,th*.035);
+  ctx.beginPath(); ctx.ellipse(fx,fy,rx*1.16,ry*1.16,0,.15*Math.PI,.85*Math.PI); ctx.stroke();
+  const g=ctx.createRadialGradient(fx,fy+ry*.2,rx*.05,fx,fy,rx);
+  g.addColorStop(0,shade(inner,-.06)); g.addColorStop(.75,inner); g.addColorStop(1,shade(inner,-.14));
+  ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(fx,fy,rx,ry,0,0,TAU); ctx.fill();
+  if(wet>0 && L.nightF<.7){                                  /* لمعة رطوبة السقي */
+    ctx.fillStyle="rgba(255,255,255,"+(.07*wet).toFixed(3)+")";
+    ctx.beginPath(); ctx.ellipse(fx+rx*.18,fy-ry*.25,rx*.38,ry*.20,0,0,TAU); ctx.fill();
+  }
+  for(let i=0;i<5;i++){
+    const a=rnd()*TAU, d=1.02+rnd()*.14;
+    ctx.fillStyle=shade(rim,(rnd()-.5)*.24);
+    ctx.beginPath(); ctx.ellipse(fx+Math.cos(a)*rx*d,fy+Math.sin(a)*ry*d,rx*.09,ry*.07,0,0,TAU); ctx.fill();
+  }
+  if(!alive){                                                /* تشقق الأرض الناشفة */
+    ctx.strokeStyle="rgba(40,26,14,.35)"; ctx.lineWidth=Math.max(.5,th*.015);
+    for(let i=0;i<4;i++){ let x=fx+(rnd()-.5)*rx, y=fy+(rnd()-.5)*ry; ctx.beginPath(); ctx.moveTo(x,y);
+      for(let k=0;k<3;k++){ x+=(rnd()-.5)*rx*.5; y+=(rnd()-.5)*ry*.5; ctx.lineTo(x,y); } ctx.stroke(); }
+  }
+}
+/* ظل النبتة الحقيقي على الأرض: يطيح بعكس الشمس، قصير وقت الظهر وطويل وقت العصر/الغروب */
+function paintPlantShadow(ctx,fx,fy,sw,sh,mat,alive,L,tw,th){
+  if(L.shadowA<.02) return;
+  let dx=-L.lx*1.15, dy=(1-Math.abs(L.lx)*.45)*.62;
+  const n=Math.hypot(dx,dy)||1; dx/=n; dy/=n;
+  const low=1-L.elev;
+  const len=sh*(.12+.95*low*low)*(mat==="column"?.85:1);
+  const wid=sw*(mat==="tree"?.46:mat==="palmTree"?.34:mat==="column"?.30:.40);
+  const A=L.shadowA*(alive?1:.7);
+  ctx.save(); ctx.translate(fx,fy); ctx.rotate(Math.atan2(dy,dx));
+  if(mat==="tree"||mat==="palmTree"){
+    ctx.strokeStyle="rgba(12,10,6,"+(A*.7).toFixed(3)+")"; ctx.lineCap="round";
+    ctx.lineWidth=Math.max(1,sw*(mat==="palmTree"?.035:.05));
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(len*.62,0); ctx.stroke();
+    farmBlob(ctx,len*.80,0,len*.30+wid*.30,wid*.30,"12,10,6",A);
+  } else {
+    farmBlob(ctx,len*.40,0,len*.52+wid*.28,wid*.32,"12,10,6",A);
+  }
+  ctx.restore();
+  farmBlob(ctx,fx,fy,wid*.42,wid*.42*(th/tw),"10,8,4",A*1.05);   /* ظل التماس عند الساق */
+}
+/* يضرب رسمة النبتة بلون الضوء نفسه اللي على الأرض (غروب دافي، ليل مزرق، غيم رمادي) */
+function tintToLight(cv,rgb){
+  if(rgb[0]>=252 && rgb[1]>=252 && rgb[2]>=252) return;
+  const w=cv.width, h=cv.height; if(!w || !h) return;
+  try{
+    const tmp=document.createElement("canvas"); tmp.width=w; tmp.height=h;
+    tmp.getContext("2d").drawImage(cv,0,0);
+    const c=cv.getContext("2d");
+    c.save(); c.setTransform(1,0,0,1,0,0);
+    c.globalCompositeOperation="multiply"; c.fillStyle="rgb("+rgb.join(",")+")"; c.fillRect(0,0,w,h);
+    c.globalCompositeOperation="destination-in"; c.drawImage(tmp,0,0);
+    c.restore();
+  }catch(e){}
+}
+/* طبقة الجو فوق كل شي (أرض ونبات): ظلمة الليل، ضباب الجبال، مطر/ثلج، وتحبّب الصورة */
+function paintFarmAtmosphere(ctx,W,H,gy,K,WX,L,sx,sy){
+  if(L.nightF>.25){
+    ctx.fillStyle="rgba(3,6,14,"+((1-L.moonLight)*.30*L.nightF).toFixed(3)+")"; ctx.fillRect(0,0,W,H);
+    if(L.moonLight>.05){ ctx.fillStyle="rgba(150,178,222,"+(L.moonLight*.08*L.nightF).toFixed(3)+")"; ctx.fillRect(0,0,W,H); }
+  }
+  if((WX.fog||0)>.02){
+    const fc = L.nightF>.5 ? "150,166,184" : "232,236,238", y0=Math.max(0,gy*.45);
+    const fg=ctx.createLinearGradient(0,y0,0,H);
+    fg.addColorStop(0,"rgba("+fc+",0)"); fg.addColorStop(.30,"rgba("+fc+","+(WX.fog*.46).toFixed(3)+")");
+    fg.addColorStop(1,"rgba("+fc+","+(WX.fog*.14).toFixed(3)+")");
+    ctx.fillStyle=fg; ctx.fillRect(0,y0,W,H-y0);
+  }
+  if((WX.rain||0)>.02 || (WX.snow||0)>.02) drawPrecip(ctx,W,H,Math.min(W,H),WX,L.nightF,0);
+  drawAtmosphereFinish(ctx,W,H,Math.min(W,H),K,L.nightF,sx,sy,L.elev);
 }
 
 /* يرسم جزيرة الواحة كاملة (سما + جسم) بحجم كبير وواضح — أرض ثابتة ٧×٧ (٤٩ خانة)،
@@ -6286,24 +6558,34 @@ let _isoFarmFrac = null;   /* null = أول مرة تفتح → نتوسّط */
 
 function renderIsoFarm(ps, islandId){
   const prevFrac = _isoFarmFrac;   /* نحافظ على الـ fraction المحفوظ */
-  el.garden.innerHTML="";
+  /* نقيس قبل أي تفريغ، ونبني المزرعة الجديدة كاملة وهي مفصولة عن الصفحة، وبعدين
+     نبدّلها بالقديمة بخطوة وحدة (replaceChildren). قبل كذا كان innerHTML="" يفرّغ
+     المكان لحظة → طول الصفحة ينهار → المتصفح يرجّع التمرير لفوق. هذا اللي كان
+     "يرقّي" المستخدم لأعلى الصفحة بالآيباد كل ما انعاد رسم المزرعة. */
+  const keepY = window.scrollY;
+  const availW=Math.max(260,(el.garden.clientWidth||330)-2);
   const wrap=document.createElement("div"); wrap.className="isofarm";
-  el.garden.appendChild(wrap);
 
   const shown=ps.slice(-ISO_COLS*ISO_ROWS);
   const { cols, rows } = isoGridDims();
-  const availW=Math.max(260,(el.garden.clientWidth||wrap.clientWidth||330)-4);
 
-  const rawSpanW=(cols+rows)*(ISO_TW/2);
-  const scale=clamp(availW/rawSpanW,.88,1.9);      /* أرضية أعلى وسقف أبعد — جزيرة أكبر وأوضح، حتى لو احتاجت تمرير أفقي */
+  /* الحجم يراعي العرض والطول معاً: الجزيرة كاملة لازم تنشاف بشاشة وحدة (بالآيباد
+     كانت أطول من الشاشة فتضطر تمرّر وتضيع النبتات). */
+  const padTopK=3.0, bedK=.42, botK=1.35, sideK=.55;
+  const fitW = availW/((cols+rows)*(ISO_TW/2) + 2*sideK*ISO_TW);
+  const vh = Math.max(window.innerHeight||0, document.documentElement.clientHeight||0) || 800;
+  const fitH = Math.max(300, vh-120)/(ISO_TH*((cols+rows)/2 + padTopK + bedK + botK));
+  const scale=clamp(Math.min(fitW,fitH),.8,1.9);
   const tw=ISO_TW*scale, th=ISO_TH*scale;
-  const skirtH=th*2.3, padTop=th*3.6, padSide=tw*.85;
+  const bedH=th*bedK, padTop=th*padTopK, padSide=tw*sideK;
 
   const corners=[isoPt(0,0,tw,th),isoPt(cols,0,tw,th),isoPt(cols,rows,tw,th),isoPt(0,rows,tw,th)];
   const minX=Math.min(...corners.map(p=>p.x)), maxX=Math.max(...corners.map(p=>p.x));
   const minY=Math.min(...corners.map(p=>p.y)), maxY=Math.max(...corners.map(p=>p.y));
-  const originX=padSide-minX, originY=padTop-minY;
-  const W=Math.ceil((maxX-minX)+padSide*2), H=Math.ceil((maxY-minY)+padTop+skirtH+th*1.2);
+  /* المسرح ما يصغر عن عرض الحاوية أبداً (السما والأرض تعبّي العرض كامل)، والمزرعة دايماً بنصّه */
+  const W=Math.ceil(Math.max((maxX-minX)+padSide*2, availW)), H=Math.ceil((maxY-minY)+padTop+bedH+th*botK);
+  const originX=(W-(maxX-minX))/2-minX, originY=padTop-minY;
+  const horizonY=originY+th*.85;                      /* خط الأفق: ورا ركن المزرعة الخلفي بشوي */
 
   const stage=document.createElement("div"); stage.className="iso-stage";
   stage.style.width=W+"px"; stage.style.height=H+"px";
@@ -6312,67 +6594,69 @@ function renderIsoFarm(ps, islandId){
   const cv=document.createElement("canvas"); cv.className="iso-land";
   stage.appendChild(cv);
   const ctx=fitCanvas(cv,W,H);
-  /* نمرّر null بدل الساعة المحلية البحتة عشان skyAt() يستخدم solarState/moonState
-     المبنية على إحداثيات موقع المستخدم الفعلية (siteLatLon من المكان المختار،
-     أو موقع GPS محفوظ، أو ولو ما شيء منهم فمن إحداثيات timezone-based تلقائياً).
-     هذا يحل مشكلة: الساعة ٢:٥٠ ص والسما تطلع "فجر"/"غروب" ملوّن دافئ (ميل بين
-     مفاتيح SKY_KEYS الزمنية الثابتة) — بدل كذا، الفلك الحقيقي يحدد: الشمس تحت
-     الأفق فعلياً → القمر الحقيقي بموقعه الفعلي بالسما.
-     moonTopY = padTop (أعلى حد لسطح الجزيرة): يحدد منطقة السما الصافية فوق الجزيرة،
-     عشان القرص (قمر/شمس) ينطبع بالمكان الفلكي الصحيح داخل هالمنطقة ما يطلع تحتها. */
-  const sunPos=paintIsoSky(ctx,W,H,null,padTop);
-  const rnd=mulberry(hashStr("isofarm-"+(islandId||"x")));     /* بذرة لكل واحة — تضاريس ثابتة ومختلفة بين الواحات */
-  paintIsoIsland(ctx,cols,rows,tw,th,originX,originY,skirtH,rnd,sunPos.sx,sunPos.sy);
+  /* السما بالفلك الحقيقي لموقع المستخدم (skyAt(null) → solarState/moonState)، والقرص
+     يبقى فوق المزرعة (moonTopY = padTop) ولو نزل للأفق تغطيه تضاريس المكان طبيعي. */
+  const sunPos=paintIsoSky(ctx,W,H,null,padTop,horizonY);
+  const K=sunPos.K, PL=curPlace(), WX=curWx(new Date()), kind=farmGroundKind(PL);
+  const L=farmLightOf(K,WX,sunPos.sx,W,sunPos.elev);
+  const rnd=mulberry(hashStr("isofarm-"+(islandId||"x")+"-"+PL.id));   /* بذرة لكل واحة ومكان — ملمس ثابت ما يرفرف */
+  paintFarmBackdrop(ctx,W,H,horizonY,PL,K,WX,L,sunPos.sx,sunPos.sy,sunPos.dR,rnd,kind);
+  paintFarmPlot(ctx,cols,rows,tw,th,originX,originY,bedH,PL,K,WX,L,rnd,kind);
 
-  const tiles=[];
-  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) tiles.push({c,r,depth:c+r});
   const fillOrder=rtlFillOrder(cols,rows);                /* صف-صف من اليمين لليسار، يبدأ من الصف الأعلى — راجع rtlFillOrder() */
-  tiles.sort((a,b)=>a.depth-b.depth || a.c-b.c);         /* ترتيب الرسم: خلف → قدّام (للتراكب الصحيح فقط) */
 
   const slots=document.createElement("div"); slots.className="iso-slots";
   stage.appendChild(slots);
 
   const spScale=Math.max(.6,scale);
   const maxSpW=tw*1.04;      /* سقف عرض النبتة قريب من عرض خانتها — ما تتلاصق مع جاراتها */
+  const items=[];
   shown.forEach((p,i)=>{
     const tl=fillOrder[i]; if(!tl) return;
     const ctr=isoPt(tl.c+.5,tl.r+.5,tw,th);
-    const fx=ctr.x+originX, fy=ctr.y+originY;           /* قاعدة النبتة بنص الخانة بالضبط — تنمو للأعلى منها (مو زاحفة لحافة الخانة) */
-    const sz=SIZES[clamp(tierOf(gMinsOf(p)),0,SIZES.length-1)];
+    const fx=ctr.x+originX, fy=ctr.y+originY;           /* قاعدة النبتة بنص الخانة بالضبط — تنمو للأعلى منها */
+    const tier=clamp(tierOf(gMinsOf(p)),0,SIZES.length-1), sz=SIZES[tier];
     let sw=sz[0]*spScale, sh=sz[1]*spScale;
     if(sw>maxSpW){ const k=maxSpW/sw; sw*=k; sh*=k; }
-    sw=Math.round(sw); sh=Math.round(sh);
+    items.push({ p, tl, fx, fy, sz, sw:Math.round(sw), sh:Math.round(sh), sizeF:tier/Math.max(1,SIZES.length-1),
+                 mat:(SPECIES[p.species]||SPECIES.basil).mat });
+  });
+  /* الأرض أولاً: أحواض السقي لكل النبتات، بعدين ظلالها فوقها (ظل شجرة كبيرة يطيح على جارتها) */
+  items.forEach(it=>paintPlantBasin(ctx,it.fx,it.fy,tw,th,it.sizeF,it.p.survived,L,PL,kind,rnd));
+  items.forEach(it=>paintPlantShadow(ctx,it.fx,it.fy,it.sw,it.sh,it.mat,it.p.survived,L,tw,th));
 
-    ctx.save();                                          /* بقعة تراب خفيفة تحت كل نبتة تثبّت المربع بصرياً — بحجم متواضع
-                                                             يتبع حجم النبتة نفسها، عشان ما تغطي بذرة صغيرة لسا بأول طورها */
-    const mr=clamp(sw*.40, tw*.055, tw*.16);
-    const mound=ctx.createRadialGradient(fx,fy+th*.04,mr*.08,fx,fy+th*.04,mr);
-    mound.addColorStop(0,"rgba(90,66,42,.48)"); mound.addColorStop(.68,"rgba(90,66,42,.20)"); mound.addColorStop(1,"rgba(90,66,42,0)");
-    ctx.fillStyle=mound;
-    ctx.beginPath(); ctx.ellipse(fx,fy+th*.05,mr,mr*.44,0,0,TAU); ctx.fill();
-    ctx.globalAlpha=.16; ctx.fillStyle="#16230E";
-    ctx.beginPath(); ctx.ellipse(fx,fy+th*.09,mr*.92,th*.16,0,0,TAU); ctx.fill();
-    ctx.restore();
-
+  const windF = clamp(.55+((WX.wind!=null?WX.wind:10)/22),.5,1.8)*(WX.storm?1.6:1);
+  items.forEach(it=>{
+    const { p, tl, fx, fy, sz, sw, sh } = it;
     /* فصلنا الرسم عن الضغط عشان الضغط يصير دقيق على الخانة فعلياً مو على
        مستطيل الكانڤاس (اللي كان يمتد لعرض/ارتفاع كامل النبتة فيلتقط ضغطات
        بالمسافات الفاضية حوالينها، أو يتداخل مع جيرانها): */
     const vis=document.createElement("div"); vis.className="iso-vis";
-    vis.style.left=fx+"px"; vis.style.top=fy+"px";
+    vis.style.left=fx+"px"; vis.style.top=(fy+sh*.035)+"px";     /* ساق النبتة (٩٦٫٥٪ من الرسمة) على قاع الحوض بالضبط */
     vis.style.zIndex=String(1000+tl.depth*100+tl.c);
     const spCv=document.createElement("canvas");
     vis.appendChild(spCv); slots.appendChild(vis);
     paint(spCv,sw,sh,{ species:p.species, minutes:gMinsOf(p), withered:!p.survived,
-      seedStr:p.id, glow:false, ground:false, sizeRef:sh*sz[2] });
+      seedStr:p.id, glow:false, ground:false, noShadow:true, sizeRef:sh*sz[2] });
+    tintToLight(spCv,L.ambRGB);                          /* نفس ضوء الأرض بالضبط */
+    /* هبّة هوا خفيفة: الأعشاب تتمايل أكثر من الشجر، والصبار ثابت — وقوتها من الرياح الحقيقية */
+    const amp = (it.mat==="clump"?1.7:it.mat==="palmTree"?.85:it.mat==="tree"?.5:0)*windF*(p.survived?1:.4);
+    if(amp>.05 && !reduceMotion){
+      const r1=h01(hashStr(p.id),3), r2=h01(hashStr(p.id),7);
+      vis.classList.add("sway");
+      vis.style.setProperty("--sa",amp.toFixed(2));
+      vis.style.setProperty("--sd",(2.6+r1*2.2).toFixed(2)+"s");
+      vis.style.setProperty("--sdl",(-r2*4).toFixed(2)+"s");
+    }
 
     const btn=document.createElement("button");
     btn.className="iso-tap"; btn.type="button";
-    btn.style.left=(ctr.x+originX)+"px"; btn.style.top=(ctr.y+originY)+"px";
+    btn.style.left=fx+"px"; btn.style.top=fy+"px";
     btn.style.width=Math.round(tw)+"px"; btn.style.height=Math.round(th)+"px";
     /* زر الضغط فوق كل الرسوم (z-index أعلى) عشان يستقبل الضغطة أول — وهو مقصوص
        بشكل معين فيوصل الضغط بس من داخل حدود الخانة، لا تطفح لجاراتها */
     btn.style.zIndex=String(5000+tl.depth*100+tl.c);
-    btn.setAttribute("aria-label",SPECIES[p.species].n+" · "+hhmm(p.minutes)+(p.survived?"":TR(" (ذبلت)")));
+    btn.setAttribute("aria-label",TR(SPECIES[p.species].n)+" · "+hhmm(p.minutes)+(p.survived?"":TR(" (ذبلت)")));
     btn.onclick=()=>openPlant(p);
     btn.onmouseenter=()=>vis.classList.add("hover");
     btn.onmouseleave=()=>vis.classList.remove("hover");
@@ -6381,14 +6665,17 @@ function renderIsoFarm(ps, islandId){
     slots.appendChild(btn);
   });
 
+  /* طبقة الجو فوق النبات والأرض سوا (ليل، ضباب، مطر) — ما تستقبل ضغط */
+  const atm=document.createElement("canvas"); atm.className="iso-atm";
+  slots.appendChild(atm);
+  paintFarmAtmosphere(fitCanvas(atm,W,H),W,H,horizonY,K,WX,L,sunPos.sx,sunPos.sy);
+
   /* أول مرة تفتح: تتمركز على وسط الجزيرة وتثبت. بعدها، أي إعادة رسم تحافظ على
      نفس موضع التمرير النسبي اللي كان عليه المستخدم (prevFrac) بدل ما ترجّعها للمنتصف —
      هذا اللي يمنع إحساس "المزرعة تتحرك وحدها". بالـRTL قيمة scrollLeft سالبة
      (الصفر عند الحافة اليمنى) — لازم نعكس الإشارة وإلا القيمة الموجبة تنقص لصفر
      تلقائياً ويبقى العرض عالق بالحافة. */
   const maxScroll = Math.max(0, W-availW);
-  /* إذا المزرعة أكبر من الحاوية، نفعّل class التمرير (يشيل flex center ويخلي العرض يبدأ من اليسار) */
-  if(maxScroll > 0) wrap.classList.add("scrollable");
   const frac = prevFrac==null ? .5 : prevFrac;
   /* نحسب offsetX من prevFrac — نستخدمها في المنطق الجديد للـ pan */
   let _panX = -(frac * maxScroll);    /* سالب = تحريك المحتوى يسار (نظرة المستخدم تتحرك يمين) */
@@ -6462,6 +6749,10 @@ function renderIsoFarm(ps, islandId){
   wrap.addEventListener("click", e=>{
     if(_hasDragged){ e.stopPropagation(); e.preventDefault(); }
   }, true);
+
+  /* التبديل الذرّي: القديمة تطلع والجديدة تدخل بنفس اللحظة — طول الصفحة ما ينهار */
+  el.garden.replaceChildren(wrap);
+  if(Math.abs(window.scrollY-keepY)>1) window.scrollTo(0,keepY);
 }
 
 /* شريط الواحات فوق الجزيرة: تبديل بينها، تعديل اسم/تصنيف الحالية، وإنشاء وحدة جديدة.
@@ -7454,8 +7745,13 @@ $("#resetBtn").onclick=()=>{
   DB=normalize(null); writeStore();
   renderAll(); go("plant"); toast(TR("رجعت الأرض بيضاء."),"🧹");
 };
-let rz; function onResize(){ clearTimeout(rz); rz=setTimeout(()=>{
-  sizeHero(); if($("#view-garden").classList.contains("on")) renderGarden();
+/* سفاري (آيباد/آيفون) يطلق resize كل ما شريط العنوان ينطوي أو يطلع أثناء التمرير —
+   تغيّر بالطول بس. لو نعيد رسم المزرعة عليه، تنبني من جديد وسط تمرير المستخدم.
+   فنعيد رسمها بس لما يتغيّر العرض فعلاً (دوران الجهاز، تكبير النافذة). */
+let rz, _lastVW = window.innerWidth;
+function onResize(){ clearTimeout(rz); rz=setTimeout(()=>{
+  const vw = window.innerWidth, widthChanged = Math.abs(vw-_lastVW)>2; _lastVW = vw;
+  sizeHero(); if(widthChanged && $("#view-garden").classList.contains("on")) renderGarden();
   if(gate.classList.contains("on")) drawGateScene();   /* بوابة الدخول ما كانت تتزامن مع تغيّر حجم الشاشة */
   if(document.body.classList.contains("landing")){ paintLandingSky(); homeSlideRender(); }
 },160); }
@@ -7584,6 +7880,7 @@ function cloudErr(e){
                                             return TR("فيه حساب بهذا الإيميل. سجّل دخول بدل ما تنشئ.");
   if(/Password should be at least/i.test(m))return TR("كلمة السر لازم ٦ خانات فأكثر.");
   if(/Unable to validate email|invalid format|valid email/i.test(m)) return TR("الإيميل غير صحيح.");
+  if(/TOO_MANY_ATTEMPTS/.test(m))            return TR("محاولات خاطئة كثيرة. انتظر ربع ساعة وجرّب.");
   if(/rate limit|too many|For security purposes/i.test(m)) return TR("محاولات كثيرة. انتظر دقيقة وجرّب.");
   if(/abort|Failed to fetch|NetworkError|network/i.test(m)) return TR("ما فيه اتصال بالسيرفر. تأكد من النت.");
   return m;
@@ -7654,8 +7951,8 @@ async function doLogin(){
     let email = idRaw;
     if(!/.+@.+\..+/.test(idRaw)){
       /* مو شكل إيميل — نعتبره اسم مستخدم ونجيب إيميله أول */
-      const found = await emailForUsername(idRaw);
-      if(!found){ msg(TR("ما لقينا حساب بهالاسم أو الإيميل.")); return; }
+      const found = await loginEmail(idRaw, pass);
+      if(!found){ msg(TR("اسم المستخدم أو كلمة السر غلط.")); return; }
       email = found;
     }
     const js = await cloudSignIn(email,pass);
@@ -8170,9 +8467,9 @@ async function deleteAccount(){
     if(!confirm(TR("هذا يمسح حسابك وكل بياناتك من الخادم نهائياً ولا يمكن التراجع. تأكيد؟"))) return;
     if(!confirm(TR("آخر تأكيد: كل المزارع والجلسات والأصدقاء ستُحذف إلى الأبد."))) return;
     try{
-      await ensureToken();
-      /* استدعاء دالة delete_my_account() من Supabase */
-      await api("/rest/v1/rpc/delete_my_account", { method:"POST", body:{} }, true);
+      /* دالة delete_my_account() بالسيرفر: تمسح المزارع والجلسات والأصدقاء واسم المستخدم ثم الحساب نفسه.
+         (كانت تنادي api() اللي ما لها وجود — فالحذف السحابي كان يفشل دايماً) */
+      await gRpc("delete_my_account",{});
       toast(TR("تم حذف حسابك نهائياً."),"🗑️");
     } catch(e){
       toast(TR("فشل حذف الحساب: ")+e.message,"⚠️");
@@ -8204,19 +8501,23 @@ function openPrivacyPolicy(){
   box.innerHTML=`
     <button onclick="this.closest('[style*=fixed]').remove()" style="position:absolute;top:12px;inset-inline-end:14px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-3)">✕</button>
     <h2 style="font-family:var(--kufi);font-size:18px;font-weight:700;color:var(--ink);margin:0 0 16px">${isAr?"سياسة الخصوصية — حصاد الإنتاجية":"Privacy Policy — Hasad Productivity"}</h2>
-    <p><strong>${isAr?"آخر تحديث:":"Last updated:"}</strong> ${new Date().toLocaleDateString(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"})}</p>
+    <p><strong>${isAr?"آخر تحديث:":"Last updated:"}</strong> ${new Date(2026,10,5).toLocaleDateString(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"})}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"ما الذي نجمعه؟":"What We Collect"}</h3>
     <p>${isAr?"نجمع فقط البيانات الضرورية لتشغيل التطبيق: عنوان البريد الإلكتروني (للحسابات السحابية)، الاسم وتفاصيل الجامعة إذا اخترت إضافتها، وبيانات الجلسات والمزارع.":"We collect only what is needed to run the app: email address (cloud accounts), display name and university details if you choose to add them, and session/farm data."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"كيف نستخدم بياناتك؟":"How We Use Your Data"}</h3>
     <p>${isAr?"بياناتك تُستخدم حصراً لتقديم خدمة التطبيق: حفظ مزرعتك، عرض إحصائياتك، والجلسات الجماعية. لا نبيع بياناتك ولا نشاركها مع أي طرف ثالث.":"Your data is used exclusively to provide the app service: saving your farm, showing your stats, and group sessions. We never sell or share your data with third parties."}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"وش يشوف غيرك؟":"What Others Can See"}</h3>
+    <p>${isAr?"اسم المستخدم يبان لمن يبحث عنك لإضافتك صديق. في الجلسات الجماعية يبان اسمك وجامعتك ونبتتك للمشاركين بنفس الجلسة فقط. لوحة الجامعات تعرض مجاميع الساعات لكل جامعة بدون أسماء. إيميلك ما يبان لأي أحد.":"Your username is visible to people searching to add you as a friend. In group sessions, your name, university and plant are shown only to participants of that session. The university board shows total hours per university without names. Your email is never shown to anyone."}</p>
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"خدمات خارجية":"Third-Party Services"}</h3>
+    <p>${isAr?"لعرض الجو الحقيقي نرسل إحداثيات المكان اللي اخترته فقط لخدمة Open-Meteo (بدون أي بيانات عنك). تحديد موقعك الدقيق اختياري ويبقى محفوظ على جهازك.":"To show live weather, we send only the coordinates of the place you picked to Open-Meteo (no personal data). Using your exact location is optional and it stays on your device."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"التخزين والأمان":"Storage & Security"}</h3>
-    <p>${isAr?"البيانات السحابية مخزّنة على Supabase مع تفعيل حماية Row-Level Security، أي كل مستخدم لا يصل إلا لبياناته. الحسابات المحلية تبقى على جهازك فقط.":"Cloud data is stored on Supabase with Row-Level Security enabled — each user can only access their own data. Local accounts stay on your device only."}</p>
+    <p>${isAr?"البيانات السحابية مخزّنة على Supabase مع حماية Row-Level Security: كل مستخدم ما يوصل إلا لبياناته، وكلمات السر مشفّرة ولا أحد يقدر يقرأها (حتى إحنا). الحسابات المحلية تبقى على جهازك فقط.":"Cloud data is stored on Supabase with Row-Level Security — each user can only access their own data, and passwords are hashed so nobody (including us) can read them. Local accounts stay on your device only."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"حقك في حذف بياناتك":"Your Right to Deletion"}</h3>
     <p>${isAr?"يمكنك حذف حسابك وجميع بياناتك بشكل نهائي في أي وقت من إعدادات الحساب. الحذف فوري وغير قابل للتراجع.":"You can permanently delete your account and all associated data at any time from account settings. Deletion is immediate and irreversible."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"ملفات تعريف الارتباط":"Cookies"}</h3>
     <p>${isAr?"نستخدم localStorage لحفظ إعداداتك محلياً فقط. لا نستخدم ملفات تتبع أو تحليلات خارجية.":"We use localStorage for local settings only. No tracking cookies or external analytics."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"التواصل":"Contact"}</h3>
-    <p>${isAr?"لأي استفسار حول بياناتك، تواصل معنا عبر:":"For any questions about your data, contact us via:"} <a href="mailto:privacy@hasad-productivity.com" style="color:var(--viridian)">privacy@hasad-productivity.com</a></p>
+    <p>${isAr?"لأي استفسار حول بياناتك، تواصل معنا عبر:":"For any questions about your data, contact us via:"} <a href="mailto:hasad.productivity@gmail.com" dir="ltr" style="color:var(--viridian)">hasad.productivity@gmail.com</a></p>
     <button onclick="this.closest('[style*=fixed]').remove()" style="margin-top:20px;width:100%" class="btn btn-primary">${isAr?"حسناً":"Got it"}</button>
   `;
   overlay.appendChild(box);
