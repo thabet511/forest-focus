@@ -2346,12 +2346,16 @@ const SPECIES = {
    - صبّار وردي متشابه: أغاف، يوكا · نخيل متكرر: ملكية، أريكا
    - مثمرة بنفس التاج المدوّر: تفاح، برتقال، مشمش، كمثرى، جوافة، خروب، توت
    - أشجار غير محلية/مكررة: أرز، غار، صفصاف، سكويا، تنّوب أزرق */
+/* الأنواع المخفيّة: ما تنحذف من البيانات (المزارع القديمة تبقى شغّالة)، بس ما تنعرض للاختيار.
+   المعيار: يبقى بس اللي شكله ونموّه واقعيين فعلاً. أُضيفت هنا الأنواع اللي كان شكلها
+   أقرب للرسم الكرتوني منه للنبات الحقيقي (تيوليب، زنبق، عبّاد الشمس، برميل الذهب). */
 const HIDDEN_SPECIES = new Set([
   "rosemary","sage","dill","henna","remth",
   "poppy","narcissus","carnation","saffron","esparto",
   "agave","yucca","royalpalm","areca",
   "apple","orange","apricot","pear","guava","carob","mulberry",
-  "cedar","laurel","willow","sequoia","bluespruce"
+  "cedar","laurel","willow","sequoia","bluespruce",
+  "tulip","lily","sunflower","goldenbarrel"
 ]);
 const SP_ORDER = Object.keys(SPECIES).filter(k=>!HIDDEN_SPECIES.has(k));
 const GUEST_SEEDS = ["basil","cactus","palm","olive","oak"];  /* نوع واحد من كل فئة للضيف */
@@ -2993,6 +2997,21 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
     ctx.fillStyle="rgba(14,18,24,"+(oc*.38*nightF).toFixed(3)+")"; ctx.fillRect(0,0,w,gy+1);
   }
 
+  /* ١ب) تدرّج أفقي نحو الشمس: السما الحقيقية مو لون واحد عبر العرض — جهة الشمس أفتح وأدفأ
+     قرب الأفق (تشتت الضوء الأمامي)، والجهة المقابلة أعمق زرقة. بدون هذا تبين السما كخلفية
+     مطليّة بلون واحد، وهذا من أكبر أسباب الإحساس "المسطّح" بالمشهد */
+  if(nightF<.92){
+    const azi=ctx.createRadialGradient(sx,gy,0,sx,gy,Math.max(w,gy)*1.15);
+    const aw=(1-nightF)*(1-WX.cloud*.55);
+    azi.addColorStop(0,   "rgba(255,246,214,"+(.26*aw).toFixed(3)+")");
+    azi.addColorStop(.34, "rgba(255,240,206,"+(.12*aw).toFixed(3)+")");
+    azi.addColorStop(1,   "rgba(255,236,200,0)");
+    ctx.fillStyle=azi; ctx.fillRect(0,0,w,gy+1);
+  }
+  /* ١ج) سحب ريشية عالية (سيروس): خيوط رفيعة جداً تكسر فراغ السما بلا ما تغطّيها — موجودة
+     في أغلب السماوات الصافية فعلياً، وغيابها التام يخلّي السما تبين كتدرّج رقمي نظيف زيادة */
+  if(nightF<.55 && WX.cloud<.5 && WX.rain<.05) drawCirrus(ctx,w,gy,s,K,nightF,tms,WX);
+
   /* ٢) نجوم — كثافتها تتبع المرحلة، وتخفت قرب القمر */
   if(K.stars*(1-WX.cloud*.85)>.02){
     ctx.fillStyle="#EAF2FF";
@@ -3069,29 +3088,22 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
   /* ٥) ثلاث طبقات تضاريس — شكلها يتبع المكان المختار، ولونها يتبع ضوء الوقت */
   drawTerrain(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR);
 
-  /* ٦) ضباب الأفق */
-  const haze=ctx.createLinearGradient(0,gy-s*.17,0,gy+s*.02);
-  haze.addColorStop(0,"rgba(0,0,0,0)"); haze.addColorStop(1,K.haze);
-  ctx.fillStyle=haze; ctx.fillRect(0,gy-s*.17,w,s*.19);
+  /* ٥ب) أرضية المقدّمة قبل ضباب الأفق مباشرة — عشان الضباب يمرّ فوق خط الأفق والأرض سوا
+     فيذوب الوصل بينهما. لو انرسمت بعد الضباب يطلع خط قصّ أفقي حاد واضح عبر كل الشاشة */
+  drawGroundPlane(ctx,w,h,gy,s,PL,K,C,nightF,sx,elev,WX);
+
+  /* ٦) ضباب الأفق — يعبر خط الأفق لتحت شوي فيذوّب الوصل بين الأرض والتضاريس */
+  const haze=ctx.createLinearGradient(0,gy-s*.17,0,gy+s*.055);
+  haze.addColorStop(0,"rgba(0,0,0,0)"); haze.addColorStop(.74,K.haze); haze.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=haze; ctx.fillRect(0,gy-s*.17,w,s*.23);
   if(WX.fog>.02){                                   /* ضباب السودة والجبال: يبلع التلال البعيدة */
     const fg=ctx.createLinearGradient(0,gy-s*.36,0,gy+s*.05);
     const fc = nightF>.5 ? "150,166,184" : "232,236,238";
-    fg.addColorStop(0,"rgba("+fc+",0)"); fg.addColorStop(.55,"rgba("+fc+","+(WX.fog*.62).toFixed(3)+")");
-    fg.addColorStop(1,"rgba("+fc+","+(WX.fog*.30).toFixed(3)+")");
+    fg.addColorStop(0,"rgba("+fc+",0)"); fg.addColorStop(.55,"rgba("+fc+","+(WX.fog*.46).toFixed(3)+")");
+    fg.addColorStop(1,"rgba("+fc+","+(WX.fog*.20).toFixed(3)+")");
     ctx.fillStyle=fg; ctx.fillRect(0,gy-s*.36,w,s*.41);
   }
 
-  /* ٧) السهل الممتد، بدرجة تتبع ضوء المرحلة */
-  const baseS = PL.soil ? mix(PAL.soil3, PL.soil, .78) : PAL.soil3;
-  const baseL = PL.soil ? mix(PAL.soil,  shade(PL.soil,-.22), .70) : PAL.soil;
-  const soilTop = shade(mix(baseS, K.sky[2], K.warmth*.22), .18+K.gTint*.5);
-  const soilMid = shade(mix(baseS, K.sky[2], K.warmth*.14), K.gTint);
-  const soilLow = shade(baseL, -.14+K.gTint*.6);
-  const gnd=ctx.createLinearGradient(0,gy,0,h);
-  gnd.addColorStop(0,soilTop); gnd.addColorStop(.28,soilMid); gnd.addColorStop(1,soilLow);
-  ctx.fillStyle=gnd; ctx.fillRect(0,gy,w,h-gy+1);
-  ctx.fillStyle = K.stars>.5 ? "rgba(150,180,205,.20)" : "rgba(255,246,214,.46)";
-  ctx.fillRect(0,gy-Math.max(1,s*.0022),w,Math.max(1,s*.0038));
   /* ظل الغيوم على الأرض: كل غيمة تسقط بقعة ظل ناعمة على السهل، منزاحة بعكس اتجاه الشمس
      وبمقدار يكبر كل ما قلّ ارتفاعها (ظل طويل ممتد عند الشروق/الغروب، قصير تحتها عند الظهر
      تماماً) — فيزياء إسقاط حقيقية بسيطة تربط السما بالأرض بدل طبقتين منفصلتين بلا علاقة */
@@ -3140,6 +3152,31 @@ function drawEnvironment(ctx,w,h,gy,s,mins,withered,hr,tms,mdate){
   }
   /* ٨) اللمسة الأخيرة: تحبّب + غسلة لون موحّدة + تظليل أطراف — تلف المشهد بمزاج واحد متماسك */
   drawAtmosphereFinish(ctx,w,h,s,K,nightF,sx,sy,elev);
+}
+
+/* ─── سحب ريشية عالية: خيوط رفيعة ممتدة أفقياً، كل خيط عدة شعيرات متفاوتة الشفافية
+   تنزاح ببطء شديد. رخيصة جداً (بضع مسارات) وفرقها البصري كبير: تعطي السما عمقاً وطبقات. ─── */
+function drawCirrus(ctx,w,gy,s,K,nightF,tms,WX){
+  const t=(tms||0)/1000, fade=(1-nightF/.55)*(1-WX.cloud*1.6);
+  if(fade<=.02) return;
+  ctx.save(); ctx.lineCap="round";
+  for(let i=0;i<7;i++){
+    const y=gy*(.08+h01(i,811)*.42);
+    const drift=(t*(.0010+h01(i,813)*.0016))%1.6;
+    const x0=(-.3+((h01(i,815)+drift)%1.6))*w;
+    const L=w*(.22+h01(i,817)*.34), arch=-s*(.004+h01(i,819)*.012);
+    const a=fade*(.05+h01(i,821)*.085)*(1-nightF*.6);
+    for(let k=0;k<4;k++){
+      const off=(k-1.5)*s*(.0045+h01(i*7+k,823)*.004);
+      const kl=L*(.55+h01(i*11+k,825)*.45), kx=x0+L*.1*h01(i*13+k,827);
+      ctx.strokeStyle="rgba(255,253,246,"+(a*(1-k*.16)).toFixed(3)+")";
+      ctx.lineWidth=Math.max(.8,s*(.0016+h01(i*17+k,829)*.0030));
+      ctx.beginPath(); ctx.moveTo(kx,y+off);
+      ctx.quadraticCurveTo(kx+kl*.5, y+off+arch, kx+kl, y+off+arch*.35);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
 
 /* ─── غيوم ناعمة: نفخات متداخلة بلا حواف، قاعدة مسطّحة رمادية، وتنزاح ببطء مع الريح ───
@@ -3235,13 +3272,26 @@ function terrainH(terr,t,i,seed){
       /* مقطع الكثيب الحقيقي: ظهر محدّب ناعم يصعد للحافة، ثم وجه انزلاق شديد ينتهي بتقعّر عند القاع.
          كثيبين بمقاسين متراكبين + ضجيج بالارتفاع عشان ما تتكرر ولا تصير أهرامات */
       const fq = terr==="bigdune" ? .9 : 1.3;                    /* كثبان عريضة ممتدة: صحراء واسعة مو تلال */
-      const u1 = t*fq + fbm(t*1.4+i,seed,2)*.7 + i*.37, fr=((u1%1)+1)%1;
-      const prof = fr<.58 ? Math.pow(Math.sin(fr/.58*Math.PI/2),1.2) : Math.pow(1-(fr-.58)/.42,1.25);
-      const hv = .80 + .30*fbm(t*1.1+i*.5,seed+6,2);
-      return prof*hv + .12*fbm(t*4+i,seed+3,3);
+      /* سعة تشويه المجال كانت كبيرة جداً (٠٫٧ بتردد ١٫٤): ميل الموجة المشوّهة يوصل صفراً أو
+         يصير سالباً على مقاطع كاملة، فيثبت الطور ويطلع الكثيب بسطح علوي مستوٍ وحافة عمودية
+         حادّة = شكل "هضاب كرتون مقصوصة". خفّضناها لحد يضمن إن الميل يبقى موجباً دايماً،
+         وعوّضنا التنوّع بتفاوت ارتفاع الكثبان نفسها (hv) وضجيج سطحي */
+      const u1 = t*fq + fbm(t*1.1+i,seed,2)*.22 + i*.37, fr=((u1%1)+1)%1;
+      /* مقطع الكثيب لازم يكون منحنىً ناعماً بقمّة مدوّرة وقاع مدوّر. المنحدر الخطّي (رفع
+         منحنى خطّي لأس قريب من ١) يعطي خط قمة مستقيماً تماماً عبر مئات البكسلات، والنتيجة
+         أشكال شبه منحرفة بأسطح مستوية وحواف مستقيمة — "كرتون مقصوص". smooth() يعطي ميلاً
+         صفرياً عند القمة والقاع، فتطلع انحناءات رمل حقيقية. */
+      const prof = fr<.62 ? smooth(fr/.62) : Math.pow(1-(fr-.62)/.38, 1.9);
+      const hv = .70 + .46*fbm(t*.85+i*.5,seed+6,2);
+      return prof*hv + .13*fbm(t*2.4+i,seed+3,3);
     }
-    case "mesa": { const v=fbm(t*2.4+i*1.3,seed,3); const plate=smooth(clamp((v-.44)/.1,0,1));
-      return .12 + plate*.8 + fbm(t*22,seed+5,2)*.06; }
+    case "mesa": {
+      /* الهضبة الحقيقية: سطح علوي مستوٍ، جدران شبه عمودية، وحافة علوية حادّة. نافذة الانتقال
+         كانت عريضة (٠٫١) فتطلع كتل مدوّرة "ذائبة" بدل جروف — ضيّقناها كثيراً وأضفنا شقوقاً */
+      const v=fbm(t*2.4+i*1.3,seed,3), plate=smooth(clamp((v-.46)/.035,0,1));
+      const notch=fbm(t*7.5+i*2.1,seed+8,2);
+      return .10 + plate*(.76+notch*.18) + fbm(t*26,seed+5,2)*.04;
+    }
     case "escarp": { const e=smooth(clamp((t-.12-i*.07)/.09,0,1))*(1-smooth(clamp((t-.9)/.08,0,1)));
       return .15 + e*(.72+fbm(t*9,seed,3)*.2); }
     case "coast": return .25+fbm(t*3,seed,3)*.6;
@@ -3292,7 +3342,10 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
   const terr=PL.terr||"hills", H=TERR_H[terr]||TERR_H.hills, NL=H.length;
   const seed=[...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),7)|0;
   const Hh=Math.ceil(gy+2);
-  const q=clamp(Math.sqrt(300000/(w*Hh)), .6, Math.min(2,window.devicePixelRatio||1));
+  /* دقّة الرسم الداخلية: كانت واطية (q≈٠٫٦٨) فحواف الغطاء النباتي تتدرّج بشكل "سلالم"
+     مربّعة واضحة لما تتكبّر الصورة. رفعناها للضعف تقريباً — والرسم مخزّن بالكاش فما يأثر
+     على الأداء إلا أول مرة، وهي تنبني على دفعات ٥ms فما تعلّق الواجهة */
+  const q=clamp(Math.sqrt(620000/(w*Hh)), .75, Math.min(2,window.devicePixelRatio||1));
   const W=Math.max(2,Math.round(w*q)), HH=Math.max(2,Math.round(Hh*q)), gyq=gy*q;
   const cv=document.createElement("canvas"); cv.width=W; cv.height=HH;
   const g2=cv.getContext("2d");
@@ -3318,7 +3371,13 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     }
     ridge.push(r);
     const kh=pick3(K.hills,fi);
-    let col = PL.hill ? mix(pick3(PL.hill,fi), kh, .22+.66*nightF) : kh;
+    /* بالنهار نخلّي لون المكان الحقيقي هو المسيطر (كان يُمزج ٢٢٪ مع لون تلال وقت اليوم
+       المائل للرمادي المخضر، فتضيع دفء صخر العلا وحمرة رمل النفود). بالليل يرجع لون
+       الوقت هو المسيطر لأن الألوان فعلاً تختفي بالعتمة */
+    /* نضغط مدى لون الطبقات: الطبقة الأبعد ما تاخذ أفتح لون بالكامل ولا الأقرب أغمقه، عشان
+       الفرق اللوني بين طبقة وطبقة ما يطلع قفزة واضحة — القفزة هي اللي تخلّي حدود الطبقات
+       تبين كحواف مقصوصة، خصوصاً وقت الغروب لما يزيد التباين */
+    let col = PL.hill ? mix(pick3(PL.hill,.20+fi*.64), kh, .12+.76*nightF) : kh;
     col = C(mix(col, K.sky[2], lerp(.50,0,Math.pow(fi,.8))*(1-nightF*.55)));
     cols.push(hex2rgb(col));
   }
@@ -3336,12 +3395,17 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     cols.splice(1,0,hex2rgb(C(mix(mix("#D6BD92", pick3(K.hills,.4), .22+.64*nightF), K.sky[2], .12*(1-nightF*.5)))));
   }
   const NLx=ridge.length;
-  const mainM=[], sideA=[];
-  for(let i=0;i<NLx;i++){ const r0=ridge[i], m0=new Float32Array(W), sd=new Float32Array(W);
+  const mainM=[], sideA=[], wideA=[];
+  for(let i=0;i<NLx;i++){ const r0=ridge[i], m0=new Float32Array(W), sd=new Float32Array(W), wd=new Float32Array(W);
     for(let x=0;x<W;x++) m0[x]=(r0[Math.min(W-1,x+3)]-r0[Math.max(0,x-3)])/6;
     const R=Math.round(28*q);                              /* ميل ناعم على نافذة عريضة: اتجاه الأكتاف يتبدّل بتدرّج */
     for(let x=0;x<W;x++){ const a=Math.max(0,x-R), b=Math.min(W-1,x+R); sd[x]=clamp(((r0[b]-r0[a])/(b-a||1))*5,-1,1); }
-    mainM.push(m0); sideA.push(sd); }
+    /* ميل على نافذة عريضة جداً وبلا تشبّع: الميلان الضيّقان يوصلان حدّهما الأقصى على كل
+       السفح وينقلبان عند القمة في عمودين، فيطلع خط ضوئي رأسي حاد. هذا الميل ينتقل من وجه
+       لوجه على مسافة ١٠٠–٢٠٠ بكسل، وهذا اللي يعطي الانحناء الحقيقي للكثيب تحت الشمس. */
+    const R2=Math.round(95*q);
+    for(let x=0;x<W;x++){ const a=Math.max(0,x-R2), b=Math.min(W-1,x+R2); wd[x]=clamp(((r0[b]-r0[a])/(b-a||1))*2.0,-1,1); }
+    mainM.push(m0); sideA.push(sd); wideA.push(wd); }
   const skyRGB=hex2rgb(C(K.sky[2])), treeRGB=PL.trees?hex2rgb(C(mix(PL.trees,K.hills[2],.2+.7*nightF))):null;
   const rockRGB=hex2rgb(C(mix(mix("#8C8374","#6E6558",.4), K.hills[2], .2+.7*nightF)));
   const Lx=clamp((sx-w/2)/(w*.42),-1,1)*(1-clamp(elev,0,1)*.5);
@@ -3368,17 +3432,25 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
       return chevron*.50 + erosion*.42 + .11*fbm2(u*21,v*21,seed+3,3) + .05*fbm2(u*68,v*68,seed+19,2);
     }
     if(st==="dune"||st==="bigdune"){
-      const sc = st==="bigdune" ? 1.5 : 2.3;
-      const sw=u*sc+v*6.5+fbm2(u*1.4,v*2.6,seed,2)*1.5, fr=sw-Math.floor(sw);
-      const prof = fr<.78 ? fr/.78 : (1-fr)/.22;                                     /* صعود هيّن ثم وجه انزلاق حاد */
-      /* تعرّجات الرمل (ripples): ترددها هنا مضبوط عشان يبقى أقل من حد نايكويست لدقّة الرسم
-         الداخلية (q قد تكون أقل من ١)، وإلا يطلع تداخل مويريه كخطوط قطرية مزيّفة عريضة بدل
-         نسيج رمل ناعم — هذا بالضبط سبب "الخطوط المائلة" اللي كانت تبين على الكثبان */
-      const rippleCoarse = Math.sin(u*34+v*74+fbm2(u*6,v*6,seed+4,2)*9)*.0066;
-      const rippleFine   = Math.sin(u*58+v*122+fbm2(u*9,v*9,seed+15,2)*13)*.0028;
-      return prof*.10 + rippleCoarse + rippleFine + fbm2(u*12,v*12,seed+5,2)*.07;
+      /* الكثيب الحقيقي سطحه ناعم جداً: جسمه الكبير يجي من خط القمة نفسه (terrainH)، واللي
+         يبقى على وجهه هو تموّج عريض خفيف + تعرّجات رمل دقيقة موازية للقمة. النسخة القديمة
+         كانت تضيف هنا "كثبان ثانوية" بوجه انزلاق حاد (prof) فوق الكثيب الأصلي، فتقطع وجهه
+         بأشرطة قطرية حادة — هذا بالضبط شكل "المضلّعات الورقية" اللي كان يبين بالمشهد. */
+      const soft = fbm2(u*2.1,v*2.1,seed+5,3)*.105 + fbm2(u*5.4,v*5.4,seed+12,2)*.030;
+      const ripple  = Math.sin(u*30+v*66+fbm2(u*3.2,v*3.2,seed+4,2)*7)*.0075;
+      const ripple2 = Math.sin(u*53+v*112+fbm2(u*6,v*6,seed+15,2)*11)*.0030;
+      return soft + ripple + ripple2;
     }
-    if(st==="mesa"||st==="escarp"||st==="qarah") return fbm2(u*18,v*55,seed+3,3)*.35;
+    if(st==="mesa"||st==="escarp"||st==="qarah"){
+      /* حجر العلا الرملي: طبقات ترسيبية أفقية + أخاديد تعرية رأسية عريضة + كتل متفاوتة.
+         النسخة القديمة كانت ضجيج واحد بتردد رأسي عالي جداً (v*55) فيطلع كجدار متّسخ بخطوط
+         رأسية رفيعة متشابهة، بلا أي إحساس بالطبقات ولا بحجم الكتلة الصخرية */
+      const uv=warpUV(u*.75,v*.75,seed+120);
+      const bed    = fbm2(uv[0]*1.3, v*24, seed+3, 3);       /* طبقات أفقية */
+      const groove = fbm2(u*20, v*3.2, seed+9, 3);           /* أخاديد رأسية عريضة */
+      const block  = fbm2(u*5.5, v*6.5, seed+15, 2);         /* كتل كبيرة متفاوتة */
+      return bed*.15 + groove*.20 + block*.20;
+    }
     if(st==="hills"){
       /* تلال متدحرجة ناعمة — مو قمم جبال حادة (مود "mount") ولا كثبان بوجه انزلاق ("dune")،
          نسيج تعرية عضوي متعدد الترددات بس بدون شيفرون حاد، يناسب هضبة نجدية عامة متموّجة */
@@ -3398,36 +3470,72 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     const hx=hPrev[i][y], dhx = hx===hx ? h-hx : 0;
     const dhy = (lastI===i && lastH===lastH) ? h-lastH : 0;
     if(track){ hPrev[i][y]=h; lastH=h; lastI=i; }
-    const nxBig=Math.sign(m)*clamp(Math.abs(m)*2.2,0,1)*Math.exp(-dMain*1.4);
+    /* أثر ميل السفح الكبير على الإضاءة يخفت كل ما نزلنا تحت خط القمة. بالجبال هذا صحيح
+       (الوجه يتغيّر بسرعة)، لكن بالكثبان وجه الانزلاق سطح واحد طويل ممتد لين القاع — ومع
+       الخفوت السريع (١٫٤) كان يطلع شريط غامق ضيّق ملاصق لخط القمة فقط وتحته فاتح، فتبين
+       حافة سوداء حادّة تتبع كل قمة = شكل كرتون مقصوص. نخلّي الخفوت بطيئاً جداً للرمل. */
+    const slowFade=(st==="dune"||st==="bigdune")?.30:1.4;
+    /* ميل السفح: كان يُؤخذ من نافذة ضيّقة (±٣ أعمدة) مع دالة sign — فعند خط القمة ينقلب
+       الميل فجأة من سالب لموجب، والانقلاب ينزل بعمود الشاشة كامل، فتطلع حافة ضوئية رأسية
+       مستقيمة حادّة من القمة لين القاع (أكثر شي خلّى المنظر يبين كقطع كرتون). الحل: نخلط
+       الميل الضيّق مع ميل نافذة عريضة، ونستبدل sign بدالة tanh المتدرّجة — فالانتقال بين
+       الوجه المضاء والمظلم يصير تدرّجاً ناعماً مثل انحناء الرمل الحقيقي. */
+    const mb = m*.16 + sideA[i][x]*.26 + wideA[i][x]*.58;
+    const nxBig = Math.tanh(mb*2.0)*Math.exp(-dMain*slowFade);
     const nxS=clamp(-dhx*Gs,-1,1), upS=clamp(-dhy*Gs,-1,1);
     let nx=clamp(nxBig*.62+nxS*.75,-1,1);
     let bright=0, mixTree=0, dark=0, rockMix=0;
     if(st==="mount"){
-      bright += (fbm2(u*52,v*52,seed+7,2)-.5)*.14;
-      bright += (fbm2(u*150,v*150,seed+23,2)-.5)*.065;         /* نقش صخري دقيق إضافي يكسر النعومة */
-      rockMix = clamp(Math.abs(nxS)*1.2+dMain*-.2+.15,0,.7);
+      /* ترددات النقش الصخري لازم تبقى بعيدة عن حدّ نايكويست لدقّة الرسم الداخلية (q≈٠٫٧)،
+         وإلا يطلع تداخل مويريه على شكل بقع مربّعة فاتحة على وجه الجبل — وهذا سبب "البكسلات"
+         اللي كانت تبين على سفوح السودة */
+      bright += (fbm2(u*34,v*34,seed+7,2)-.5)*.13;
+      bright += (fbm2(u*62,v*62,seed+23,2)-.5)*.055;           /* نقش صخري دقيق يكسر النعومة */
+      /* انكشاف الصخر يتبع ميل السفح الكبير (خط القمة)، مو مشتقة الضجيج الدقيقة. الاعتماد
+         على المشتقة الدقيقة كان يشبّع القيمة عند حدّها الأعلى في بكسلات ويصفّرها في جارتها،
+         فتطلع رقع صخرية فاتحة بحواف مربّعة حادّة — هذا مصدر "البكسلات" على وجه الجبل */
+      rockMix = clamp(.08 + .48*smooth(clamp(Math.abs(m)*.45,0,1)) - dMain*.18 + Math.abs(nxS)*.10, 0, .56);
       if(treeRGB && fi>.25 && dMain>.05 && rockMix<.55){
         /* الشجر يتجمّع بقطع غابة واسعة (patch) بدل ما يتوزّع كبقع متناثرة بانتظام على كل
            المنحدر — هذا أقرب لتوزيع الغطاء النباتي الحقيقي اللي يتبع الرطوبة والميل */
+        /* الغطاء الشجري: قبل كذا كان عتبة حادّة على ضجيج تردده عالي جداً (u*95) — وبدقّة الرسم
+           الداخلية المخفّضة يطلع تنميش (aliasing) على شكل مربّعات بيضاء/خضراء واضحة على وجه
+           الجبل. الحين تردد أقل وتدرّج ناعم (smoothstep) بدل العتبة الحادّة، فيطلع غطاء
+           متدرّج الكثافة زي الغابة الحقيقية بدل بكسلات مربّعة */
         const patch=vn2(u*3.1,v*3.1,seed+61), patchF=clamp((patch-.30)/.22,0,1);  /* حافة ناعمة بدل قطع حاد */
         if(patchF>.02){
-          const cl=vn2(u*17,v*17,seed+13), tn=vn2(u*95,v*95,seed+11);
-          const th=.64-cl*.34+Math.min(.18,dMain*.08)-fi*.05-patchF*.30;
-          if(tn>th) mixTree=clamp((tn-th)*3.6,0,.82)*patchF;
-          if(mixTree>0){ const clump=vn2(u*46,v*46,seed+77); mixTree*=.76+.36*clump; }  /* تفاوت لوني بين كتل الشجر */
+          const cl=vn2(u*9,v*9,seed+13), tn=fbm2(u*22,v*22,seed+11,3);
+          const th=.52-cl*.20+Math.min(.12,dMain*.05)-fi*.04-patchF*.18;
+          /* نافذة انتقال عريضة: الحافة الحادّة بين لون الشجر ولون الصخر هي اللي تتحوّل
+             لسلالم مربّعة عند التكبير، والغطاء الحقيقي أصلاً يخفّ بالتدريج مو بخط قاطع */
+          const soft=clamp((tn-th)/.34,0,1);
+          if(soft>0) mixTree=smooth(soft)*.74*patchF;
+          if(mixTree>0){ const clump=fbm2(u*14,v*14,seed+77,2); mixTree*=.80+.30*clump; }  /* تفاوت لوني بين كتل الشجر */
+          /* الصخر داخل منطقة الغابة أغمق وأقل بياضاً — بدونها تبين فجوات فاتحة بين الكتل
+             كأنها بقع ضباب على السفح */
+          if(patchF>.05) dark += patchF*.10;
         }
       }
       if(PL.terraces && fi>.4){ const band=(dMain*amps[i]/(s*.0085))%1; if(band<.2) dark+=.14; else if(band<.34) bright+=.06; }
     } else if(st==="dune"||st==="bigdune"){
-      if(nxS*Math.sign(Lx||1)<-.25) dark += clamp((-nxS*Math.sign(Lx||1)-.25)*.5,0,.3);  /* وجوه الانزلاق الصغيرة */
-      const lee=-nxBig*Math.sign(Lx||1);
-      if(lee>.08) dark += clamp((lee-.08)*.55,0,.34);                                  /* الوجه البعيد عن الشمس */
+      /* بلا عتبات حادّة: أي عتبة (if lee>.08) تتحوّل لخط فاصل حاد على السطح */
+      const sgn=Math.sign(Lx||1);
+      dark += .26*smooth(clamp(-nxS*sgn,0,1));                                         /* وجوه الانزلاق الصغيرة */
+      dark += .30*smooth(clamp(-nxBig*sgn,0,1));                                       /* الوجه البعيد عن الشمس */
       /* حبيبات الرمل: ضجيج خشن + ضجيج دقيق فوقه، يعطي ملمس حبيبي حقيقي بدل تدرّج أملس */
       bright += (h01(x*7919+(y|0),seed)-.5)*.032;
       bright += (h01((x*131+y*977)|0,seed+41)-.5)*.018;
     } else if(st==="mesa"||st==="escarp"||st==="qarah"){
-      bright += (fbm2(u*2,v*70+fbm2(u*3,v*3,seed,2)*1.2,seed+3,2)-.5)*.30;
-      if(vn2(u*60,v*5,seed+9)>.8) dark+=.14;
+      /* طبقات ترسيبية واضحة لكن متموّجة (مو خطوط مستقيمة)، وأخاديد تعرية رأسية بحواف ناعمة
+         بدل الخطوط الرأسية الحادّة اللي كانت تبين كلطخات على جدار */
+      bright += (fbm2(u*3.0, v*28+fbm2(u*2.2,v*2.2,seed,2)*2.2, seed+3,3)-.5)*.24;
+      dark   += clamp((fbm2(u*24,v*4.2,seed+9,2)-.56)*1.3,0,.20);
+      bright += (fbm2(u*48,v*48,seed+51,2)-.5)*.07;          /* خشونة سطح الحجر */
+      /* حجم الكتلة الصخرية: لكل كتلة وجه مواجه للشمس (أفتح) ووجه مقابل (أغمق). بدون هذا
+         يبقى الجرف لوحة مسطّحة بلا أي إحساس بالعمق مهما كان نسيجه دقيقاً */
+      const bd=(fbm2(u*5.5+.34,v*6.5,seed+15,2)-fbm2(u*5.5-.34,v*6.5,seed+15,2))*Math.sign(Lx||1);
+      bright += clamp(-bd*3.4,-.20,.20);
+      nx = clamp(nx + nxS*.45, -1, 1);                        /* الأخاديد تنحت بالضوء فعلياً */
       if(st==="qarah"){
         if(vn2(u*38,v*2.4,seed+33)>.68) dark+=.18;
         if(dMain>.3 && vn2(u*26,v*9,seed+31)>.80) dark+=.46;
@@ -3435,18 +3543,29 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     } else if(st==="hills"){
       /* تلال متدحرجة بغطاء شجيرات متناثر خفيف — أخف بكثير من غابة الجبال، يناسب هضبة عامة */
       bright += (fbm2(u*40,v*40,seed+27,2)-.5)*.11;
-      rockMix = clamp(Math.abs(nxS)*.7+dMain*-.15+.08,0,.4);
+      rockMix = clamp(.06 + .30*smooth(clamp(Math.abs(m)*.5,0,1)) - dMain*.12 + Math.abs(nxS)*.08, 0, .38);
       if(treeRGB && fi>.30 && dMain>.04){
         const patch=vn2(u*2.4,v*2.4,seed+63), patchF=clamp((patch-.38)/.20,0,1);
         if(patchF>.02){
-          const tn=vn2(u*70,v*70,seed+19), th=.72-fi*.08-patchF*.22;
-          if(tn>th) mixTree=clamp((tn-th)*4.2,0,.5)*patchF;             /* شجيرات متناثرة، مو غابة كثيفة */
+          /* نافذة انتقال عريضة: العتبة الضيّقة تطلع رقعاً خضراء بحواف حادّة تبين كنمط
+             تمويه عسكري على التلال — وهذا أول مشهد يشوفه أي مستخدم جديد (مكان "موقعي") */
+          const tn=fbm2(u*13,v*13,seed+19,3), th=.56-fi*.06-patchF*.16;
+          const soft=clamp((tn-th)/.30,0,1);
+          if(soft>0) mixTree=smooth(soft)*.44*patchF;                   /* شجيرات متناثرة، مو غابة كثيفة */
+          if(patchF>.05) dark += patchF*.05;
         }
       }
     }
     const lf=nx*Lx;
-    if(dMain<.012) bright += .12*clamp(lf*2+.3,0,1);                                  /* خط القمة */
-    const ny=.45+.55*(1-Math.exp(-dMain*2.2));
+    /* وهج خط القمة: كان شرطاً حادّاً (dMain<.012) فيطلع خط بعرض بكسل واحد يتبع القمة
+       بشكل "سلالم" مسنّنة واضحة. الحين تلاشٍ أُسّي ناعم على عدة بكسلات */
+    bright += .07*clamp(lf*2+.3,0,1)*Math.exp(-dMain*26);
+    /* الإضاءة المحيطة (ضوء السما): القمة هي الأكثر انكشافاً للسما فهي الأفتح، وكل ما نزلنا
+       زاد الحجب فتغمق. النسخة القديمة كانت تعكس هذا تماماً (أغمق شيء تحت القمة مباشرة)،
+       فيطلع شريط غامق حاد ملاصق لكل خط قمة — وهذا اللي يخلّي الكثبان تبين كحواف مقصوصة
+       من كرتون بدل انحناءات رمل. الفرق أوضح ما يكون وقت الغروب لما يزيد التباين. */
+    const sandyT = st==="dune"||st==="bigdune";
+    const ny = sandyT ? (1-.30*clamp(dMain*.9,0,1)) : (.62+.38*(1-Math.exp(-dMain*2.2)));
     const diff=clamp(lf*.95+upS*Ly*.45+ny*Ly*.40+.22,0,1.4);
     let f=lerp(.56+.68*diff, .92+.12*diff, nightF) + bright*day - dark*day;
     f*= 1 - .14*clamp(dMain*.55,0,1);                                               /* ظل القاع */
@@ -3463,10 +3582,11 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
        بسرعة خيالية فيوصل الضباب لأقصاه على كل سطح الكثيب تقريباً، فيطلع بلون رمادي مغسول بدل
        اللون الرملي الدافئ. الحين الضباب يعتمد بس على بُعد الطبقة (fi) بلا علاقة بالسعة المحلية،
        وهذا أصح فيزيائياً أصلاً: الطبقة البعيدة كلها ضبابية بالتساوي تقريباً، مو بس قرب قمّتها */
-    const hz=Math.pow(1-fi,1.6)*.33*(1-nightF*.5);
+    const hz=Math.pow(1-fi,1.6)*(sandyT?.19:.33)*(1-nightF*.5);
     out[0]=lerp(R,skyRGB[0],hz); out[1]=lerp(G,skyRGB[1],hz); out[2]=lerp(B,skyRGB[2],hz);
     return out;
   }
+  const softPx=Math.max(1.5, q*s*.011);
   let topMin=HH; for(let i=0;i<NLx;i++) for(let x=0;x<W;x++) if(ridge[i][x]<topMin) topMin=ridge[i][x];
   const y0=Math.max(0,Math.floor(topMin));
   function column(x){
@@ -3474,7 +3594,10 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev){
     for(let y=y0;y<HH;y++){
       let i=NLx-1; while(i>=0 && ridge[i][x]>y+1) i--;
       if(i<0) continue;
-      const Y=(y+.5)/q, cov=clamp(y+1-ridge[i][x],0,1);
+      /* الحافة بين طبقة وطبقة لازم تذوب على عدة بكسلات مو بكسل واحد: طبقات الكثبان متداخلة
+         بشدّة، وعند الغروب يختلف سطوع كل طبقة كثيراً — فأي قطع حاد بينها يبين كحافة مستقيمة
+         أفقية/رأسية، وتطلع الكثبان كأنها هضاب كرتون مقصوصة. التذويب يخلّيها تتداخل طبيعياً */
+      const Y=(y+.5)/q, cov=clamp((y+1-ridge[i][x])/softPx,0,1);
       const c=shadeAt(i,X,Y,x,y,true); let R=c[0],G=c[1],B=c[2],A=255;
       if(cov<1){
         let j=i-1; while(j>=0 && ridge[j][x]>y+1) j--;
@@ -3706,42 +3829,261 @@ function drawPrecip(ctx,w,h,s,WX,nightF,tms){
   }
 }
 
+/* ═══ أرضية المقدّمة بمنظور حقيقي ═══
+   المشكلة القديمة: الأرض كانت شريط لون متدرّج مسطّح + بقعة تربة بيضاوية فوقه بحافة بيضاء
+   واضحة — تبين كأنها "صحن" مرسوم فوق خلفية، بلا أي ملمس ولا عمق، وهذا أكبر سبب لقُبح المشهد.
+   الحين: مستوٍ أرضي حقيقي بمنظور. لكل بكسل نحسب بُعده الفعلي (Z) من خط الأفق، ومنه إحداثيات
+   العالم الحقيقية، فتطلع التفاصيل (تموّجات الرمل، الحصى، الحبيبات) كبيرة قريب المشاهد وتصغر
+   وتتضاغط تدريجياً للأفق — نفس ما تشوفه العين. الإضاءة محسوبة من ميل السطح الفعلي باتجاه
+   الشمس الحقيقي، واللون عند الأفق مطابق للون أقرب طبقة تضاريس فما يبين أي خط قصّ.
+   الصورة تنحفظ بالكاش وما تنعاد إلا لما يتغيّر المكان أو ضوء الوقت. */
+const GND_JOBS=new Map(), GND_LAST=new Map();
+const GND_CACHE={ clear(){ GND_JOBS.clear(); GND_LAST.clear(); } };
+function groundKind(PL){
+  const t=PL.terr||"hills";
+  if(t==="dune"||t==="bigdune") return "sand";
+  if(t==="coast")  return "beach";
+  if(t==="oasis")  return "loam";
+  if(t==="mesa"||t==="escarp") return "grit";
+  if(t==="mount")  return "rocky";
+  return "najd";
+}
+function drawGroundPlane(ctx,w,h,gy,s,PL,K,C,nightF,sx,elev,WX){
+  const base=[PL.id,w|0,h|0,Math.round(gy),s|0,C("#808080")].join("|");
+  const key=base+"|"+[Math.round(sx/10),Math.round(nightF*14),Math.round(clamp(elev,0,1)*16),
+                      K.sky[2],K.hills[2],Math.round((WX.rain||0)*4)].join("|");
+  let last=GND_LAST.get(base);
+  if(!last || last.key!==key){
+    let job=GND_JOBS.get(base);
+    if(!job || job.key!==key){
+      /* نقرأ صف البكسلات اللي فوق خط الأفق مباشرة من التضاريس المرسومة للتو، ونخلي لون
+         الأرض عند الأفق مطابقاً له تماماً لكل عمود — هذي الطريقة الوحيدة اللي تضمن اختفاء
+         خط القصّ الأفقي نهائياً، لأن أي لون محسوب نظرياً يظل يختلف عن الناتج الفعلي للتضاريس */
+      let row=null, dpr=1;
+      try{
+        const tr=ctx.getTransform?ctx.getTransform():null; dpr=(tr&&tr.a)||1;
+        const yy=Math.max(0,Math.round((gy-1.5)*dpr));
+        const raw=ctx.getImageData(0,yy,Math.max(1,Math.round(w*dpr)),1).data;
+        /* تمويه أفقي للصف المقروء: التضاريس فيها تفاصيل دقيقة جداً بكل عمود، ولو أخذناها
+           كما هي يرث كل عمود من الأرض لونه الخاص فتطلع خطوط رأسية واضحة تنزل من الأفق.
+           نحتاج بس التدرّج اللوني العام عشان الالتحام، فنمسح التفاصيل بتمويه عريض */
+        const n=raw.length>>2, rad=Math.max(4,Math.round(n/46)), sm=new Uint8ClampedArray(raw.length);
+        let sr=0,sg=0,sb=0,sa=0,cnt=0;
+        for(let i=0;i<=rad && i<n;i++){ sr+=raw[i*4]; sg+=raw[i*4+1]; sb+=raw[i*4+2]; sa+=raw[i*4+3]; cnt++; }
+        for(let i=0;i<n;i++){
+          sm[i*4]=sr/cnt; sm[i*4+1]=sg/cnt; sm[i*4+2]=sb/cnt; sm[i*4+3]=sa/cnt;
+          const add=i+rad+1, rem=i-rad;
+          if(add<n){ sr+=raw[add*4]; sg+=raw[add*4+1]; sb+=raw[add*4+2]; sa+=raw[add*4+3]; cnt++; }
+          if(rem>=0){ sr-=raw[rem*4]; sg-=raw[rem*4+1]; sb-=raw[rem*4+2]; sa-=raw[rem*4+3]; cnt--; }
+        }
+        row=sm;
+      }catch(e){ row=null; }
+      job=makeGroundJob(w,h,gy,s,PL,K,C,nightF,sx,elev,WX,row,dpr); job.key=key; GND_JOBS.set(base,job);
+    }
+    job.step(last?4:1e9);                       /* أول مرة كاملة، وبعدها على دفعات بلا تعليق */
+    if(job.done){
+      last={key,cv:job.cv,y0:job.y0}; GND_LAST.set(base,last); GND_JOBS.delete(base);
+      if(GND_LAST.size>6) GND_LAST.delete(GND_LAST.keys().next().value);
+    }
+  }
+  if(last) ctx.drawImage(last.cv, 0, last.y0, w, h-last.y0+1);
+}
+function makeGroundJob(w,h,gy,s,PL,K,C,nightF,sx,elev,WX,horizonRow,dpr){
+  const kind=groundKind(PL);
+  const seed=[...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),17)|0;
+  const y0=Math.floor(gy), bandH=Math.max(6,h-y0+1);
+  const q=clamp(Math.sqrt(240000/(w*bandH)), .7, Math.min(2,window.devicePixelRatio||1));
+  const W=Math.max(2,Math.round(w*q)), HH=Math.max(2,Math.round(bandH*q));
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=HH;
+  const g2=cv.getContext("2d");
+  const img=g2.createImageData(W,HH), D=img.data;
+  const cxq=W/2, FOC=s*q*.55;                   /* بُعد بؤري بالبكسل: يحوّل عرض العالم لعرض الشاشة */
+  const gyq=(gy-y0)*q, bq=Math.max(2,HH-gyq);   /* موضع الأفق داخل اللوحة وارتفاع الشريط بعده */
+  /* ثوابت المنظور: Z = 1/(dy²·a + b) — dy المسافة النسبية تحت الأفق. قريب=١، بعيد≈١٦ */
+  const PA=.94, PB=.06;
+
+  const Lx=clamp((sx-w/2)/(w*.42),-1,1)*(1-clamp(elev,0,1)*.45);
+  const Ly=.34+clamp(elev,0,1)*.52, day=1-nightF*.85, warm=K.warmth||0;
+  const rain=clamp(WX.rain||0,0,1);
+  /* اللون البعيد = لون أقرب طبقة تضاريس بالضبط (بلا أي خط فاصل)، والقريب = تربة المكان */
+  const farC = hex2rgb(C(mix(PL.hill?PL.hill[2]:K.hills[2], K.hills[2], .22+.66*nightF)));
+  const soilHex = PL.soil || PAL.soil;
+  /* لون المقدّمة يُبنى من لون التضاريس القريبة نفسه مع ميل بسيط لتربة المكان — وإلا يطلع
+     شريط بني مشبع تحت كثبان باهتة، فتبين كصورتين ملصوقتين */
+  const nearC = hex2rgb(shade(mix(rgb2hex(farC), C(soilHex), .55), .13 - rain*.12));
+  const rockC = hex2rgb(C(mix(mix("#8E8475","#6B6256",.45), K.hills[2], .18+.68*nightF)));
+  const skyC  = hex2rgb(C(K.sky[2]));
+  /* كثافة الحصى وحجم خلاياه حسب طبيعة الأرض */
+  const CS   = kind==="sand"?.60 : kind==="rocky"?.26 : kind==="grit"?.30 : kind==="beach"?.52 : kind==="loam"?.38 : .33;
+  const PTH  = kind==="sand"?.88 : kind==="rocky"?.40 : kind==="grit"?.46 : kind==="beach"?.86 : kind==="loam"?.70 : .56;
+  const sandy = kind==="sand"||kind==="beach";
+
+  const hPrev=new Float32Array(HH).fill(NaN);   /* ارتفاع العمود السابق لكل صف (الفرق الأفقي) */
+  let lastH=NaN;                                /* ارتفاع الصف السابق بنفس العمود (الفرق العمقي) */
+  function heightAt(X,Z,fade){
+    let hv = fbm2(X*.85, Z*.85, seed+11, 3)*.055;            /* تموّج التربة العام */
+    if(sandy){
+      /* تعرّجات الرمل: خطوط مستقيمة على الأرض عمودية على اتجاه الريح. بما إن الريح مائلة،
+         تنعكس بالمنظور كخطوط مائلة تتقارب نحو نقطة التلاشي — مو خطوط أفقية متوازية.
+         (أول نسخة كان طور الموجة يعتمد على العمق Z وحده، وكل صف بالشاشة له Z واحد، فتطلع
+         أشرطة أفقية مثالية عبر كل العرض = منظر "ألواح خشب" بدل رمل) */
+      /* المقطع لازم يكون متّصل تماماً: منحنى السنّ المنشاري (fr) فيه قفزة حادّة عند نهاية كل
+         دورة، والقفزة تولّد خط إضاءة حاد مستقيم عبر الشاشة = شكل "ألواح الخشب". جيبان
+         متراكبان يعطيان نفس عدم التماثل (ظهر ناعم ووجه أحدّ) بلا أي قفزة */
+      /* الالتواء القوي ضروري: بدونه تطلع الخطوط متوازية بانتظام رياضي واضح (شكل مسطرة)،
+         والرمل الحقيقي تعرّجاته تتلوّى وتنقطع وتتفاوت قوّتها من بقعة لبقعة */
+      const a = (Z*.62 + X*.62)*3.4*TAU + fbm2(X*.30,Z*.22,seed+3,3)*9.0;
+      /* تفاوت قوّة التعرّج من بقعة لبقعة: في الواقع فيه رقع رمل ناعمة بلا تعرّج أصلاً، وهذا
+         اللي يكسر إحساس "القماش المضلّع" المتكرر بانتظام */
+      const amp = Math.pow(clamp(fbm2(X*.42,Z*.30,seed+9,2)*1.5-.18,0,1),1.3);
+      hv += (Math.sin(a)+.34*Math.sin(2*a))*.013*amp*fade;
+      hv += Math.sin(a*2.3+X*1.4)*.004*amp*fade;
+    } else {
+      hv += fbm2(X*3.2,Z*3.2,seed+7,3)*.060*fade;            /* نتوءات وأخاديد تربة */
+      hv += fbm2(X*9.5,Z*9.5,seed+13,2)*.020*fade;
+    }
+    hv += (fbm2(X*24,Z*24,seed+19,2)-.5)*.0035*fade;         /* حبيبات دقيقة */
+    return hv;
+  }
+  function pebbleAt(X,Z,out){
+    const ci=Math.floor(X/CS), cj=Math.floor(Z/CS);
+    out[0]=0; out[1]=0;
+    if(h01(ci*7919+cj*104729, seed+5) < PTH) return;
+    const ox=.26+.48*h01(ci*31+cj*17,seed+6), oz=.26+.48*h01(ci*53+cj*29,seed+7);
+    const pr=(.045+.080*h01(ci*11+cj*7,seed+8))*CS;
+    const dx=X-(ci+ox)*CS, dz=Z-(cj+oz)*CS;
+    const dd=(dx*dx+dz*dz)/(pr*pr);
+    if(dd>=1) return;
+    const k=Math.sqrt(1-dd);
+    out[0]=k*pr*.70; out[1]=k;                               /* ارتفاع الحصاة، ومقدار كونها حصاة */
+  }
+  const peb=[0,0];
+  const rowW = horizonRow ? (horizonRow.length>>2) : 0;
+  function column(x){
+    lastH=NaN;
+    const sxw=(x+.5-cxq);
+    /* لون الأفق لهذا العمود: من التضاريس المرسومة فعلاً إن توفّرت، وإلا اللون المحسوب */
+    let fR=farC[0], fG=farC[1], fB=farC[2];
+    if(rowW){
+      const ix=Math.min(rowW-1,Math.max(0,Math.round((x/q)*dpr)))*4;
+      if(horizonRow[ix+3]>8){ fR=horizonRow[ix]; fG=horizonRow[ix+1]; fB=horizonRow[ix+2]; }
+    }
+    for(let y=0;y<HH;y++){
+      const dy=(y+.5-gyq)/bq;
+      if(dy<=.0008){ const o=(y*W+x)*4; D[o+3]=0; continue; }
+      const Z=1/(dy*dy*PA+PB);
+      const X=sxw*Z/FOC;
+      const fade=clamp(dy*3.0,0,1);                          /* تفاصيل دقيقة تذوب بالبعد (ضد التنميش) */
+      pebbleAt(X,Z,peb);
+      const hv=heightAt(X,Z,fade)+peb[0];
+      /* ميل السطح بالعالم الحقيقي: نحوّل فرق الارتفاع بالبكسل لفرق بوحدات العالم */
+      const wpx = Z/FOC;                                     /* وحدة عالم لكل بكسل أفقياً */
+      const wpy = (2*dy*PA*Z*Z)/bq;                          /* وحدة عالم لكل بكسل عمقياً */
+      const px=hPrev[y];
+      let slopeX = 0, slopeZ = 0;
+      if(px===px)       slopeX = (hv-px)/Math.max(1e-6,wpx);
+      if(lastH===lastH) slopeZ = (hv-lastH)/Math.max(1e-6,wpy);
+      hPrev[y]=hv; lastH=hv;
+      const nx = clamp(-slopeX*1.6,-1,1), nz = clamp(-slopeZ*1.6,-1,1);
+      const diff = clamp(.42 + nx*Lx*.85 + nz*Ly*.62 + Ly*.30, 0, 1.5);
+      /* كل التظليل والملمس يتلاشى تدريجياً عند الأفق حتى يصير الصف الأول مطابقاً تماماً
+         للون التضاريس فوقه — بلا أي حدّ مرئي */
+      const blend=smooth(clamp(dy*4.2,0,1));
+      const f = lerp(1, lerp(.72+.42*diff, .95+.10*diff, nightF), blend);
+      const t=Math.pow(dy,.60);
+      const tone=(fbm2(X*.6,Z*.6,seed+23,3)-.5)*.16*blend;
+      let R=lerp(fR,nearC[0],t)*(1+tone*.5);
+      let G=lerp(fG,nearC[1],t)*(1+tone*.5);
+      let B=lerp(fB,nearC[2],t)*(1+tone*.35);
+      if(peb[1]>.02){ const pm=clamp(peb[1]*1.25,0,.85)*blend;
+        R=lerp(R,rockC[0],pm); G=lerp(G,rockC[1],pm); B=lerp(B,rockC[2],pm); }
+      R*=f; G*=f; B*=f;
+      const shb=(1-clamp(diff,0,1))*(sandy?.10:.22)*day*blend;  /* ظل الرمل دافئ، ظل الصخر مزرق */
+      R=lerp(R,skyC[0]*.62,shb); G=lerp(G,skyC[1]*.66,shb); B=lerp(B,skyC[2]*.82,shb);
+      const wl=warm*clamp(diff,0,1)*day*20*blend; R+=wl; G+=wl*.52;
+      /* حبيبات: نثار إضاءة دقيق جداً + تبقيع أوسع — بدونه يطلع السطح أملس كبلاستيك */
+      const sp=((h01((x*7919+y*104729)|0,seed+31)-.5)*.026 + (vn2(X*42,Z*42,seed+37)-.5)*.030)*blend;
+      R*=1+sp; G*=1+sp; B*=1+sp;
+      const o=(y*W+x)*4;
+      D[o]=R<0?0:R>255?255:R; D[o+1]=G<0?0:G>255?255:G; D[o+2]=B<0?0:B>255?255:B; D[o+3]=255;
+    }
+  }
+  const job={ cv, y0, done:false, x:0,
+    step(budget){
+      if(this.done) return;
+      const t0=performance.now();
+      while(this.x<W){ column(this.x++); if((this.x&7)===0 && performance.now()-t0>budget) return; }
+      g2.putImageData(img,0,0);
+      g2.setTransform(q,0,0,q,0,-y0*q);                       /* نرسم الباقي بإحداثيات الصفحة */
+      groundDressing(g2,w,h,gy,s,PL,K,C,nightF,kind,seed,Lx,day);
+      this.done=true;
+    } };
+  return job;
+}
+/* نثار الأرض: خصل يابسة وشجيرات صغيرة وأغصان — كلها بمنظور صحيح (حجمها يصغر مع البعد) */
+function groundDressing(g,w,h,gy,s,PL,K,C,nightF,kind,seed,Lx,day){
+  const FOCp=s*.55, PA=.94, PB=.06, band=h-gy;
+  function proj(X,Z){
+    const dy=Math.sqrt(Math.max(0,(1/Z-PB)/PA));
+    return [w/2 + X*FOCp/Z, gy+dy*band, FOCp/Z];
+  }
+  const N = kind==="sand"?9 : kind==="beach"?6 : kind==="grit"?18 : kind==="rocky"?30 : kind==="loam"?40 : 26;
+  const dryHex  = kind==="loam" ? "#6E8A46" : kind==="rocky" ? "#6B7A4C" : kind==="sand" ? "#A8955F" : "#9A8B55";
+  const dry  = C(mix(mix(dryHex, K.sky[2], .10), K.hills[2], .12+.70*nightF));
+  const dry2 = C(mix(mix(shade(dryHex,-.22), K.sky[2], .08), K.hills[2], .12+.70*nightF));
+  g.lineCap="round";
+  for(let i=0;i<N;i++){
+    const Z = 1.15 + Math.pow(h01(i,seed+71),.75)*11.5;       /* موزّعة على كل العمق، مو صف واحد */
+    const X = (h01(i,seed+73)-.5)*2.5*Z*.60;
+    const P = proj(X,Z); if(P[0]<-s*.1||P[0]>w+s*.1) continue;
+    const sc = P[2];
+    const nb = 4+Math.round(h01(i,seed+75)*5);
+    const hgt = sc*(.055+h01(i,seed+77)*.075);
+    if(hgt<.6) continue;
+    g.lineWidth=Math.max(.5,hgt*.085);
+    for(let b=0;b<nb;b++){
+      const a=(b/(nb-1)-.5)*1.5 + (h01(i*13+b,seed+79)-.5)*.5;
+      const L=hgt*(.55+h01(i*17+b,seed+81)*.75);
+      g.strokeStyle = b%2 ? dry : dry2;
+      g.beginPath(); g.moveTo(P[0],P[1]);
+      g.quadraticCurveTo(P[0]+Math.sin(a)*L*.35, P[1]-L*.70, P[0]+Math.sin(a)*L*.95, P[1]-L*.92);
+      g.stroke();
+    }
+  }
+}
+
 /* ─── ٥. الأرض والبذرة ──────────────────────────────────────── */
+/* حوض الزراعة: تراب مقلوب حول النبتة. قبل كذا كان قرص بيضاوي كامل بحافة بيضاء لامعة —
+   يبين كصحن موضوع فوق المشهد. الحين بقعة غير منتظمة تذوب بحوافها في الأرض: تراب أغمق قليلاً
+   (مقلوب ورطب) مع كتل صغيرة مضاءة من جهة الشمس، بلا أي حدّ مرسوم. */
 function drawGround(ctx,cx,gy,w,s,rnd){
-  const bw = Math.min(w*1.02, s*1.18);      /* تربة ممتدة، ما هي بقعة صغيرة */
-  /* هالة ترابية تذوّب الحافة في الخلفية بدل القصّة الحادّة */
-  const halo=ctx.createRadialGradient(cx,gy,bw*.16,cx,gy,bw*.66);
-  halo.addColorStop(0, PAL.night?"rgba(58,46,33,.40)":"rgba(142,118,88,.28)");
-  halo.addColorStop(1,"rgba(0,0,0,0)");
-  ctx.fillStyle=halo;
-  ctx.beginPath(); ctx.ellipse(cx,gy+s*.006,bw*.66,s*.062,0,0,TAU); ctx.fill();
-  /* جسم التراب بتدرّج ثلاثي */
-  const g = ctx.createLinearGradient(cx,gy-s*.055,cx,gy+s*.10);
-  g.addColorStop(0,shade(PAL.soil3,.12)); g.addColorStop(.55,PAL.soil3); g.addColorStop(1,PAL.soil);
-  ctx.fillStyle=g;
-  ctx.beginPath(); ctx.ellipse(cx,gy,bw/2,s*.044,0,0,TAU); ctx.fill();
-  /* حافة مضيئة من جهة مصدر الضوء */
-  ctx.strokeStyle = PAL.night?"rgba(152,180,198,.15)":"rgba(255,246,216,.38)";
-  ctx.lineWidth=Math.max(.7,s*.0042);
-  ctx.beginPath(); ctx.ellipse(cx,gy-s*.0015,bw*.492,s*.042,0,Math.PI*1.06,Math.PI*1.94); ctx.stroke();
-  /* حصى ونثار */
-  for(let i=0;i<16;i++){
-    const a=rnd()*TAU, r=rnd()*bw*.42;
-    const px=cx+Math.cos(a)*r, py=gy+Math.sin(a)*s*.024;
-    ctx.fillStyle = i%3 ? shade(PAL.soil,-.18) : shade(PAL.soil3,.18);
-    ctx.beginPath(); ctx.ellipse(px,py,s*.0085+rnd()*s*.006,s*.0044,0,0,TAU); ctx.fill();
+  const rx = s*.20, ry = s*.040;
+  const dark = PAL.night ? "28,24,18" : "74,56,36";
+  ctx.save();
+  /* البقعة الأساسية: ثلاث طبقات بيضاوية مزاحة بأحجام مختلفة = حافة غير منتظمة طبيعية */
+  for(let k=0;k<3;k++){
+    const kx = rx*(1-k*.22), ky = ry*(1-k*.20);
+    const ox = (rnd()-.5)*rx*.16, oy = (rnd()-.5)*ry*.30 + ry*.18;
+    const gd = ctx.createRadialGradient(cx+ox,gy+oy,0,cx+ox,gy+oy,kx);
+    gd.addColorStop(0,   "rgba("+dark+","+(.16+k*.05).toFixed(3)+")");
+    gd.addColorStop(.62, "rgba("+dark+","+(.10+k*.04).toFixed(3)+")");
+    gd.addColorStop(1,   "rgba("+dark+",0)");
+    ctx.fillStyle=gd; ctx.save(); ctx.translate(cx+ox,gy+oy); ctx.scale(1,ky/kx);
+    ctx.beginPath(); ctx.arc(0,0,kx,0,TAU); ctx.fill(); ctx.restore();
   }
-  /* خصل عشب على الحافة تكسر استدارة البقعة */
-  const grass = mix(PAL.soil3, "#5E8A4E", .58);
-  for(let i=0;i<16;i++){
-    const t=(i+.5)/16, side=i%2?1:-1;
-    const px=cx+(t-.5)*bw*1.04, py=gy+s*.012*(i%2?1:.4);
-    const hh=s*(.015+rnd()*.020);
-    ctx.strokeStyle = i%2?grass:shade(grass,-.15);
-    ctx.lineWidth=Math.max(.6,s*.0032); ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(px,py);
-    ctx.quadraticCurveTo(px+side*hh*.30,py-hh*.62,px+side*hh*.72,py-hh); ctx.stroke();
+  /* كتل تراب مقلوب: كل كتلة لها وجه مضاء من جهة الشمس وظل تحتها — تربط النبتة بالأرض */
+  const lit = Math.cos(LIGHT_ANG||-1.2), litC = PAL.night?"rgba(150,166,180,.13)":"rgba(255,246,222,.20)";
+  const cl  = PAL.night?"rgba(22,18,14,.17)":"rgba(70,52,32,.15)";
+  for(let i=0;i<10;i++){
+    const a=rnd()*TAU, r=Math.pow(rnd(),.65)*rx*.80;
+    const px=cx+Math.cos(a)*r, py=gy+Math.sin(a)*ry*.80+ry*.10;
+    const cw=s*(.004+rnd()*.006), ch=cw*(.44+rnd()*.24);
+    ctx.fillStyle=cl;
+    ctx.beginPath(); ctx.ellipse(px,py,cw,ch,0,0,TAU); ctx.fill();
+    ctx.fillStyle=litC;
+    ctx.beginPath(); ctx.ellipse(px-lit*cw*.22,py-ch*.30,cw*.60,ch*.50,0,0,TAU); ctx.fill();
   }
+  ctx.restore();
 }
 function drawSeed(ctx,cx,gy,s,g,sp){
   const r = s*.0085 + s*.010*smooth(clamp(g/.05,0,1));   /* بذرة صغيرة جداً */
@@ -3993,6 +4335,14 @@ function capH(gy,reach){ return Math.max(2, gy*.88/reach); }
      من القاعدة، بدل ما نعيد بناء آلاف الأوراق كل إطار.
    ═══════════════════════════════════════════════════════════════ */
 let SCENE_SPECIES = "basil", LIGHT_WARM = 0, LIGHT_ELEV = .6;
+/* مرحلة عمر النبتة الحالية: ٠ = بادرة للتو، ١ = شكل بالغ مكتمل. تُضبط في drawSceneCore
+   قبل أي رسم، ويقرأها محرّك الشجر/النخيل عشان يغيّر البنية نفسها (عدد الأغصان، عرض التاج،
+   سماكة الجذع، حجم الورقة) مو بس المقاس — الفرق بين "نمو حقيقي" و"شجرة مصغّرة". */
+let SCENE_YOUNG = 1;
+function youthOf(g,M){
+  if(M<=1.001) return clamp(.10+.50*clamp(g,0,1), .10, .60);   /* الطور الأول: بادرة → شتلة */
+  return clamp(.60+.40*fitOf(M), .60, 1);                       /* بعدها: شتلة → شجرة بالغة */
+}
 const TREE_HABIT = {
   round:  { rx:.44, ry:.36, fork:.33, multi:.35, leaf:.014, lw:.52, dens:1.0, gap:.10, spread:.62, up:.14 },
   spread: { rx:.56, ry:.29, fork:.26, multi:.55, leaf:.013, lw:.48, dens:.95, gap:.14, spread:.82, up:.06 },
@@ -4053,9 +4403,15 @@ function buildTreeModel(sp,id,H,M,seed,withered,bloom,small,maxRX){
   const hb=Object.assign({},base,TREE_SPECIES_HABIT[id]||{});
   const fit=fitOf(M), mature=clamp(fit*1.5,0,1);
   const conifer=hb.conifer||(sp.canopy==="conic"?"pine":null);
-  let RX=H*hb.rx*(.78+.30*fit)*(sp.slim&&!conifer?.8:1);
+  /* ═ مرحلة العمر (٠=بادرة ١=شجرة بالغة) ═
+     قبل كذا كانت الشتلة "شجرة كاملة مصغّرة": نفس عدد الأغصان ونفس عرض التاج، بس أصغر —
+     وهذا مو شكل نمو حقيقي أبداً. الشجرة الصغيرة بالواقع: ساق واحد رفيع، تاج ضيّق جداً
+     وعالٍ، أغصان قليلة جداً، وأوراق كبيرة نسبةً لحجمها. كل هذي تتدرّج مع العمر. */
+  const yg = hb.bush ? 1 : clamp(SCENE_YOUNG==null?1:SCENE_YOUNG, .05, 1);
+  const ygR = Math.pow(yg,.70);
+  let RX=H*hb.rx*(.78+.30*fit)*(sp.slim&&!conifer?.8:1)*lerp(.26,1,ygR);
   if(maxRX) RX=Math.min(RX,maxRX-H*.075);
-  const RY=H*hb.ry*(hb.bush?1:(.86+.22*fit));
+  const RY=H*hb.ry*(hb.bush?1:(.86+.22*fit))*lerp(.46,1,ygR);
   const top=hb.bush?-RY*1.92:-H, CY=top+RY, bottom=CY+RY;
   /* غلاف التاج: نصف العرض عند كل ارتفاع */
   const half = y => {
@@ -4070,14 +4426,18 @@ function buildTreeModel(sp,id,H,M,seed,withered,bloom,small,maxRX){
     return RX*(hb.umbrella ? Math.pow(k,.45) : k);
   };
   const inside=(x,y)=>{ const hw=half(y); return hw>0 && Math.abs(x)<=hw*.90 && y>=top+H*.03; };
-  const girth=hb.bush ? H*.014 : H*(.040+.052*fit)*(hb.gnarl?1.25:1)*(conifer==="cypress"?.8:1);
+  const girth=(hb.bush ? H*.014 : H*(.040+.052*fit)*(hb.gnarl?1.25:1)*(conifer==="cypress"?.8:1))*lerp(.40,1,Math.pow(yg,.85));
   const segs=[], tips=[];
 
   /* ── الهيكل ── */
-  const depth = hb.bush ? (small?2:3) : conifer ? 0 : (hb.maxDepth ? Math.min(hb.maxDepth, small?3:4+Math.round(fit*2)) : (small ? 4 : clamp(4+Math.round(fit*3.4),4,7)));
+  let depth = hb.bush ? (small?2:3) : conifer ? 0 : (hb.maxDepth ? Math.min(hb.maxDepth, small?3:4+Math.round(fit*2)) : (small ? 4 : clamp(4+Math.round(fit*3.4),4,7)));
+  if(!hb.bush && !conifer) depth = Math.max(1, Math.round(depth*lerp(.28,1,yg)));   /* أجيال تفرّع أقل وهي صغيرة */
   const ratio = .74;
-  const nStems = (!conifer && M>1.22 && tHash(seed,1,1)<hb.multi*mature) ? (tHash(seed,1,2)<.30?3:2) : 1;
-  const forkY = -H*hb.fork*(.9+tHash(seed,1,3)*.2);
+  const nStems = (!conifer && M>1.22 && yg>.80 && tHash(seed,1,1)<hb.multi*mature) ? (tHash(seed,1,2)<.30?3:2) : 1;
+  const forkAdult = -H*hb.fork*(.9+tHash(seed,1,3)*.2);
+  /* الشتلة ساق واحد عارٍ لين التاج: نقطة التفرّع ترتفع قرب قاعدة التاج وتنزل بالتدريج
+     كل ما كبرت الشجرة، فيبين جذع صغير واضح بدل تفرّع من عند الأرض */
+  const forkY = lerp(Math.min(forkAdult, bottom+H*.02), forkAdult, ygR);
   function branch(x,y,ang,len,w,d,path){
     let x1=x+Math.cos(ang)*len, y1=y+Math.sin(ang)*len, term=d<=0;
     /* الغصن ما يطلع برا غلاف التاج: نقصّره لين يوقف داخله، ولو ما ركب نهائياً ما ينرسم */
@@ -4113,7 +4473,7 @@ function buildTreeModel(sp,id,H,M,seed,withered,bloom,small,maxRX){
     segs.push({ x0:0,y0:0,x1:0,y1:yb,mx:0,my:yb/2,w0:girth*2,w1:girth*1.5,d:6 });
     const yTop=top+(bottom-top)*(conifer==="cypress"?.20:.10);
     segs.push({ x0:0,y0:yb,x1:0,y1:yTop,mx:(tHash(seed,2,1)-.5)*girth,my:(yb+yTop)*.5,w0:girth*1.2,w1:girth*.15,d:5 });
-    const whorls=conifer==="pine" ? 7+Math.round(mature*5) : 0;
+    const whorls=conifer==="pine" ? Math.max(3,Math.round((7+mature*5)*lerp(.42,1,yg))) : 0;
     for(let i=0;i<whorls;i++){
       const t=(i+.5)/whorls, y=bottom+(top-bottom)*t, hw=half(y);
       for(let s2=-1;s2<=1;s2+=2){
@@ -4133,7 +4493,8 @@ function buildTreeModel(sp,id,H,M,seed,withered,bloom,small,maxRX){
       const bend=(tHash(seed,10+s2,3)-.5)*L0*(hb.gnarl?.30:.10);
       segs.push({ x0:sx,y0:0,x1,y1,mx:(sx+x1)/2+bend,my:y1/2,w0:sw,w1:sw*.78,d:depth+1,stem:1 });
       /* الأطراف الرئيسية من نقطة التفرّع */
-      const limbs=hb.umbrella?(nStems>1?2:3):(nStems>1?2:3)+(tHash(seed,10+s2,4)<.4?1:0);
+      const limbs0=hb.umbrella?(nStems>1?2:3):(nStems>1?2:3)+(tHash(seed,10+s2,4)<.4?1:0);
+      const limbs=Math.max(1,Math.round(limbs0*lerp(.34,1,yg)));
       for(let i=0;i<limbs;i++){
         /* كل طرف رئيسي متّجه لنقطة داخل التاج — فيوزّع الأغصان على التاج كامل بدل ما يطيح برّا */
         const u=limbs===1?0:(i/(limbs-1))*2-1;
@@ -4150,7 +4511,8 @@ function buildTreeModel(sp,id,H,M,seed,withered,bloom,small,maxRX){
 
   /* ── كتل الورق: شبكة متداخلة تغطي غلاف التاج كامل (مثل الشجرة الحقيقية: كتل متلاصقة كل وحدة
      ضوءها من فوق وظلها من تحت)، بطبقتين: خلفية أغمق وأمامية، والأطراف ناقصة شوي = فراغات سما ── */
-  const rc0=H*(conifer==="cypress"?.034:conifer?.048:.072)*(small?1.3:1);
+  /* الورقة على الشتلة كبيرة نسبةً لحجم النبتة — فرق جوهري بصرياً بين شتلة وشجرة مصغّرة */
+  const rc0=H*(conifer==="cypress"?.034:conifer?.048:.072)*(small?1.3:1)*lerp(1.75,1,ygR);
   const clumps=[];
   const step=rc0*1.05, gy0=Math.floor(top/step)-1, gy1=Math.ceil(bottom/step)+1;
   for(let gyI=gy0; gyI<=gy1; gyI++){
@@ -4174,7 +4536,7 @@ function buildTreeModel(sp,id,H,M,seed,withered,bloom,small,maxRX){
   if(withered) for(let i=clumps.length-1;i>=0;i--) if(tHash(seed,i,77)<.78) clumps.splice(i,1);
   /* كتل كبرى (مثل القرنبيط بالصورة الحقيقية): كل مجموعة كتل لها كرة ضوء خاصة فيها،
      وبين الكتل الكبرى شقوق أغمق — هذا اللي يعطي التاج عمق وحجم بدل سطح واحد مستوي */
-  const lobes=[], nLobe=conifer?0:Math.round(5+fit*6);
+  const lobes=[], nLobe=conifer?0:Math.max(1,Math.round((5+fit*6)*lerp(.35,1,yg)));
   for(let i=0;i<nLobe;i++){
     const ty=tHash(seed,1300+i,1), y=top+RY*.35+(bottom-top-RY*.55)*ty, hw=half(y);
     lobes.push({ x:(tHash(seed,1300+i,2)*2-1)*hw*.72, y, r:Math.max(rc0*1.6,Math.min(RX,RY)*(.42+tHash(seed,1300+i,3)*.25)) });
@@ -4496,7 +4858,7 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small,Hover){
   if(!sway){ renderTreeModel(ctx,make(),sp,cx,gy); return; }
   /* متحرك: صورة جاهزة + ميلان من القاعدة مع الريح */
   let dpr=1; try{ dpr=ctx.getTransform().a||1; }catch(e){ dpr=Math.min(3,window.devicePixelRatio||1); }
-  const key=[id,seed,Hd|0,M.toFixed(2),withered?1:0,(+bloom).toFixed(1),Math.round(LIGHT_ANG*12),Math.round(LIGHT_WARM*10),maxRX|0,small?1:0,dpr.toFixed(2)].join("|");
+  const key=[id,seed,Hd|0,M.toFixed(2),SCENE_YOUNG.toFixed(2),withered?1:0,(+bloom).toFixed(1),Math.round(LIGHT_ANG*12),Math.round(LIGHT_WARM*10),maxRX|0,small?1:0,dpr.toFixed(2)].join("|");
   const spr=treeSprite(key,()=>{
     const m=make();
     const halfW=Math.min(maxRX*1.18+m.rc0, Math.max(m.RX*1.2+m.rc0, m.girth*2.2)), padT=m.rc0*1.4;
@@ -4898,7 +5260,10 @@ function cactusTube(ctx,sp,pts,w,withered,seed,ribs){
   }
 }
 function drawSaguaro(ctx,sp,cx,gy,Hd,q,seed,withered,bloom){
-  const bw=Hd*(.15+.03*q);
+  /* الصبّار الصغير برميل ممتلئ قصير، ومع العمر يستطيل ويرفع ويصير نحيفاً نسبةً لطوله.
+     قبل كذا كانت النسبة ثابتة (١٥٪) فالشتلة تطلع عمود رفيع طويل = شكل غير طبيعي أبداً */
+  const slim=smooth(clamp((q-.30)/.90,0,1));
+  const bw=Hd*lerp(.46,.155,slim);
   const arms=[];
   const nArms = q<.45 ? 0 : Math.min(4, Math.round((q-.45)*5.2));
   for(let i=0;i<nArms;i++){
@@ -4972,17 +5337,25 @@ function drawBarrel(ctx,sp,cx,gy,Hd,q,seed,withered,bloom){
 function drawOpuntia(ctx,sp,cx,gy,Hd,q,seed,withered,bloom){
   const pads=[];
   const maxN=Math.round(2+q*11), pw=Hd*.20, ph=Hd*.27;
-  (function grow(x,y,ang,sc,gen,id){
-    if(pads.length>=maxN || gen>4) return;
-    const w=pw*sc, h=ph*sc, cxp=x+Math.cos(ang)*h*.5, cyp=y+Math.sin(ang)*h*.5;
-    pads.push({ x:cxp, y:cyp, w, h, ang, gen, id, z:tHash(seed,id,1)*2-1 });
-    const kids = gen===0 ? 2 : (tHash(seed,id,2)<.55?2:1);
+  /* نمو بالعرض أولاً (طابور) مو بالعمق: النسخة القديمة كانت تنادي نفسها تكرارياً، فأول
+     سلسلة أبناء تستهلك كل الحد المسموح (maxN) قبل ما يجي دور الكف الثاني من القاعدة —
+     والنتيجة سلسلة كفوف مائلة صاعدة بدل أجمة. الطابور يوزّع النمو على كل الفروع بالتساوي. */
+  const queue=[{x:cx,y:gy,ang:-Math.PI/2,sc:1,gen:0,id:1}];
+  while(queue.length && pads.length<maxN){
+    const nd=queue.shift();
+    if(nd.gen>4) continue;
+    const w=pw*nd.sc, h=ph*nd.sc;
+    const cxp=nd.x+Math.cos(nd.ang)*h*.5, cyp=nd.y+Math.sin(nd.ang)*h*.5;
+    pads.push({ x:cxp, y:cyp, w, h, ang:nd.ang, gen:nd.gen, id:nd.id, z:tHash(seed,nd.id,1)*2-1 });
+    const kids = nd.gen===0 ? (2+(tHash(seed,nd.id,9)<.55?1:0)) : (tHash(seed,nd.id,2)<.55?2:1);
     for(let k=0;k<kids;k++){
-      const off=(k-(kids-1)/2)*.9+(tHash(seed,id,3+k)-.5)*.5;
-      const ea=ang+off, ex=cxp+Math.cos(ang+off*.6)*h*.46, ey=cyp+Math.sin(ang+off*.6)*h*.46;
-      grow(ex,ey,ea-(ea+Math.PI/2)*.25,sc*(.86+tHash(seed,id,6+k)*.12),gen+1,id*3+k+1);
+      const off=(k-(kids-1)/2)*(nd.gen===0?1.18:.95)+(tHash(seed,nd.id,3+k)-.5)*.55;
+      const ea=nd.ang+off;
+      queue.push({ x:cxp+Math.cos(nd.ang+off*.6)*h*.46, y:cyp+Math.sin(nd.ang+off*.6)*h*.46,
+                   ang:ea-(ea+Math.PI/2)*.16, sc:nd.sc*(.86+tHash(seed,nd.id,6+k)*.12),
+                   gen:nd.gen+1, id:nd.id*3+k+1 });
     }
-  })(cx,gy,-Math.PI/2,1,0,1);
+  }
   pads.sort((a,b)=>a.gen-b.gen || a.z-b.z);
   const LX=Math.cos(LIGHT_ANG), LY=Math.sin(LIGHT_ANG);
   pads.forEach(p=>{
@@ -5305,6 +5678,7 @@ function drawSceneCore(ctx,o){
   const eK = K0.astro?K0.elev2:K0.elev, xK = K0.astro?K0.sunX2:K0.sunX;
   LIGHT_ANG = Math.atan2((gy-(h*.10+(gy-h*.02)*eK*.92)) - gy*.55, w*xK - cx);
   SCENE_SPECIES = base; LIGHT_WARM = K0.warmth||0; LIGHT_ELEV = clamp(eK,0,1);   /* للمحرّك الواقعي: نوع النبتة ودفء/ارتفاع الشمس */
+  SCENE_YOUNG = youthOf(g,M);                                                    /* مرحلة العمر تحدّد بنية النبتة نفسها */
 
   if(!o.noClear) ctx.clearRect(0,0,w,h);
 
@@ -5329,12 +5703,23 @@ function drawSceneCore(ctx,o){
     const midX = cx + tipX*.5;
     const radX = Math.abs(tipX)*.5 + spread*.50;
     const squishY = lerp(1,.78,lowSun);
-    /* نصف الظل: واسع وخفيف */
-    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.24)" : "rgba(26,38,30,.21)";
-    ctx.beginPath(); ctx.ellipse(midX,gy+s*.013,radX*1.08,s*.027*squishY,0,0,TAU); ctx.fill();
-    /* نواة الظل: ضيّقة وأغمق، تلصق النبتة بالأرض */
-    ctx.fillStyle = PAL.night ? "rgba(0,0,0,.42)" : "rgba(26,38,30,.36)";
-    ctx.beginPath(); ctx.ellipse(cx+tipX*.22,gy+s*.010,radX*.60,s*.017*lerp(1,.62,lowSun),0,0,TAU); ctx.fill();
+    /* الظل بتدرّج شعاعي، مو تعبئة مصمتة: الظل الحقيقي حوافه ناعمة (نصف ظل) وقلبه أغمق.
+       النسخة القديمة كانت بيضاويين مصمتين فتطلع بقعة رمادية بحافة حادّة تبين كرقعة ملصوقة */
+    const shA = PAL.night ? "0,0,0" : "40,30,18";
+    const sg=ctx.createRadialGradient(midX,gy+s*.013,0,midX,gy+s*.013,radX*1.15);
+    sg.addColorStop(0,  "rgba("+shA+",.30)");
+    sg.addColorStop(.52,"rgba("+shA+",.17)");
+    sg.addColorStop(1,  "rgba("+shA+",0)");
+    ctx.save(); ctx.translate(midX,gy+s*.013); ctx.scale(1,(s*.030*squishY)/(radX*1.15));
+    ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(0,0,radX*1.15,0,TAU); ctx.fill(); ctx.restore();
+    /* نواة الظل عند قاعدة الجذع: تلصق النبتة بالأرض */
+    const cgR=radX*.62, cgy=gy+s*.009, cgx=cx+tipX*.20;
+    const cg=ctx.createRadialGradient(cgx,cgy,0,cgx,cgy,cgR);
+    cg.addColorStop(0,  "rgba("+shA+",.34)");
+    cg.addColorStop(.58,"rgba("+shA+",.18)");
+    cg.addColorStop(1,  "rgba("+shA+",0)");
+    ctx.save(); ctx.translate(cgx,cgy); ctx.scale(1,(s*.019*lerp(1,.62,lowSun))/cgR);
+    ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(0,0,cgR,0,TAU); ctx.fill(); ctx.restore();
   }
 
   if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); return; }
@@ -6320,7 +6705,10 @@ function drawHeroCore(){
   if(!heroW) return;
   const ctx=fitCanvas(el.cv,heroW,heroH);
   const species = sess?sess.seed:DB.seed;
-  const base = { species, seedStr: sess?sess.id:"preview-"+species, glow:true, w:heroW, h:heroH, tms:performance.now(), mdate:new Date() };
+  /* الأفق أنزل شوي من قبل (٨٩٪ بدل ٩٣٪): يعطي شريط أرض فيه عمق فعلي بدل خط رفيع، وهذا
+     شرط أساسي عشان منظور الأرض وتعرّجاتها تبين كأرض حقيقية مو كشريط لون */
+  const base = { species, seedStr: sess?sess.id:"preview-"+species, glow:true, w:heroW, h:heroH,
+                 groundFrac:.893, tms:performance.now(), mdate:new Date() };
   const tNow = performance.now();
   const swayNow = reduceMotion?0:windAt(tNow);
 
