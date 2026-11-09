@@ -513,14 +513,83 @@ td.acts   { display: flex; gap: 6px; align-items: center; }
               <th data-key="email">الإيميل <span class="arrow">▾</span></th>
               <th data-key="uni" class="uni-col">الجامعة <span class="arrow">▾</span></th>
               <th data-key="total_hours" class="sorted">الساعات <span class="arrow">▾</span></th>
+              <th data-key="coins">النقاط <span class="arrow">▾</span></th>
               <th>إجراء</th>
             </tr>
           </thead>
           <tbody id="tblBody">
-            <tr class="loading-row"><td colspan="6">جارٍ التحميل…</td></tr>
+            <tr class="loading-row"><td colspan="7">جارٍ التحميل…</td></tr>
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- الأكواد الترويجية -->
+    <div class="tbl-card" style="margin-top:18px">
+      <div style="padding:16px 18px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:16px">الأكواد الترويجية</h2>
+        <button class="btn btn-accent-soft" onclick="openPromoNew()">＋ كود جديد</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الكود</th><th>النقاط</th><th>الاستخدام</th>
+              <th>ينتهي</th><th>الحالة</th><th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="promoBody">
+            <tr class="empty-row"><td colspan="6">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- مودال منح نقاط -->
+<div class="overlay" id="modalCoins" style="display:none" onclick="if(event.target===this)closeModal('modalCoins')">
+  <div class="modal">
+    <div class="modal-icon">🪙</div>
+    <h2>منح نقاط</h2>
+    <p class="desc">المستخدم: <b id="mcName"></b> — رصيده الآن: <b id="mcNow" style="color:var(--accent)"></b></p>
+    <div class="fld">
+      <label for="mcInput">عدد النقاط (بالسالب للخصم)</label>
+      <input id="mcInput" dir="ltr" type="number" placeholder="200" autocomplete="off">
+    </div>
+    <div class="modal-err" id="mcErr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalCoins')">إلغاء</button>
+      <button class="btn btn-primary" style="width:auto;padding:9px 20px" id="mcSaveBtn" onclick="doGrantCoins()">امنح</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال كود ترويجي جديد -->
+<div class="overlay" id="modalPromo" style="display:none" onclick="if(event.target===this)closeModal('modalPromo')">
+  <div class="modal">
+    <div class="modal-icon">🎁</div>
+    <h2>كود ترويجي جديد</h2>
+    <div class="fld">
+      <label for="mpCode">الكود</label>
+      <input id="mpCode" dir="ltr" placeholder="WELCOME50" maxlength="32" autocomplete="off" style="text-transform:uppercase">
+    </div>
+    <div class="fld">
+      <label for="mpCoins">النقاط لكل مستخدم</label>
+      <input id="mpCoins" dir="ltr" type="number" placeholder="200" autocomplete="off">
+    </div>
+    <div class="fld">
+      <label for="mpMax">حد الاستخدامات (فاضي = بلا حد)</label>
+      <input id="mpMax" dir="ltr" type="number" placeholder="100" autocomplete="off">
+    </div>
+    <div class="fld">
+      <label for="mpDays">ينتهي بعد كم يوم (فاضي = ما ينتهي)</label>
+      <input id="mpDays" dir="ltr" type="number" placeholder="30" autocomplete="off">
+    </div>
+    <div class="modal-err" id="mpErr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalPromo')">إلغاء</button>
+      <button class="btn btn-primary" style="width:auto;padding:9px 20px" id="mpSaveBtn" onclick="doCreatePromo()">أنشئ</button>
     </div>
   </div>
 </div>
@@ -618,7 +687,8 @@ function doLogout(){
 async function loadDashboard(){
   el("loginView").style.display="none";
   el("mainView").style.display="block";
-  el("tblBody").innerHTML='<tr class="loading-row"><td colspan="6">جارٍ التحميل…</td></tr>';
+  el("tblBody").innerHTML='<tr class="loading-row"><td colspan="7">جارٍ التحميل…</td></tr>';
+  loadPromos();
   try{
     allUsers = (await sbFetch("/rest/v1/rpc/admin_list_users",{method:"POST",body:{}},true)) || [];
     const total = allUsers.reduce((s,r)=>s+(+r.total_hours||0),0);
@@ -630,7 +700,7 @@ async function loadDashboard(){
     clearInterval(adminRefreshTimer);
     adminRefreshTimer = setInterval(refreshDashboardSilently, 30000);
   }catch(e){
-    el("tblBody").innerHTML='<tr class="empty-row"><td colspan="6">خطأ: '+esc(e.message)+'</td></tr>';
+    el("tblBody").innerHTML='<tr class="empty-row"><td colspan="7">خطأ: '+esc(e.message)+'</td></tr>';
   }
 }
 async function refreshDashboardSilently(){
@@ -652,10 +722,10 @@ function renderTable(){
     (r.email||"").toLowerCase().includes(q)) : [...allUsers];
   list.sort((a,b)=>{
     let av=a[sortKey],bv=b[sortKey];
-    if(sortKey==="total_hours"){ av=+av||0; bv=+bv||0; return (av-bv)*sortDir; }
+    if(sortKey==="total_hours"||sortKey==="coins"){ av=+av||0; bv=+bv||0; return (av-bv)*sortDir; }
     return ((av||"").toString()).localeCompare((bv||"").toString(),"ar")*sortDir;
   });
-  if(!list.length){ el("tblBody").innerHTML='<tr class="empty-row"><td colspan="6">ما فيه نتائج.</td></tr>'; return; }
+  if(!list.length){ el("tblBody").innerHTML='<tr class="empty-row"><td colspan="7">ما فيه نتائج.</td></tr>'; return; }
   el("tblBody").innerHTML = list.map(r=>
     '<tr>'+
       '<td>'+esc(r.name)+'</td>'+
@@ -663,12 +733,123 @@ function renderTable(){
       '<td class="email">'+esc(r.email)+'</td>'+
       '<td class="uni-col">'+esc(r.uni||"—")+'</td>'+
       '<td class="hours">'+(+r.total_hours||0).toFixed(1)+'h</td>'+
+      '<td class="hours">'+(r.coins==null?"—":(+r.coins||0))+'</td>'+
       '<td class="acts">'+
+        '<button class="btn btn-accent-soft" onclick="openGrantCoins(\''+r.id+'\')">🪙 نقاط</button>'+
         '<button class="btn btn-accent-soft" onclick="openEditUser(\''+r.id+'\')">✏️ يوزر</button>'+
         '<button class="btn btn-danger-soft" onclick="openDelUser(\''+r.id+'\')">🗑️</button>'+
       '</td>'+
     '</tr>'
   ).join("");
+}
+
+/* ── منح نقاط ── */
+let coinRow = null;
+function openGrantCoins(uid){
+  coinRow = allUsers.find(r=>r.id===uid); if(!coinRow) return;
+  el("mcName").textContent = coinRow.name || coinRow.email;
+  el("mcNow").textContent  = (coinRow.coins==null ? "—" : coinRow.coins) + " نقطة";
+  el("mcInput").value = ""; el("mcErr").textContent = "";
+  el("mcSaveBtn").disabled = false; el("mcSaveBtn").textContent = "امنح";
+  el("modalCoins").style.display = "flex";
+  setTimeout(()=>el("mcInput").focus(), 80);
+}
+async function doGrantCoins(){
+  if(!coinRow) return;
+  const n = parseInt(el("mcInput").value, 10);
+  el("mcErr").textContent = "";
+  if(!Number.isFinite(n) || n === 0){ el("mcErr").textContent = "اكتب عدداً غير صفر."; return; }
+  if(Math.abs(n) > 100000){ el("mcErr").textContent = "العدد كبير جداً."; return; }
+  const btn = el("mcSaveBtn"); btn.disabled = true; btn.textContent = "يمنح…";
+  try{
+    const r = await sbFetch("/rest/v1/rpc/admin_grant_coins",
+      { method:"POST", body:{ p_user_id:coinRow.id, p_coins:n, p_note:null } }, true);
+    if(r && typeof r.balance === "number") coinRow.coins = r.balance;
+    closeModal("modalCoins"); renderTable();
+  }catch(e){
+    el("mcErr").textContent = /NOT_ADMIN/.test(e.message) ? "ما عندك صلاحية."
+                            : /Could not find the function|404/.test(e.message)
+                              ? "الدوال ما نُفّذت بعد في القاعدة — شغّل ملف الـ SQL أول."
+                              : e.message;
+  }
+  btn.disabled = false; btn.textContent = "امنح";
+}
+
+/* ── الأكواد الترويجية ── */
+let promos = [];
+async function loadPromos(){
+  try{
+    promos = (await sbFetch("/rest/v1/rpc/admin_promo_list", { method:"POST", body:{} }, true)) || [];
+    renderPromos();
+  }catch(e){
+    el("promoBody").innerHTML = '<tr class="empty-row"><td colspan="6">'+
+      (/Could not find the function|404/.test(e.message)
+        ? "الدوال ما نُفّذت بعد في القاعدة — شغّل ملف الـ SQL أول."
+        : esc(e.message))+'</td></tr>';
+  }
+}
+function renderPromos(){
+  if(!promos.length){
+    el("promoBody").innerHTML = '<tr class="empty-row"><td colspan="6">ما فيه أكواد بعد.</td></tr>';
+    return;
+  }
+  el("promoBody").innerHTML = promos.map(p=>{
+    const exp = p.expires_at ? new Date(p.expires_at).toLocaleDateString("ar") : "ما ينتهي";
+    const dead = p.expires_at && new Date(p.expires_at) < new Date();
+    const used = p.uses + (p.max_uses ? (" / " + p.max_uses) : "");
+    const st = !p.active ? "موقوف" : dead ? "منتهي" : "شغّال";
+    const c = esc(p.code);
+    return '<tr>'+
+      '<td class="uname" dir="ltr">'+c+'</td>'+
+      '<td class="hours">'+(+p.coins||0)+'</td>'+
+      '<td class="hours">'+esc(used)+'</td>'+
+      '<td>'+esc(exp)+'</td>'+
+      '<td>'+st+'</td>'+
+      '<td class="acts">'+
+        '<button class="btn btn-accent-soft" onclick="togglePromo(\''+c+'\','+(!p.active)+')">'+
+          (p.active?"إيقاف":"تشغيل")+'</button>'+
+        '<button class="btn btn-danger-soft" onclick="deletePromo(\''+c+'\')">🗑️</button>'+
+      '</td>'+
+    '</tr>';
+  }).join("");
+}
+function openPromoNew(){
+  el("mpCode").value=""; el("mpCoins").value=""; el("mpMax").value=""; el("mpDays").value="";
+  el("mpErr").textContent=""; el("mpSaveBtn").disabled=false; el("mpSaveBtn").textContent="أنشئ";
+  el("modalPromo").style.display="flex";
+  setTimeout(()=>el("mpCode").focus(),80);
+}
+async function doCreatePromo(){
+  const code=(el("mpCode").value||"").trim().toUpperCase();
+  const coins=parseInt(el("mpCoins").value,10);
+  const maxU=el("mpMax").value.trim()===""?null:parseInt(el("mpMax").value,10);
+  const days=el("mpDays").value.trim()===""?null:parseInt(el("mpDays").value,10);
+  el("mpErr").textContent="";
+  if(!/^[A-Z0-9_-]{1,32}$/.test(code)){ el("mpErr").textContent="حروف إنجليزية وأرقام و - _ فقط."; return; }
+  if(!Number.isFinite(coins)||coins<=0){ el("mpErr").textContent="اكتب عدد نقاط أكبر من صفر."; return; }
+  if(maxU!==null && (!Number.isFinite(maxU)||maxU<=0)){ el("mpErr").textContent="حد الاستخدامات لازم أكبر من صفر."; return; }
+  if(days!==null && (!Number.isFinite(days)||days<=0)){ el("mpErr").textContent="عدد الأيام لازم أكبر من صفر."; return; }
+  const btn=el("mpSaveBtn"); btn.disabled=true; btn.textContent="ينشئ…";
+  try{
+    await sbFetch("/rest/v1/rpc/admin_promo_create",
+      { method:"POST", body:{ p_code:code, p_coins:coins, p_max_uses:maxU, p_days:days, p_note:null } }, true);
+    closeModal("modalPromo"); await loadPromos();
+  }catch(e){ el("mpErr").textContent=e.message; }
+  btn.disabled=false; btn.textContent="أنشئ";
+}
+async function togglePromo(code, active){
+  try{
+    await sbFetch("/rest/v1/rpc/admin_promo_set_active",
+      { method:"POST", body:{ p_code:code, p_active:active } }, true);
+    await loadPromos();
+  }catch(e){ alert(e.message); }
+}
+async function deletePromo(code){
+  if(!confirm("حذف الكود "+code+" نهائياً؟")) return;
+  try{
+    await sbFetch("/rest/v1/rpc/admin_promo_delete", { method:"POST", body:{ p_code:code } }, true);
+    await loadPromos();
+  }catch(e){ alert(e.message); }
 }
 
 /* ── Edit username ── */
