@@ -206,6 +206,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .chip.locked{border-style:dashed;color:var(--ink-3);opacity:.82;padding-top:5px;padding-bottom:5px}
 .chip.locked:hover{opacity:1;border-color:var(--viridian);color:var(--ink)}
 .chip.locked small{color:var(--ink-3);opacity:.9;font-weight:600;letter-spacing:.2px}
+.codes-btn{margin:0 0 10px;margin-inline-start:8px;vertical-align:middle}
 .coin-bar{margin:0 0 10px;font-size:12.5px;font-weight:600;color:var(--ink-2);
   background:var(--sand,rgba(180,150,80,.12));border:1px solid var(--line);
   border-radius:999px;padding:7px 13px;display:inline-block}
@@ -863,6 +864,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
       <section class="panel">
         <h3>وش تزرع اليوم؟ <span class="hint" id="seedHint"></span></h3>
         <p class="coin-bar" id="coinBar" hidden></p>
+        <button class="chip ghost codes-btn" id="codesBtn" type="button" hidden>🎁 عندك كود؟</button>
         <div class="chips" id="seedChips"></div>
         <p class="guest-banner" id="seedLockNote" hidden></p>
       </section>
@@ -6440,7 +6442,7 @@ const el = {
   cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
   setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
-  seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), coinBar:$("#coinBar"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
+  seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), coinBar:$("#coinBar"), codesBtn:$("#codesBtn"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
   modeChips:$("#modeChips"), durPanel:$("#durPanel"),
   durVal:$("#durVal"), durMinus:$("#durMinus"), durPlus:$("#durPlus"),
   breakVal:$("#breakVal"), breakMinus:$("#breakMinus"), breakPlus:$("#breakPlus"),
@@ -6804,6 +6806,108 @@ function confirmBuySeed(k){
   overlay.appendChild(box);
   overlay.addEventListener("click",e=>{ if(e.target===overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+}
+
+/* ─── الأكواد: ترويجي أو دعوة ────────────────────────────────────
+   السيرفر هو اللي يميّز نوع الكود ويتحقق منه ويمنح. العميل ما يعرف الأكواد
+   ولا يقدر يسردها — ما فيه سياسة قراءة على جدول الأكواد الترويجية أصلاً. */
+let REFCODE = null;
+async function loadRefCode(){
+  if(!(CURRENT && CURRENT.cloud && cloudReady())) return null;
+  try{ REFCODE = await gRpc("my_referral_code",{}); return REFCODE; }
+  catch(e){ return null; }
+}
+function openCodesDialog(){
+  if(CURRENT && CURRENT.guest){
+    toast(TR("الأكواد للحسابات المسجّلة. أنشئ حسابك أول."),"🔒");
+    return;
+  }
+  if(!(CURRENT && CURRENT.cloud)){
+    toast(TR("الأكواد تحتاج حساب سحابي — سجّل دخولك."),"☁️");
+    return;
+  }
+  const overlay=document.createElement("div");
+  overlay.dataset.modal="codes";
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:flex;align-items:center;justify-content:center;padding:18px";
+  const box=document.createElement("div");
+  box.style.cssText="background:var(--paper);border-radius:var(--r-m);max-width:400px;width:100%;padding:22px;max-height:86vh;overflow-y:auto";
+  box.innerHTML =
+    '<div style="font-family:var(--kufi);font-size:17px;font-weight:700;color:var(--ink);margin-bottom:4px"></div>'+
+    '<p class="gsub" style="margin:0 0 14px"></p>'+
+    '<input id="codeInput" type="text" autocomplete="off" spellcheck="false" dir="ltr" '+
+      'style="width:100%;text-align:center;letter-spacing:2px;text-transform:uppercase;font-weight:700;font-size:16px;padding:12px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--paper);color:var(--ink)">'+
+    '<button class="btn btn-primary" style="width:100%;margin-top:10px" type="button"></button>'+
+    '<p id="codeMsg" class="gsub" style="margin:10px 0 0;min-height:18px"></p>'+
+    '<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">'+
+    '<div style="font-family:var(--kufi);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px"></div>'+
+    '<p class="gsub" id="refNote" style="margin:0 0 10px"></p>'+
+    '<div id="refBox" style="display:flex;gap:8px;align-items:stretch"></div>'+
+    '<button class="btn btn-quiet" style="width:100%;margin-top:16px" type="button"></button>';
+  const kids = box.children;
+  kids[0].textContent = TR("أكواد ونقاط");
+  kids[1].textContent = TR("عندك كود ترويجي أو كود دعوة من صاحبك؟ اكتبه هنا.");
+  const input = kids[2], goBtn = kids[3], msg = kids[4];
+  input.placeholder = TR("اكتب الكود");
+  goBtn.textContent = TR("فعّل الكود");
+  kids[6].textContent = TR("كود الدعوة حقك");
+  const refNote = kids[7], refBox = kids[8], closeBtn = kids[9];
+  closeBtn.textContent = TR("إغلاق");
+  closeBtn.onclick = ()=>overlay.remove();
+
+  const say=(t,bad)=>{ msg.textContent=t; msg.style.color = bad?"var(--brick)":"var(--viridian)"; };
+  goBtn.onclick = async ()=>{
+    const v = (input.value||"").trim().toUpperCase();
+    if(!v){ say(TR("اكتب الكود أول."),true); return; }
+    goBtn.disabled=true; goBtn.textContent=TR("جارٍ التحقق…"); say("",false);
+    try{
+      const r = await gRpc("redeem_code",{ p_code:v });
+      applyWallet(r); writeStore(); renderSetup();
+      const n = (r && r.coins) || 0;
+      say((r && r.kind==="referral") ? TR("تمت الدعوة! +")+n+TR(" نقطة لك ولصاحبك.")
+                                     : TR("تم! +")+n+TR(" نقطة في رصيدك."), false);
+      input.value="";
+      toast(TR("+")+n+TR(" نقطة · رصيدك ")+coinBalance(),"🎁");
+      loadRefCode().then(paintRef);
+    }catch(e){
+      const m = String(e && e.message || e);
+      say(/غير مصرح|Failed to fetch|NetworkError/i.test(m) ? cloudErr(e)
+          : (m.replace(/^.*?:\s*/,"") || TR("الكود ما ضبط.")), true);
+    }finally{ goBtn.disabled=false; goBtn.textContent=TR("فعّل الكود"); }
+  };
+  input.addEventListener("keydown",e=>{ if(e.key==="Enter") goBtn.click(); });
+
+  function paintRef(){
+    refBox.innerHTML="";
+    if(!REFCODE || !REFCODE.code){
+      refNote.textContent = TR("ما قدرنا نجيب كودك الآن — تأكد من الاتصال.");
+      return;
+    }
+    const c = REFCODE.code, per = REFCODE.coins || 200, inv = REFCODE.invited || 0;
+    refNote.textContent = TR("كل واحد يسجّل بكودك تاخذ ")+per+TR(" نقطة وياخذ هو ")+per+
+      TR(" · دعوت ")+inv+TR(" إلى الآن.");
+    const val=document.createElement("div");
+    val.textContent = c;
+    val.setAttribute("dir","ltr");
+    val.style.cssText="flex:1;text-align:center;letter-spacing:3px;font-weight:700;font-size:18px;padding:12px;border:1px dashed var(--line);border-radius:var(--r-s);color:var(--ink)";
+    const cp=document.createElement("button");
+    cp.className="btn btn-quiet"; cp.type="button"; cp.textContent=TR("نسخ");
+    cp.style.flex="0 0 auto";
+    cp.onclick=async ()=>{
+      try{ await navigator.clipboard.writeText(c); }
+      catch(e){ const t=document.createElement("textarea"); t.value=c; document.body.appendChild(t);
+                t.select(); try{ document.execCommand("copy"); }catch(_){} t.remove(); }
+      cp.textContent=TR("تم ✓"); setTimeout(()=>cp.textContent=TR("نسخ"),1600);
+    };
+    refBox.appendChild(val); refBox.appendChild(cp);
+  }
+  refNote.textContent = TR("جارٍ التحميل…");
+  paintRef();
+  loadRefCode().then(paintRef);
+
+  overlay.appendChild(box);
+  overlay.addEventListener("click",e=>{ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(()=>{ try{ input.focus({preventScroll:true}); }catch(e){} },50);
 }
 
 /* ─── صوت ───────────────────────────────────────────────────────
@@ -7438,6 +7542,10 @@ function renderSetup(){
         (locked ? (TR(" · باقي ")+locked+TR(" نبتة بالمتجر")) : TR(" · ملكت كل النباتات 🏆")) +
         TR(" · كل ساعة تركيز = ")+COINS_PER_HOUR;
     }
+  }
+  if(el.codesBtn){
+    el.codesBtn.hidden = guest;
+    el.codesBtn.onclick = openCodesDialog;
   }
   if(el.seedLockNote){
     el.seedLockNote.hidden = !guest;
@@ -10089,7 +10197,7 @@ function openPrivacyPolicy(){
     <h2 style="font-family:var(--kufi);font-size:18px;font-weight:700;color:var(--ink);margin:0 0 16px">${isAr?"سياسة الخصوصية — حصاد الإنتاجية":"Privacy Policy — Hasad Productivity"}</h2>
     <p><strong>${isAr?"آخر تحديث:":"Last updated:"}</strong> ${new Date(2026,10,5).toLocaleDateString(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"})}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"ما الذي نجمعه؟":"What We Collect"}</h3>
-    <p>${isAr?"نجمع فقط البيانات الضرورية لتشغيل التطبيق: عنوان البريد الإلكتروني (للحسابات السحابية)، الاسم وتفاصيل الجامعة إذا اخترت إضافتها، وبيانات الجلسات والمزارع، ورصيد الكوينز وسجل الجلسات التي مُنحت عليها (مدة الجلسة وتاريخها فقط، بلا أي محتوى).":"We collect only what is needed to run the app: email address (cloud accounts), display name and university details if you choose to add them, session/farm data, and your coin balance with a log of the sessions it was awarded for (duration and date only, no content)."}</p>
+    <p>${isAr?"نجمع فقط البيانات الضرورية لتشغيل التطبيق: عنوان البريد الإلكتروني (للحسابات السحابية)، الاسم وتفاصيل الجامعة إذا اخترت إضافتها، وبيانات الجلسات والمزارع، ورصيد الكوينز وسجل الجلسات التي مُنحت عليها (مدة الجلسة وتاريخها فقط، بلا أي محتوى)، وكود الدعوة الخاص بك ومن سجّل به.":"We collect only what is needed to run the app: email address (cloud accounts), display name and university details if you choose to add them, session/farm data, your coin balance with a log of the sessions it was awarded for (duration and date only, no content), and your invite code and who signed up with it."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"كيف نستخدم بياناتك؟":"How We Use Your Data"}</h3>
     <p>${isAr?"بياناتك تُستخدم حصراً لتقديم خدمة التطبيق: حفظ مزرعتك، عرض إحصائياتك، والجلسات الجماعية. لا نبيع بياناتك ولا نشاركها مع أي طرف ثالث.":"Your data is used exclusively to provide the app service: saving your farm, showing your stats, and group sessions. We never sell or share your data with third parties."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"وش يشوف غيرك؟":"What Others Can See"}</h3>
@@ -10099,7 +10207,7 @@ function openPrivacyPolicy(){
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"الاستضافة والتخزين":"Hosting & Infrastructure"}</h3>
     <p>${isAr?"الموقع مستضاف على Vercel، والبيانات السحابية مخزّنة على Supabase مع حماية Row-Level Security: كل مستخدم ما يوصل إلا لبياناته، وكلمات السر مشفّرة ولا أحد يقدر يقرأها (حتى إحنا). هذه الخدمات قد تسجّل بيانات تقنية أساسية (مثل عنوان IP وسجلات الطلبات) لأغراض التشغيل والأمان فقط. الحسابات المحلية تبقى على جهازك فقط ولا تُرسل لأي خادم.":"The site is hosted on Vercel, and cloud data is stored on Supabase with Row-Level Security — each user can only access their own data, and passwords are hashed so nobody (including us) can read them. These providers may log basic technical data (such as IP address and request logs) for operation and security purposes only. Local accounts stay on your device only and are never sent to any server."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"مدة الاحتفاظ بالبيانات":"Data Retention"}</h3>
-    <p>${isAr?"نحتفظ ببيانات حسابك السحابي ما دام حسابك مفعّلاً. إذا حذفت حسابك، تُمسح كل بياناتك (المزرعة، الجلسات، الكوينز والنباتات المشتراة، الأصدقاء، اسم المستخدم) فوراً ونهائياً من خوادمنا. الحسابات المحلية تبقى محفوظة على جهازك فقط حتى تحذفها أنت أو تمسح بيانات المتصفح.":"We keep your cloud account data for as long as your account is active. If you delete your account, all your data (farm, sessions, coins and purchased plants, friends, username) is immediately and permanently erased from our servers. Local accounts remain on your own device only until you delete them or clear your browser data."}</p>
+    <p>${isAr?"نحتفظ ببيانات حسابك السحابي ما دام حسابك مفعّلاً. إذا حذفت حسابك، تُمسح كل بياناتك (المزرعة، الجلسات، الكوينز والنباتات المشتراة، كود الدعوة وسجل دعواتك، الأصدقاء، اسم المستخدم) فوراً ونهائياً من خوادمنا. الحسابات المحلية تبقى محفوظة على جهازك فقط حتى تحذفها أنت أو تمسح بيانات المتصفح.":"We keep your cloud account data for as long as your account is active. If you delete your account, all your data (farm, sessions, coins and purchased plants, invite code and referral history, friends, username) is immediately and permanently erased from our servers. Local accounts remain on your own device only until you delete them or clear your browser data."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"حقوقك":"Your Rights"}</h3>
     <p>${isAr?"يحق لك: (١) الوصول لبياناتك وتنزيل نسخة منها عبر زر \"نزّل نسخة\" في صفحة مزرعتك، (٢) تصحيح اسمك أو تفاصيل جامعتك من إعدادات الحساب، و(٣) حذف حسابك وكل بياناتك نهائياً في أي وقت. الحذف فوري وغير قابل للتراجع.":"You have the right to: (1) access your data and download a copy via the \"Download a copy\" button on your garden page, (2) correct your name or university details from account settings, and (3) permanently delete your account and all your data at any time. Deletion is immediate and irreversible."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"خطة الاستجابة لأي تسريب بيانات":"Data Breach Response Plan"}</h3>
