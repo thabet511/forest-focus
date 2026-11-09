@@ -202,6 +202,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .chip.tag::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--tagc);margin-inline-end:7px;vertical-align:middle}
 .chip.tag[aria-pressed="true"]::before{background:rgba(255,255,255,.85)}
 .chip.ghost{border-style:dashed;color:var(--ink-3)}
+/* نبتة مقفلة بالمتجر: باهتة بإطار متقطّع وسعرها تحت اسمها */
+.chip.locked{border-style:dashed;color:var(--ink-3);opacity:.82;padding-top:5px;padding-bottom:5px}
+.chip.locked:hover{opacity:1;border-color:var(--viridian);color:var(--ink)}
+.chip.locked small{color:var(--ink-3);opacity:.9;font-weight:600;letter-spacing:.2px}
+.coin-bar{margin:0 0 10px;font-size:12.5px;font-weight:600;color:var(--ink-2);
+  background:var(--sand,rgba(180,150,80,.12));border:1px solid var(--line);
+  border-radius:999px;padding:7px 13px;display:inline-block}
 
 /* عداد رقمي (− / رقم / +) — يستخدم لأي قيمة يحددها المستخدم بحرية بدل خيارات
    جاهزة محدودة، زي عدد الاستراحات */
@@ -855,6 +862,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
 
       <section class="panel">
         <h3>وش تزرع اليوم؟ <span class="hint" id="seedHint"></span></h3>
+        <p class="coin-bar" id="coinBar" hidden></p>
         <div class="chips" id="seedChips"></div>
         <p class="guest-banner" id="seedLockNote" hidden></p>
       </section>
@@ -2355,9 +2363,27 @@ const HIDDEN_SPECIES = new Set([
   "agave","yucca","royalpalm","areca",
   "apple","orange","apricot","pear","guava","carob","mulberry",
   "cedar","laurel","willow","sequoia","bluespruce",
-  "tulip","lily","sunflower","goldenbarrel"
+  "tulip","lily","sunflower","goldenbarrel",
+  "thyme","jasmine"
 ]);
-const SP_ORDER = Object.keys(SPECIES).filter(k=>!HIDDEN_SPECIES.has(k));
+/* ─── المتجر: سبع نباتات مجانية، والباقي بالكوينز ───────────────
+   المجانية هي الأشهر وواحدة من كل عائلة، عشان أي مستخدم جديد يلقى
+   تنويع من أول يوم. الباقي أسعارها بين ٣٠٠ و٧٠٠ كوينز حسب ندرة
+   النبتة وبطء نموّها — والكوينز تُكسب ١٠ لكل ساعة تركيز ناجحة. */
+const FREE_SEEDS = ["basil","mint","chamomile","cactus","palm","olive","oak"];
+const SEED_PRICE = {
+  wheat:300, lavender:320, arfaj:340, strawberry:360, aloe:400,
+  hibiscus:420, opuntia:450, acacia:460, rose:480, lemon:500,
+  cypress:500, washingtonia:520, pomegranate:540, doum:560, pine:560,
+  fig:580, mango:600, sidr:620, jacaranda:680, sakura:700
+};
+/* المجانية أولاً، ثم المدفوعة من الأرخص للأغلى — ترتيب يقرأ كأنه رفوف متجر */
+const SP_ORDER = FREE_SEEDS.filter(k=>SPECIES[k] && !HIDDEN_SPECIES.has(k)).concat(
+  Object.keys(SEED_PRICE)
+    .filter(k=>SPECIES[k] && !HIDDEN_SPECIES.has(k) && !FREE_SEEDS.includes(k))
+    .sort((a,b)=>SEED_PRICE[a]-SEED_PRICE[b] || a.localeCompare(b))
+);
+const COINS_PER_HOUR = 10;
 const GUEST_SEEDS = ["basil","cactus","palm","olive","oak"];  /* نوع واحد من كل فئة للضيف */
 const HUSK = "#8A6A4F";
 
@@ -6157,6 +6183,11 @@ function mergeFarms(a, b){
   out.plants = plants.sort((x,y)=>x.endedAt-y.endedAt);
   other.ach.forEach(x=>{ if(!out.ach.includes(x)) out.ach.push(x); });
   other.tags.forEach(t=>{ if(t&&t.id&&!out.tags.some(y=>y.id===t.id)) out.tags.push(t); });
+  /* الكوينز: المكسوب بالأعلى (ما ينقص أبداً) والمشتريات باتحاد القائمتين.
+     الرصيد نفسه محسوب، فما يحتاج دمج ولا يضيع شراء صار على جهاز ثاني. */
+  out.coinsEarned = Math.max(out.coinsEarned||0, other.coinsEarned||0);
+  out.coinFrac    = Math.max(out.coinFrac||0,    other.coinFrac||0);
+  other.owned.forEach(k=>{ if(!out.owned.includes(k)) out.owned.push(k); });
   if(!out.active && other.active) out.active = other.active;
   return out;
 }
@@ -6277,6 +6308,7 @@ const DEFAULTS = {
   v:2, plants:[], ach:[], theme:null, strict:true, grace:10000,
   timerMode:"count", timerMins:30, breakMins:5, breakCount:0,
   seed:"basil", tag:"study", active:null,
+  coinsEarned:0, coinFrac:0, owned:[],
   tags:[
     { id:"study",  n:"دراسة",  c:"#2F6B4F" },
     { id:"work",   n:"عمل",    c:"#3A5E87" },
@@ -6323,7 +6355,18 @@ function normalize(d){
   if(!Array.isArray(o.plants)) o.plants=[];
   if(!Array.isArray(o.ach)) o.ach=[];
   if(!Array.isArray(o.tags)||!o.tags.length) o.tags=JSON.parse(JSON.stringify(DEFAULTS.tags));
+  /* ── الكوينز والنباتات المشتراة ──
+     ما نخزّن "الرصيد" مباشرة، بل إجمالي المكسوب (coinsEarned، يزيد فقط) وقائمة
+     المشتريات. الرصيد = المكسوب − مجموع أسعار اللي اشتراه، فيُحسب لحظياً. الفايدة:
+     لو تزامنت مزرعتك من جهازين، ندمج بالأعلى والاتحاد وما يضيع ولا يتضاعف شي.
+     coinFrac هو كسر الكوين الباقي من جلسة سابقة فما تضيع دقائق المستخدم. */
+  if(!Array.isArray(o.owned)) o.owned=[];
+  o.owned = o.owned.filter((k,i)=> SPECIES[k] && SEED_PRICE[k] && o.owned.indexOf(k)===i);
+  o.coinsEarned = Math.max(0, Math.floor(Number(o.coinsEarned)||0));
+  o.coinFrac = Number(o.coinFrac); if(!(o.coinFrac>=0 && o.coinFrac<1)) o.coinFrac=0;
   if(!SPECIES[o.seed] || HIDDEN_SPECIES.has(o.seed)) o.seed="basil";   /* بذرة صارت مخفية → نرجع للريحان */
+  /* بذرة مدفوعة ما اشتراها (أو بيانات قديمة من قبل المتجر) → نرجع للريحان */
+  if(SEED_PRICE[o.seed] && !o.owned.includes(o.seed)) o.seed="basil";
   o.plants = o.plants.filter(p=>p && p.id && SPECIES[p.species] && isFinite(p.minutes));
   if(!Array.isArray(o.islands)) o.islands=[];
   o.islands = o.islands.filter(x=>x && x.id && x.name);
@@ -6391,7 +6434,7 @@ const el = {
   cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
   setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
-  seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
+  seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), coinBar:$("#coinBar"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
   modeChips:$("#modeChips"), durPanel:$("#durPanel"),
   durVal:$("#durVal"), durMinus:$("#durMinus"), durPlus:$("#durPlus"),
   breakVal:$("#breakVal"), breakMinus:$("#breakMinus"), breakPlus:$("#breakPlus"),
@@ -6582,6 +6625,211 @@ function notify(title,body){
     if("Notification" in window && Notification.permission==="granted" && document.hidden)
       new Notification(title,{ body });
   }catch(e){}
+}
+/* إشعار يطلع ولو الصفحة مفتوحة — نستخدمه لتحقّق الحضور لأنه ما ينفع يفوت المستخدم */
+function notifyAlways(title,body){
+  try{
+    if("Notification" in window && Notification.permission==="granted")
+      new Notification(title,{ body, tag:"hasad-presence", renotify:true });
+  }catch(e){}
+}
+
+/* ─── الكوينز ───────────────────────────────────────────────────
+   تُكسب ١٠ كوينز لكل ساعة تركيز مكتملة (أي كوين لكل ٦ دقائق)، والكسر الباقي
+   يتراكم للجلسة الجاية. الجلسة اللي تذبل أو تنحذف ما تعطي شي. */
+const seedPrice  = k => SEED_PRICE[k] || 0;
+const seedOwned  = k => !SEED_PRICE[k] || (DB.owned||[]).includes(k);
+function coinsSpent(){ return (DB.owned||[]).reduce((a,k)=>a+seedPrice(k),0); }
+function coinBalance(){ return Math.max(0, (DB.coinsEarned||0) - coinsSpent()); }
+/* تمنح كوينز مقابل دقائق ناجحة، وترجّع العدد الصحيح الممنوح (للرسالة) */
+function awardCoins(mins){
+  if(!(mins>0)) return 0;
+  const total = (DB.coinFrac||0) + (mins/60)*COINS_PER_HOUR;
+  const whole = Math.floor(total);
+  DB.coinFrac    = total - whole;
+  DB.coinsEarned = (DB.coinsEarned||0) + whole;
+  return whole;
+}
+function buySeed(k){
+  const price = seedPrice(k);
+  if(!price || seedOwned(k)) return false;
+  if(CURRENT && CURRENT.guest){
+    toast(TR("المتجر للحسابات المسجّلة. أنشئ حسابك وتكسب كوينز من جلساتك."),"🔒");
+    return false;
+  }
+  if(coinBalance() < price){
+    toast(TR("رصيدك ")+coinBalance()+TR(" كوينز، وتحتاج ")+price+TR(". كل ساعة تركيز = ")+COINS_PER_HOUR+TR(" كوينز."),"🪙");
+    return false;
+  }
+  if(!Array.isArray(DB.owned)) DB.owned=[];
+  DB.owned.push(k);
+  DB.seed = k;
+  writeStore();
+  toast(TR("شريت ")+TR(SPECIES[k].n)+TR(" بـ ")+price+TR(" كوينز · باقي ")+coinBalance(),"🛒");
+  if(CURRENT && CURRENT.cloud) pushNow(true);
+  return true;
+}
+/* تأكيد الشراء — نافذة صغيرة بدل confirm() المتصفح، عشان تحترم ثيم التطبيق */
+function confirmBuySeed(k){
+  const price = seedPrice(k), sp = SPECIES[k];
+  if(!sp || !price) return;
+  if(CURRENT && CURRENT.guest){ buySeed(k); return; }
+  const bal = coinBalance(), enough = bal >= price;
+  const overlay=document.createElement("div");
+  overlay.dataset.modal="buy";
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:flex;align-items:center;justify-content:center;padding:18px";
+  const box=document.createElement("div");
+  box.style.cssText="background:var(--paper);border-radius:var(--r-m);max-width:380px;width:100%;padding:22px;text-align:center";
+  box.innerHTML =
+    '<div style="font-family:var(--kufi);font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px"></div>'+
+    '<p class="gsub" style="margin:0 0 14px"></p>'+
+    '<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px"></div>'+
+    '<p class="gsub" style="margin:0 0 18px"></p>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-quiet" style="flex:1" type="button"></button>'+
+    '<button class="btn btn-primary" style="flex:1" type="button"></button></div>';
+  const kids = box.children;
+  kids[0].textContent = TR(sp.n);
+  kids[1].textContent = TR(sp.note);
+  kids[2].textContent = price + TR(" كوينز");
+  kids[3].textContent = enough ? (TR("رصيدك ")+bal+TR(" · يبقى لك ")+(bal-price))
+                              : (TR("رصيدك ")+bal+TR(" — تحتاج ")+(price-bal)+TR(" كوينز أكثر"));
+  const btns = kids[4].children;
+  btns[0].textContent = TR("رجوع");
+  btns[0].onclick = ()=>overlay.remove();
+  btns[1].textContent = TR("اشترِ");
+  btns[1].onclick = ()=>{
+    overlay.remove();
+    if(buySeed(k)){ renderSetup(); previewSeed(); }
+  };
+  /* ما يكفي الرصيد: زر واحد هادئ بدل زر شراء أخضر ما يسوّي شي — الزر البارز
+     لازم يكون دايماً فعلاً ممكن، وإلا صار وعداً كاذباً */
+  if(!enough){ btns[1].remove(); btns[0].className="btn btn-primary"; btns[0].style.flex="1"; btns[0].textContent=TR("حسناً"); }
+  overlay.appendChild(box);
+  overlay.addEventListener("click",e=>{ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+/* ─── صوت ───────────────────────────────────────────────────────
+   نولّد النغمة بـ Web Audio بدل ملف صوتي، فما نحمّل أي شي من الشبكة ولا
+   نرسل أي طلب خارجي. السياق يُفتح أول ما المستخدم يضغط "ابدأ" (لمسة مستخدم)
+   عشان المتصفحات ما تمنع التشغيل. */
+let AC = null, alarmTimer = null;
+function audioCtx(){
+  try{
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if(!Ctor) return null;
+    if(!AC) AC = new Ctor();
+    if(AC.state === "suspended") AC.resume().catch(()=>{});
+    return AC;
+  }catch(e){ return null; }
+}
+function beepOnce(freq, dur, vol){
+  const ac = audioCtx(); if(!ac) return;
+  try{
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+    o.type = "triangle"; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + .015);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t + dur + .03);
+  }catch(e){}
+}
+function buzz(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){} }
+function alarmStart(){
+  alarmStop();
+  const ring = ()=>{
+    beepOnce(920,.20,.50);
+    setTimeout(()=>beepOnce(1240,.20,.50), 240);
+    setTimeout(()=>beepOnce(920,.30,.45),  500);
+    buzz([320,160,320,160,520]);
+  };
+  ring();
+  alarmTimer = setInterval(ring, 1600);
+}
+function alarmStop(){
+  if(alarmTimer){ clearInterval(alarmTimer); alarmTimer=null; }
+  buzz(0);
+}
+
+/* ─── تحقّق الحضور أثناء الجلسة ──────────────────────────────────
+   كل ١٠ دقائق يطلع سؤال بصوت متواصل: "لا زلت موجوداً؟". عندك ٣٠ ثانية.
+   إذا ما جاوبت تنحذف الجلسة بالكامل: ما تنسجل نبتة (ولا ذابلة) ولا كوينز،
+   عشان الساعات المسجّلة تعني تركيزاً فعلياً لا صفحة متروكة.
+   المؤقّت مستقل عن حلقة الرسم لأن المتصفح يوقفها بالخلفية. */
+const PRESENCE_EVERY = 10*60*1000;   /* كل عشر دقائق */
+const PRESENCE_GRACE = 30*1000;      /* نص دقيقة للرد */
+let presenceTimer = null, presenceBox = null, presenceDeadline = 0;
+function presenceReset(){ if(sess) sess.lastPresence = Date.now(); }
+function presenceStart(){
+  clearInterval(presenceTimer);
+  presenceReset();
+  presenceTimer = setInterval(presenceTick, 1000);
+}
+function presenceStop(){
+  clearInterval(presenceTimer); presenceTimer=null;
+  presenceClose();
+}
+function presenceClose(){
+  alarmStop();
+  if(presenceBox){ presenceBox.remove(); presenceBox=null; }
+  presenceDeadline = 0;
+}
+function presenceTick(){
+  if(!sess){ presenceStop(); return; }
+  /* الجلسة متوقفة مؤقتاً: ما نسأل، ونعيد ضبط العدّاد عشان ما يطلع السؤال لحظة الاستئناف */
+  if(sess.paused){ if(presenceBox) presenceClose(); presenceReset(); return; }
+  if(presenceBox){
+    const left = Math.ceil((presenceDeadline - Date.now())/1000);
+    const lbl = presenceBox.querySelector("[data-left]");
+    if(lbl) lbl.textContent = Math.max(0,left) + TR(" ثانية");
+    if(Date.now() >= presenceDeadline) discardSession();
+    return;
+  }
+  if(Date.now() - (sess.lastPresence||sess.startedAt) >= PRESENCE_EVERY) presenceAsk();
+}
+function presenceAsk(){
+  if(!sess || presenceBox) return;
+  presenceDeadline = Date.now() + PRESENCE_GRACE;
+  const overlay=document.createElement("div");
+  overlay.setAttribute("role","alertdialog");
+  overlay.dataset.modal="presence";
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(10,18,14,.86);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)";
+  const box=document.createElement("div");
+  box.style.cssText="background:var(--paper);border-radius:var(--r-m);max-width:360px;width:100%;padding:26px 22px;text-align:center";
+  box.innerHTML =
+    '<div style="font-size:34px;line-height:1;margin-bottom:10px">👋</div>'+
+    '<div style="font-family:var(--kufi);font-size:19px;font-weight:700;color:var(--ink);margin-bottom:8px"></div>'+
+    '<p class="gsub" style="margin:0 0 6px"></p>'+
+    '<div data-left style="font-family:var(--kufi);font-size:26px;font-weight:700;color:var(--brick);margin:10px 0 18px"></div>'+
+    '<button class="btn btn-primary" style="width:100%;font-size:16px;padding:15px" type="button"></button>';
+  const kids = box.children;
+  kids[1].textContent = TR("لا زلت موجوداً؟");
+  kids[2].textContent = TR("أكّد حضورك، وإلا انحذفت الجلسة وما تسجّلت ولا كوينز.");
+  kids[3].textContent = Math.ceil(PRESENCE_GRACE/1000) + TR(" ثانية");
+  const btn = kids[4];
+  btn.textContent = TR("أنا موجود ✋");
+  btn.onclick = ()=>{
+    presenceClose(); presenceReset();
+    beepOnce(1320,.12,.28);
+    toast(TR("تأكّد حضورك. الجلسة ماشية."),"✅");
+  };
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  presenceBox = overlay;
+  try{ btn.focus({ preventScroll:true }); }catch(e){}
+  alarmStart();
+  notifyAlways(TR("حصاد الإنتاجية"), TR("لا زلت موجوداً؟ أكّد حضورك قبل نص دقيقة وإلا انحذفت الجلسة."));
+}
+/* حذف الجلسة بالكامل: لا نبتة (ولا ذابلة)، لا دقائق، لا كوينز */
+function discardSession(){
+  if(!sess) return;
+  const mins = Math.max(0, elapsedMin());
+  presenceStop();
+  anim = null;
+  endCommon(); writeStore();
+  toast(TR("انحذفت الجلسة — ما أكّدت حضورك. ")+hhmm(mins)+TR(" ما تسجّلت ولا كوينز."),"🗑️");
+  notify(TR("حصاد الإنتاجية"), TR("انحذفت جلستك لأنك ما أكّدت حضورك."));
 }
 
 /* ─── المسرح ────────────────────────────────────────────────── */
@@ -6844,9 +7092,10 @@ function startSession(){
   el.setup.style.display="none"; el.run.style.display="";
   const sp=SPECIES[sess.seed], tg=DB.tags.find(t=>t.id===sess.tagId);
   setRunTitle();
-  const graceLine = DB.strict
+  const graceLine = (DB.strict
     ? TR("خلّ الصفحة مفتوحة. إذا غبت أكثر من ") + TR(graceName()) + TR(" تذبل النبتة.")
-    : TR("الوضع الصارم مقفل. اقعد براحتك، والنبتة تكبر ما دام العدّاد ماشي.");
+    : TR("الوضع الصارم مقفل. اقعد براحتك، والنبتة تكبر ما دام العدّاد ماشي."))
+    + TR(" وكل ١٠ دقائق يطلع سؤال بصوت: أكّد حضورك خلال ٣٠ ثانية وإلا انحذفت الجلسة.");
   const brkLine = sess.breakMins>0 ? (TR("، وبعدها استراحة ")+hhmm(sess.breakMins)) : TR("، وبعدها بلا استراحة");
   const roundLine = roundsTotal>1 ? (TR(" · جولة ")+roundIndex+TR(" من ")+roundsTotal) : "";
   el.runNote.textContent = sess.mode==="timer"
@@ -6855,6 +7104,10 @@ function startSession(){
   if("Notification" in window && Notification.permission==="default") Notification.requestPermission().catch(()=>{});
   const pb=$("#pauseBtn");
   if(pb) pb.onclick=()=>{ if(sess.paused) resumeSession(); else pauseSession(); };
+  /* نفتح سياق الصوت الآن لأن هذي لمسة مستخدم — لو انتظرنا لحظة التحقّق
+     ممكن المتصفح يمنع التشغيل ويطلع السؤال بلا صوت */
+  audioCtx();
+  presenceStart();
   holdScreen(true); startLoop(); paintClock(0);
   /* مؤقّت مستقل عن حلقة الرسم (requestAnimationFrame) — المتصفح يوقف rAF تماماً
      لو التاب صار بالخلفية أو الجوال اتقفل، فـ beat() يتوقف معه وما يترفع شي للسحابة
@@ -6864,6 +7117,7 @@ function startSession(){
 }
 function endCommon(){
   rafOn=false; hiddenAt=null; sess=null; DB.active=null;
+  presenceStop();
   clearInterval(liveSyncTimer); liveSyncTimer=null;
   el.setup.style.display=""; el.run.style.display="none";
   holdScreen(false); renderAll(); paintClock(0);
@@ -6892,9 +7146,11 @@ function keep(){
             startedAt:sess.startedAt, endedAt:Date.now(), survived:true, islandId:DB.activeIsland,
             mode:sess.mode||"count", growMinutes:gMins };
   DB.plants.push(p);
+  const got = awardCoins(p.minutes);
   anim={ kind:"bloom", t0:performance.now(), dur:1300, seedStr:p.id, species:p.species, mins:gMins };
   endCommon(); writeStore(); startLoop();
-  toast(TR(SPECIES[p.species].n)+TR(" دخلت المزرعة · ")+TR(tierName(gMins))+" · "+hhmm(p.minutes),"✅");
+  toast(TR(SPECIES[p.species].n)+TR(" دخلت المزرعة · ")+TR(tierName(gMins))+" · "+hhmm(p.minutes)+
+        (got?TR(" · +")+got+TR(" كوينز"):""),"✅");
   checkAch();
   if(CURRENT && CURRENT.cloud) pushNow(true);
 }
@@ -7035,6 +7291,10 @@ function restore(){
   const pb=$("#pauseBtn");
   if(pb) pb.onclick=()=>{ if(sess.paused) resumeSession(); else pauseSession(); };
   clearInterval(liveSyncTimer); liveSyncTimer = setInterval(liveSync, 60000);
+  /* تحقّق الحضور يبدأ من جديد بعد الاستعادة: العدّاد صفر من الآن، فما نعاقب
+     المستخدم على وقت كانت فيه الصفحة مقفلة. الصوت ممكن يتأخر لين أول لمسة
+     لأن المتصفح يمنع التشغيل بلا تفاعل — السؤال نفسه يطلع بكل الأحوال. */
+  presenceStart();
   holdScreen(true); startLoop();
   toast(TR("رجّعنا جلستك: ")+hhmm(elapsedMin())+TR(" لين الآن."),"⏱️");
 }
@@ -7051,14 +7311,37 @@ function renderSetup(){
   const seedList = guest ? GUEST_SEEDS : SP_ORDER;
   el.seedChips.innerHTML="";
   seedList.forEach(k=>{
+    const price = seedPrice(k), owned = seedOwned(k);
     const b=document.createElement("button");
-    b.className="chip"; b.textContent=TR(SPECIES[k].n);
-    b.setAttribute("aria-pressed", DB.seed===k);
-    b.onclick=()=>{ DB.seed=k; writeStore(); renderSetup(); previewSeed(); };
+    b.className = "chip" + (owned ? "" : " locked");
+    b.textContent = TR(SPECIES[k].n);
+    if(!owned){
+      const tag=document.createElement("small");
+      tag.textContent = "🔒 " + price + TR(" كوينز");
+      b.appendChild(tag);
+      b.setAttribute("aria-label", TR(SPECIES[k].n)+TR(" — مقفلة، سعرها ")+price+TR(" كوينز"));
+    }
+    b.setAttribute("aria-pressed", owned && DB.seed===k);
+    b.onclick = owned
+      ? (()=>{ DB.seed=k; writeStore(); renderSetup(); previewSeed(); })
+      : (()=>confirmBuySeed(k));
     el.seedChips.appendChild(b);
   });
-  if(!seedList.includes(DB.seed)){ DB.seed=seedList[0]; writeStore(); }
+  if(!seedList.includes(DB.seed) || !seedOwned(DB.seed)){
+    DB.seed = seedList.find(k=>seedOwned(k)) || "basil"; writeStore();
+  }
   el.seedHint.textContent=TR(SPECIES[DB.seed].note);
+  /* شريط الرصيد: يبيّن الكوينز وكم نبتة باقية بالمتجر، وما يطلع للضيف
+     لأن المتجر للحسابات المسجّلة */
+  if(el.coinBar){
+    const locked = SP_ORDER.filter(k=>!seedOwned(k)).length;
+    el.coinBar.hidden = guest;
+    if(!guest){
+      el.coinBar.textContent = "🪙 " + coinBalance() + TR(" كوينز") +
+        (locked ? (TR(" · باقي ")+locked+TR(" نبتة بالمتجر")) : TR(" · ملكت كل النباتات 🏆")) +
+        TR(" · كل ساعة تركيز = ")+COINS_PER_HOUR;
+    }
+  }
   if(el.seedLockNote){
     el.seedLockNote.hidden = !guest;
     if(guest){
@@ -8110,7 +8393,8 @@ function renderStats(){
     ["brick", s.dead, TR("ذبلت")],
     ["", s.rate+"%", TR("نسبة النجاة")],
     ["accent", s.longest?TR(tierName(s.longest)):"—", TR("أكبر نبتة")],
-    ["", s.kinds, TR("نوع جرّبته")]
+    ["", s.kinds, TR("نوع جرّبته")],
+    ["ochre", coinBalance(), TR("كوينز بالرصيد")]
   ];
   if(s.bestHour!==null) cards.push(["", fmt2(s.bestHour)+":00", TR("أخصب ساعة عندك")]);
   el.statCards.innerHTML=cards.map(c=>
@@ -8546,9 +8830,11 @@ function gRecordMine(){
               survived: !dead, islandId:DB.activeIsland,
               group: { size:r.members.length, host:r.host===gMyId(),
                        allAlive: !dead && r.members.every(m=>m.state==="alive") } };
-  DB.plants.push(p); writeStore();
+  DB.plants.push(p);
+  const gotCoins = dead ? 0 : awardCoins(p.minutes);
+  writeStore();
   if(dead) toast(TR("ذبلت نبتتك بالجلسة الجماعية."),"🥀");
-  else     toast(TR("خلصت الجلسة الجماعية! نبتتك دخلت المزرعة."),"🤝");
+  else     toast(TR("خلصت الجلسة الجماعية! نبتتك دخلت المزرعة.")+(gotCoins?TR(" +")+gotCoins+TR(" كوينز"):""),"🤝");
   const fresh = checkAch();
   if(fresh.length && G.code) fresh.forEach(a=>gAnnounce("badge", a.n, a.ic));
   if(CURRENT && CURRENT.cloud) pushNow(true);
@@ -8643,7 +8929,8 @@ function gWitherChips(strict, grace, act){
 }
 function gSeedChips(cur){
   const guest = !!(CURRENT && CURRENT.guest);
-  const list  = guest ? GUEST_SEEDS : SP_ORDER;
+  /* الجلسة الجماعية تعرض اللي تملكه فقط — الشراء يصير من شاشة الزراعة */
+  const list  = (guest ? GUEST_SEEDS : SP_ORDER).filter(k=>seedOwned(k));
   const sel   = list.includes(cur) ? cur : (list.includes(DB.seed) ? DB.seed : list[0]);
   return '<div class="chips">'+list.map(k=>
     '<button class="chip" type="button" data-act="species" data-v="'+k+'" aria-pressed="'+(k===sel)+'">'+
@@ -9712,7 +9999,7 @@ function openPrivacyPolicy(){
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"الاستضافة والتخزين":"Hosting & Infrastructure"}</h3>
     <p>${isAr?"الموقع مستضاف على Vercel، والبيانات السحابية مخزّنة على Supabase مع حماية Row-Level Security: كل مستخدم ما يوصل إلا لبياناته، وكلمات السر مشفّرة ولا أحد يقدر يقرأها (حتى إحنا). هذه الخدمات قد تسجّل بيانات تقنية أساسية (مثل عنوان IP وسجلات الطلبات) لأغراض التشغيل والأمان فقط. الحسابات المحلية تبقى على جهازك فقط ولا تُرسل لأي خادم.":"The site is hosted on Vercel, and cloud data is stored on Supabase with Row-Level Security — each user can only access their own data, and passwords are hashed so nobody (including us) can read them. These providers may log basic technical data (such as IP address and request logs) for operation and security purposes only. Local accounts stay on your device only and are never sent to any server."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"مدة الاحتفاظ بالبيانات":"Data Retention"}</h3>
-    <p>${isAr?"نحتفظ ببيانات حسابك السحابي ما دام حسابك مفعّلاً. إذا حذفت حسابك، تُمسح كل بياناتك (المزرعة، الجلسات، الأصدقاء، اسم المستخدم) فوراً ونهائياً من خوادمنا. الحسابات المحلية تبقى محفوظة على جهازك فقط حتى تحذفها أنت أو تمسح بيانات المتصفح.":"We keep your cloud account data for as long as your account is active. If you delete your account, all your data (farm, sessions, friends, username) is immediately and permanently erased from our servers. Local accounts remain on your own device only until you delete them or clear your browser data."}</p>
+    <p>${isAr?"نحتفظ ببيانات حسابك السحابي ما دام حسابك مفعّلاً. إذا حذفت حسابك، تُمسح كل بياناتك (المزرعة، الجلسات، الكوينز والنباتات المشتراة، الأصدقاء، اسم المستخدم) فوراً ونهائياً من خوادمنا. الحسابات المحلية تبقى محفوظة على جهازك فقط حتى تحذفها أنت أو تمسح بيانات المتصفح.":"We keep your cloud account data for as long as your account is active. If you delete your account, all your data (farm, sessions, coins and purchased plants, friends, username) is immediately and permanently erased from our servers. Local accounts remain on your own device only until you delete them or clear your browser data."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"حقوقك":"Your Rights"}</h3>
     <p>${isAr?"يحق لك: (١) الوصول لبياناتك وتنزيل نسخة منها عبر زر \"نزّل نسخة\" في صفحة مزرعتك، (٢) تصحيح اسمك أو تفاصيل جامعتك من إعدادات الحساب، و(٣) حذف حسابك وكل بياناتك نهائياً في أي وقت. الحذف فوري وغير قابل للتراجع.":"You have the right to: (1) access your data and download a copy via the \"Download a copy\" button on your garden page, (2) correct your name or university details from account settings, and (3) permanently delete your account and all your data at any time. Deletion is immediate and irreversible."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"خطة الاستجابة لأي تسريب بيانات":"Data Breach Response Plan"}</h3>
