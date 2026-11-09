@@ -6364,6 +6364,12 @@ function normalize(d){
   o.owned = o.owned.filter((k,i)=> SPECIES[k] && SEED_PRICE[k] && o.owned.indexOf(k)===i);
   o.coinsEarned = Math.max(0, Math.floor(Number(o.coinsEarned)||0));
   o.coinFrac = Number(o.coinFrac); if(!(o.coinFrac>=0 && o.coinFrac<1)) o.coinFrac=0;
+  /* طابور المنح المعلّق — محلي بحت، ما يُرفع ولا يُدمج */
+  if(!Array.isArray(o.coinQueue)) o.coinQueue=[];
+  o.coinQueue = o.coinQueue
+    .filter(x=>x && typeof x.id==="string" && x.id.length<=64 && Number(x.mins)>0)
+    .slice(-200)
+    .map(x=>({ id:x.id, mins:Number(x.mins), tries:Math.max(0,Math.floor(Number(x.tries)||0)) }));
   if(!SPECIES[o.seed] || HIDDEN_SPECIES.has(o.seed)) o.seed="basil";   /* بذرة صارت مخفية → نرجع للريحان */
   /* بذرة مدفوعة ما اشتراها (أو بيانات قديمة من قبل المتجر) → نرجع للريحان */
   if(SEED_PRICE[o.seed] && !o.owned.includes(o.seed)) o.seed="basil";
@@ -6637,25 +6643,115 @@ function notifyAlways(title,body){
 /* ─── الكوينز ───────────────────────────────────────────────────
    تُكسب ١٠ كوينز لكل ساعة تركيز مكتملة (أي كوين لكل ٦ دقائق)، والكسر الباقي
    يتراكم للجلسة الجاية. الجلسة اللي تذبل أو تنحذف ما تعطي شي. */
-const seedPrice  = k => SEED_PRICE[k] || 0;
-const seedOwned  = k => !SEED_PRICE[k] || (DB.owned||[]).includes(k);
+/* للحسابات السحابية: المحفظة في السيرفر هي مصدر الحقيقة. الرصيد يُحسب هناك
+   والشراء يتم بدالة محميّة، فما ينفع أحد يزوّد رصيده بتعديل المتصفح. والنسخة
+   المحلية تبقى مرآة للعرض وللعمل بلا اتصال. الضيف والحساب المحلي يحسبون محلياً
+   لأنه ما فيه سيرفر أصلاً. */
+let WALLET = null;
+const walletOn  = () => !!(CURRENT && CURRENT.cloud && WALLET);
+const ownedList = () => (walletOn() ? (WALLET.owned||[]) : (DB.owned||[]));
+const seedPrice = k => SEED_PRICE[k] || 0;
+const seedOwned = k => !SEED_PRICE[k] || ownedList().includes(k);
 function coinsSpent(){ return (DB.owned||[]).reduce((a,k)=>a+seedPrice(k),0); }
-function coinBalance(){ return Math.max(0, (DB.coinsEarned||0) - coinsSpent()); }
-/* تمنح كوينز مقابل دقائق ناجحة، وترجّع العدد الصحيح الممنوح (للرسالة) */
-function awardCoins(mins){
+function coinBalance(){
+  if(walletOn()) return Math.max(0, WALLET.balance|0);
+  return Math.max(0, (DB.coinsEarned||0) - coinsSpent());
+}
+/* نعكس ردّ السيرفر على النسخة المحلية عشان تشتغل الواجهة بلا اتصال أيضاً */
+function applyWallet(w){
+  if(!w || typeof w!=="object") return false;
+  WALLET = { earned:+w.earned||0, spent:+w.spent||0, balance:+w.balance||0,
+             owned:Array.isArray(w.owned)?w.owned.filter(k=>SEED_PRICE[k]):[] };
+  DB.coinsEarned = WALLET.earned;
+  DB.owned = WALLET.owned.slice();
+  if(SEED_PRICE[DB.seed] && !seedOwned(DB.seed)) DB.seed="basil";
+  return true;
+}
+async function walletSync(){
+  if(!(CURRENT && CURRENT.cloud && cloudReady())) return false;
+  try{
+    applyWallet(await gRpc("wallet_get",{}));
+    writeStore();
+    await flushAwards();
+    try{ if(el && el.seedChips) renderSetup(); }catch(e){}
+    return true;
+  }catch(e){ return false; }   /* بلا اتصال: نكمل بالمرآة المحلية */
+}
+/* طابور المنح: لو الجلسة خلصت والنت مقطوع، نحفظ معرّفها ونعيد المحاولة لاحقاً.
+   الدالة في السيرفر لا تمنح نفس المعرّف مرتين، فإعادة المحاولة آمنة تماماً. */
+function queueAward(id, mins){
+  if(!Array.isArray(DB.coinQueue)) DB.coinQueue=[];
+  if(!DB.coinQueue.some(x=>x.id===id))
+    DB.coinQueue.push({ id, mins:Math.round(mins*100)/100, tries:0 });
+  if(DB.coinQueue.length>200) DB.coinQueue = DB.coinQueue.slice(-200);
+}
+let flushing = false;
+async function flushAwards(){
+  if(flushing || !(CURRENT && CURRENT.cloud && cloudReady())) return;
+  if(!Array.isArray(DB.coinQueue) || !DB.coinQueue.length) return;
+  flushing = true;
+  try{
+    for(const it of DB.coinQueue.slice()){
+      try{
+        applyWallet(await gRpc("wallet_award",{ p_session_id:it.id, p_minutes:it.mins }));
+        DB.coinQueue = DB.coinQueue.filter(x=>x.id!==it.id);
+        writeStore();
+      }catch(e){
+        /* السيرفر رفضها (سقف يومي مثلاً): نحاول خمس مرات ثم نتركها عشان
+           ما يعلق الطابور للأبد. انقطاع الشبكة يوقف الجولة ونعيد لاحقاً. */
+        it.tries = (it.tries||0)+1;
+        if(it.tries>=5) DB.coinQueue = DB.coinQueue.filter(x=>x.id!==it.id);
+        writeStore();
+        break;
+      }
+    }
+  } finally { flushing = false; }
+}
+/* تمنح كوينز مقابل دقائق ناجحة. سحابياً: السيرفر يحسب ويمنح. محلياً: حساب فوري
+   بنفس المعادلة. ترجّع العدد الممنوح فوراً للرسالة (سحابياً ترجّع -1 = "بينحسب"). */
+function awardCoins(mins, sessionId){
   if(!(mins>0)) return 0;
+  if(CURRENT && CURRENT.cloud){
+    queueAward(sessionId || ("s-"+uid()), mins);
+    flushAwards();
+    return -1;
+  }
   const total = (DB.coinFrac||0) + (mins/60)*COINS_PER_HOUR;
   const whole = Math.floor(total);
   DB.coinFrac    = total - whole;
   DB.coinsEarned = (DB.coinsEarned||0) + whole;
   return whole;
 }
-function buySeed(k){
+/* نص الكوينز في رسالة نهاية الجلسة. سحابياً المنح يصير بالسيرفر فما نعرف
+   العدد لحظتها (-1)، فنقول "تُحتسب" بدل رقم قد يطلع غلط. */
+function coinNote(got){
+  if(got>0)  return TR(" · +")+got+TR(" كوينز");
+  if(got<0)  return TR(" · كوينزك تُحتسب");
+  return "";
+}
+async function buySeed(k){
   const price = seedPrice(k);
   if(!price || seedOwned(k)) return false;
   if(CURRENT && CURRENT.guest){
     toast(TR("المتجر للحسابات المسجّلة. أنشئ حسابك وتكسب كوينز من جلساتك."),"🔒");
     return false;
+  }
+  /* حساب سحابي: الشراء يتم في السيرفر — السعر والرصيد يُتحقق منهما هناك */
+  if(CURRENT && CURRENT.cloud){
+    if(!cloudReady()){ toast(TR("الشراء يحتاج اتصال بالسيرفر. تأكد من النت."),"📴"); return false; }
+    try{
+      await flushAwards();
+      applyWallet(await gRpc("wallet_buy",{ p_species:k }));
+      DB.seed = k; writeStore();
+      toast(TR("شريت ")+TR(SPECIES[k].n)+TR(" بـ ")+price+TR(" كوينز · باقي ")+coinBalance(),"🛒");
+      return true;
+    }catch(e){
+      const m = String(e&&e.message||e);
+      toast(/ما يكفي/.test(m) ? TR("رصيدك ما يكفي. كل ساعة تركيز = ")+COINS_PER_HOUR+TR(" كوينز.")
+                              : TR("ما تم الشراء: ")+cloudErr(e), "⚠️");
+      walletSync();
+      return false;
+    }
   }
   if(coinBalance() < price){
     toast(TR("رصيدك ")+coinBalance()+TR(" كوينز، وتحتاج ")+price+TR(". كل ساعة تركيز = ")+COINS_PER_HOUR+TR(" كوينز."),"🪙");
@@ -6666,7 +6762,6 @@ function buySeed(k){
   DB.seed = k;
   writeStore();
   toast(TR("شريت ")+TR(SPECIES[k].n)+TR(" بـ ")+price+TR(" كوينز · باقي ")+coinBalance(),"🛒");
-  if(CURRENT && CURRENT.cloud) pushNow(true);
   return true;
 }
 /* تأكيد الشراء — نافذة صغيرة بدل confirm() المتصفح، عشان تحترم ثيم التطبيق */
@@ -6697,9 +6792,11 @@ function confirmBuySeed(k){
   btns[0].textContent = TR("رجوع");
   btns[0].onclick = ()=>overlay.remove();
   btns[1].textContent = TR("اشترِ");
-  btns[1].onclick = ()=>{
+  btns[1].onclick = async ()=>{
+    btns[1].disabled = true; btns[1].textContent = TR("جارٍ الشراء…");
+    const ok = await buySeed(k);
     overlay.remove();
-    if(buySeed(k)){ renderSetup(); previewSeed(); }
+    if(ok){ renderSetup(); previewSeed(); }
   };
   /* ما يكفي الرصيد: زر واحد هادئ بدل زر شراء أخضر ما يسوّي شي — الزر البارز
      لازم يكون دايماً فعلاً ممكن، وإلا صار وعداً كاذباً */
@@ -7146,11 +7243,11 @@ function keep(){
             startedAt:sess.startedAt, endedAt:Date.now(), survived:true, islandId:DB.activeIsland,
             mode:sess.mode||"count", growMinutes:gMins };
   DB.plants.push(p);
-  const got = awardCoins(p.minutes);
+  const got = awardCoins(p.minutes, p.id);
   anim={ kind:"bloom", t0:performance.now(), dur:1300, seedStr:p.id, species:p.species, mins:gMins };
   endCommon(); writeStore(); startLoop();
   toast(TR(SPECIES[p.species].n)+TR(" دخلت المزرعة · ")+TR(tierName(gMins))+" · "+hhmm(p.minutes)+
-        (got?TR(" · +")+got+TR(" كوينز"):""),"✅");
+        coinNote(got),"✅");
   checkAch();
   if(CURRENT && CURRENT.cloud) pushNow(true);
 }
@@ -8595,6 +8692,7 @@ function enterApp(){
         const remote = await cloudPull();
         if(remote){ DB = mergeFarms(remote, DB); writeStore(); renderAll(); }
         await cloudPush(DB); setSync("ok");
+        await walletSync();
       }catch(e){ setSync("err"); }
     })();
     return true;
@@ -8831,10 +8929,10 @@ function gRecordMine(){
               group: { size:r.members.length, host:r.host===gMyId(),
                        allAlive: !dead && r.members.every(m=>m.state==="alive") } };
   DB.plants.push(p);
-  const gotCoins = dead ? 0 : awardCoins(p.minutes);
+  const gotCoins = dead ? 0 : awardCoins(p.minutes, p.id);
   writeStore();
   if(dead) toast(TR("ذبلت نبتتك بالجلسة الجماعية."),"🥀");
-  else     toast(TR("خلصت الجلسة الجماعية! نبتتك دخلت المزرعة.")+(gotCoins?TR(" +")+gotCoins+TR(" كوينز"):""),"🤝");
+  else     toast(TR("خلصت الجلسة الجماعية! نبتتك دخلت المزرعة.")+coinNote(gotCoins),"🤝");
   const fresh = checkAch();
   if(fresh.length && G.code) fresh.forEach(a=>gAnnounce("badge", a.n, a.ic));
   if(CURRENT && CURRENT.cloud) pushNow(true);
@@ -9388,7 +9486,7 @@ function enterGuest(){
 }
 function leaveGuest(){
   guestMem = null; closeSheet();
-  CURRENT = null; DB = normalize(null);
+  CURRENT = null; DB = normalize(null); WALLET = null;
   $("#userInitial").textContent = "·";
   showGate();
 }
@@ -9406,12 +9504,14 @@ async function afterCloudAuth(stay){
     DB = local; setSync("err");
     toast(TR("دخلت بلا مزامنة (ما فيه اتصال). مزرعتك تشتغل محلياً."),"📴");
   }
+  WALLET = null;
   if(!stay) writeTok(null);
   ACC.last = u.id; ACC.stay = null; writeAcc();
   gate.classList.remove("on"); document.body.classList.remove("gated");
   $("#userInitial").textContent = initialOf(u.name);
   claimReservedUsername();
   bootApp();
+  walletSync();   /* بعد bootApp عشان تكون عناصر الواجهة جاهزة للتحديث */
   toast(TR("أهلاً ")+u.name+TR("، مزرعتك جاهزة."),"🌿");
 }
 /* اسم المستخدم يُختار وقت التسجيل ويُحفظ بالـ metadata، ويُثبَّت فعلياً أول ما تصير عندنا جلسة حقيقية */
@@ -9932,7 +10032,7 @@ async function leaveAccount(clearStay){
   closeSheet();
   setSync("off");
   if(clearStay){ ACC.stay=null; writeAcc(); }
-  CURRENT=null; DB=normalize(null); MYUSERNAME=null;
+  CURRENT=null; DB=normalize(null); MYUSERNAME=null; WALLET=null;
   $("#userInitial").textContent="·";
   showGate();
 }
@@ -9963,7 +10063,7 @@ async function deleteAccount(){
     }
     try{ localStorage.removeItem(userKey(CURRENT.id)); }catch(e2){}
     TOK=null; writeTok(null); ACC.stay=null; ACC.last=null; writeAcc(); closeSheet();
-    CURRENT=null; DB=normalize(null); $("#userInitial").textContent="·"; setSync("off");
+    CURRENT=null; DB=normalize(null); WALLET=null; $("#userInitial").textContent="·"; setSync("off");
     showGate(); return;
   }
   /* حساب محلي */
@@ -9974,7 +10074,7 @@ async function deleteAccount(){
   if(ACC.stay===CURRENT.id) ACC.stay=null;
   if(ACC.last===CURRENT.id) ACC.last=null;
   writeAcc(); closeSheet();
-  CURRENT=null; DB=normalize(null); $("#userInitial").textContent="·";
+  CURRENT=null; DB=normalize(null); WALLET=null; $("#userInitial").textContent="·";
   showGate();
 }
 function openPrivacyPolicy(){
@@ -9989,7 +10089,7 @@ function openPrivacyPolicy(){
     <h2 style="font-family:var(--kufi);font-size:18px;font-weight:700;color:var(--ink);margin:0 0 16px">${isAr?"سياسة الخصوصية — حصاد الإنتاجية":"Privacy Policy — Hasad Productivity"}</h2>
     <p><strong>${isAr?"آخر تحديث:":"Last updated:"}</strong> ${new Date(2026,10,5).toLocaleDateString(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"})}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"ما الذي نجمعه؟":"What We Collect"}</h3>
-    <p>${isAr?"نجمع فقط البيانات الضرورية لتشغيل التطبيق: عنوان البريد الإلكتروني (للحسابات السحابية)، الاسم وتفاصيل الجامعة إذا اخترت إضافتها، وبيانات الجلسات والمزارع.":"We collect only what is needed to run the app: email address (cloud accounts), display name and university details if you choose to add them, and session/farm data."}</p>
+    <p>${isAr?"نجمع فقط البيانات الضرورية لتشغيل التطبيق: عنوان البريد الإلكتروني (للحسابات السحابية)، الاسم وتفاصيل الجامعة إذا اخترت إضافتها، وبيانات الجلسات والمزارع، ورصيد الكوينز وسجل الجلسات التي مُنحت عليها (مدة الجلسة وتاريخها فقط، بلا أي محتوى).":"We collect only what is needed to run the app: email address (cloud accounts), display name and university details if you choose to add them, session/farm data, and your coin balance with a log of the sessions it was awarded for (duration and date only, no content)."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"كيف نستخدم بياناتك؟":"How We Use Your Data"}</h3>
     <p>${isAr?"بياناتك تُستخدم حصراً لتقديم خدمة التطبيق: حفظ مزرعتك، عرض إحصائياتك، والجلسات الجماعية. لا نبيع بياناتك ولا نشاركها مع أي طرف ثالث.":"Your data is used exclusively to provide the app service: saving your farm, showing your stats, and group sessions. We never sell or share your data with third parties."}</p>
     <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px">${isAr?"وش يشوف غيرك؟":"What Others Can See"}</h3>
