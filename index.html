@@ -202,11 +202,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .chip.tag::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--tagc);margin-inline-end:7px;vertical-align:middle}
 .chip.tag[aria-pressed="true"]::before{background:rgba(255,255,255,.85)}
 .chip.ghost{border-style:dashed;color:var(--ink-3)}
-/* نبتة مقفلة بالمتجر: باهتة بإطار متقطّع وسعرها تحت اسمها */
-.chip.locked{border-style:dashed;color:var(--ink-3);opacity:.82;padding-top:5px;padding-bottom:5px}
-.chip.locked:hover{opacity:1;border-color:var(--viridian);color:var(--ink)}
-.chip.locked small{color:var(--ink-3);opacity:.9;font-weight:600;letter-spacing:.2px}
 .codes-btn{margin:0 0 10px;margin-inline-start:8px;vertical-align:middle}
+.gall-coins{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
 .coin-bar{margin:0 0 10px;font-size:12.5px;font-weight:600;color:var(--ink-2);
   background:var(--sand,rgba(180,150,80,.12));border:1px solid var(--line);
   border-radius:999px;padding:7px 13px;display:inline-block}
@@ -358,6 +355,21 @@ html[lang="en"] .disp{letter-spacing:-.01em}
 .card .sub{font-size:11px;color:var(--ink-3);margin-top:-4px;line-height:1.4}
 .card.active{border-color:var(--viridian);box-shadow:0 0 0 2px var(--viridian-soft),var(--shadow-1)}
 .card.active .nm{color:var(--viridian)}
+/* بطاقة نبتة مقفلة بالمعرض: النبتة باهتة وعليها شارة سعر، عشان تبان موجودة
+   وتستاهل الشراء بدل ما تختفي من القائمة */
+.card{position:relative}
+.card.locked{border-style:dashed}
+.card.locked canvas{opacity:.42;filter:saturate(.55)}
+.card.locked .nm{color:var(--ink-3)}
+.card.locked:hover{border-color:var(--viridian)}
+.card.locked:hover canvas{opacity:.72;filter:saturate(.85)}
+.card .pricetag{
+  position:absolute;top:13px;inset-inline-end:13px;
+  background:var(--ink);color:var(--paper);
+  font-size:11px;font-weight:700;letter-spacing:.2px;
+  padding:3px 8px;border-radius:999px;pointer-events:none;
+  box-shadow:0 1px 4px rgba(0,0,0,.22)
+}
 .famtitle{font-family:var(--kufi);font-size:15px;font-weight:600;margin:20px 0 -2px;display:flex;align-items:center;gap:9px}
 .famtitle::after{content:"";flex:1;height:1px;background:var(--line)}
 
@@ -864,6 +876,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
       <section class="panel">
         <h3>وش تزرع اليوم؟ <span class="hint" id="seedHint"></span></h3>
         <p class="coin-bar" id="coinBar" hidden></p>
+        <button class="chip ghost codes-btn" id="shopBtn" type="button" hidden>🌱 افتح المتجر</button>
         <button class="chip ghost codes-btn" id="codesBtn" type="button" hidden>🎁 عندك كود؟</button>
         <div class="chips" id="seedChips"></div>
         <p class="guest-banner" id="seedLockNote" hidden></p>
@@ -967,7 +980,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
   <main class="view" id="view-seeds">
     <div class="view-head">
       <h2>كيس البذور</h2>
-      <p id="seedsIntro">كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثماني ساعات تركيز.</p>
+      <p id="seedsIntro">سبع أنواع مجانية، والباقي تفتحه بالكوينز اللي تكسبها من تركيزك. اضغط على نبتة مفتوحة تصير هي المزروعة، أو على مقفلة عشان تشتريها.</p>
     </div>
     <div id="seedGallery"></div>
   </main>
@@ -1544,7 +1557,7 @@ const DICT = {
  " صارت هي المزروعة.":" is now planted.",
  "المزروعة الآن":"Planted now",
  "كيس البذور":"Seed pouch",
- "كل الأنواع مفتوحة ومجانية. اضغط على أي واحدة تصير هي المزروعة، والمعاينة تبيّن شكلها بعد ثماني ساعات تركيز.":"Every species is free and unlocked. Tap any one to plant it — the preview shows it after eight hours of focus.",
+ "سبع أنواع مجانية، والباقي تفتحه بالكوينز اللي تكسبها من تركيزك. اضغط على نبتة مفتوحة تصير هي المزروعة، أو على مقفلة عشان تشتريها.":"Seven species are free; the rest unlock with coins you earn from focusing. Tap an unlocked plant to grow it, or a locked one to buy it.",
  "انتهت الجلسة":"Session ended",
  "ما فيه جلسة":"No session",
  " دخلت المزرعة · ":" joined the farm · ",
@@ -2347,7 +2360,40 @@ const SPECIES = {
   sequoia:{ n:"سكويا", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"من أطول الأشجار، تعيش آلاف السنين.",
     leaf:"#2A4E36", leaf2:"#385E44", stem:"#5A4834", flower:"#6B5438", core:"#4E3C24", bark:"#5A4834" },
   bluespruce:{ n:"تنّوب أزرق", fam:"big", kind:"conifer", mat:"tree", canopy:"conic", note:"إبَر فضّية مزرقّة تلمع وقت الشمس.",
-    leaf:"#4A6E82", leaf2:"#5E8698", stem:"#5A4A38", flower:"#6E5438", core:"#8A6A42", bark:"#5A4A38" }
+    leaf:"#4A6E82", leaf2:"#5E8698", stem:"#5A4A38", flower:"#6E5438", core:"#8A6A42", bark:"#5A4A38" },
+  /* ─ أنواع جديدة: الورق هو البطل ─
+     كل واحدة مبنية على قِيَم ورق متطرفة (حجم/عرض/كثافة) عشان تطلع بشكل
+     ما يشبه الموجود: موز بورق عملاق، سرخس بسعف كثيف، كافور منسدل فضّي… */
+  banana:{ n:"موز", fam:"herbflower", kind:"herb", mat:"clump", note:"ورق عملاق يتمزّق مع الهوا، وظلّه عريض.",
+    leaf:"#3C8A3E", leaf2:"#55A851", stem:"#5E8A48", flower:"#C8A23A", core:"#8E6A22", pairs:5, lw:1.05, ll:2.1, th:1.5 },
+  fern:{ n:"سرخس", fam:"herbflower", kind:"herb", mat:"clump", note:"سعف مشقّق كثيف، يحب الظل والرطوبة.",
+    leaf:"#2F6B3C", leaf2:"#44874E", stem:"#4A7A42", flower:"#5E7A48", core:"#486038", pairs:14, lw:.22, ll:1.35, th:.9 },
+  taro:{ n:"قلقاس", fam:"herbflower", kind:"herb", mat:"clump", note:"ورق قلبي ضخم على عيدان طويلة.",
+    leaf:"#35764A", leaf2:"#4A9060", stem:"#5A8A58", flower:"#D8CC8E", core:"#B0A066", pairs:4, lw:.95, ll:1.6, th:1.3 },
+  coleus:{ n:"نبات القلب", fam:"herbflower", kind:"herb", mat:"clump", note:"ورق مخملي بحواف قرمزية، كثيف ومتراص.",
+    leaf:"#6E3A4E", leaf2:"#8E5068", stem:"#5E6A4A", flower:"#B8A2CC", core:"#8E78A8", pairs:11, lw:.72, ll:.92, th:1.05 },
+
+  /* ─ صبّار وصحراء ─ */
+  euphorbia:{ n:"فربيون", fam:"desert", kind:"cactus", mat:"column", note:"أعمدة مضلّعة تتفرّع كالشمعدان.",
+    leaf:"#4A8A58", leaf2:"#5EA06C", stem:"#4A8A58", flower:"#C84A3A", core:"#E8784A" },
+
+  /* ─ نخيل ─ */
+  fishtail:{ n:"نخيل ذيل السمكة", fam:"palms", kind:"palm", mat:"palmTree", note:"سعف مزدوج مشرشر، أكثف نخلة ورقاً.",
+    leaf:"#2F7044", leaf2:"#45895A", stem:"#6E5A3E", flower:"#A88A3A", core:"#86682A", bark:"#6E5A3E", fruit:true },
+
+  /* ─ أشجار مثمرة ─ */
+  grape:{ n:"عنب", fam:"fruit", kind:"fruit", mat:"tree", canopy:"spread", note:"ورق مفصّص عريض وعناقيد تتدلّى تحته.",
+    leaf:"#4A8A46", leaf2:"#5EA25A", stem:"#6E6248", flower:"#5E3A6E", core:"#3E2450", bark:"#6E6248", fruit:true, pairs:5, lw:.95, ll:1, th:1.2, fl:1.3 },
+
+  /* ─ أشجار كبيرة ─ */
+  ficus:{ n:"لبخ", fam:"big", kind:"leafy", mat:"tree", canopy:"spread", note:"شجرة الظل الضخمة، تاجها كثيف ما يمرّ منه ضوء.",
+    leaf:"#2E6B3E", leaf2:"#3F8450", stem:"#6B5E4A", flower:"#7A6A3A", core:"#5E5028", bark:"#6B5E4A", pairs:7, lw:.80, ll:1.1, th:1.5 },
+  eucalyptus:{ n:"كافور", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"ورق فضّي منسدل وريحة تفتح النفس.",
+    leaf:"#6E8E7E", leaf2:"#86A494", stem:"#9AA08E", flower:"#E0E4D4", core:"#BCC2AA", bark:"#9AA08E", pairs:11, lw:.22, ll:1.5, th:1.1 },
+  neem:{ n:"نيم", fam:"big", kind:"leafy", mat:"tree", canopy:"round", note:"ورق ريشي دقيق وكثيف، يصمد بالحر.",
+    leaf:"#35703E", leaf2:"#488A50", stem:"#5E5A42", flower:"#E4E8D0", core:"#C2C8A4", bark:"#5E5A42", pairs:13, lw:.26, ll:.92, th:1.2 },
+  bamboo:{ n:"خيزران", fam:"big", kind:"leafy", mat:"tree", canopy:"conic", note:"عيدان مجوّفة عالية وورق رفيع كثيف.",
+    leaf:"#4A8A46", leaf2:"#60A25C", stem:"#9AA85E", flower:"#C8CC8A", core:"#A8AC66", bark:"#9AA85E", slim:true, pairs:12, lw:.16, ll:1.25, th:.8 }
 };
 /* أنواع مخفية من قائمة الاختيار — تعريفها باقي عشان النبتات المحفوظة قديماً تنرسم عادي.
    أخفينا المكرر بصرياً (نفس الشكل بلون مختلف) وغير المعروف محلياً، وأبقينا الأشهر:
@@ -2377,7 +2423,10 @@ const SEED_PRICE = {
   wheat:300, lavender:320, arfaj:340, strawberry:360, aloe:400,
   hibiscus:420, opuntia:450, acacia:460, rose:480, lemon:500,
   cypress:500, washingtonia:520, pomegranate:540, doum:560, pine:560,
-  fig:580, mango:600, sidr:620, jacaranda:680, sakura:700
+  fig:580, mango:600, sidr:620, jacaranda:680, sakura:700,
+  /* الأنواع الكثيفة الورق — أغلى شوي لأنها أوضح وأجمل بالمشهد */
+  coleus:380, fern:440, taro:520, euphorbia:540, grape:600,
+  neem:640, bamboo:660, banana:680, eucalyptus:700, fishtail:740, ficus:780
 };
 /* المجانية أولاً، ثم المدفوعة من الأرخص للأغلى — ترتيب يقرأ كأنه رفوف متجر */
 const SP_ORDER = FREE_SEEDS.filter(k=>SPECIES[k] && !HIDDEN_SPECIES.has(k)).concat(
@@ -4399,7 +4448,17 @@ const TREE_SPECIES_HABIT = {
   chamomile:  { bush:1, rx:.70, ry:.30, leaf:.030, lw:.18, dens:1.0, gap:.14, flowers:"daisy" },
   lavender:   { bush:1, rx:.66, ry:.30, leaf:.050, lw:.16, dens:1.0, gap:.12, flowers:"lavender", silver:.4 },
   pine:       { rx:.30, ry:.46, fork:.05, multi:0, leaf:.012, lw:.08, dens:1.0, gap:.12, conifer:"pine" },
-  cypress:    { rx:.12, ry:.48, fork:.04, multi:0, leaf:.007, lw:.62, dens:1.3, gap:.03, conifer:"cypress" }
+  cypress:    { rx:.12, ry:.48, fork:.04, multi:0, leaf:.007, lw:.62, dens:1.3, gap:.03, conifer:"cypress" },
+  /* ─ الأنواع الجديدة: الورقة أكبر وأعرض وأكثف من كل اللي فوق ─ */
+  ficus:      { rx:.86, ry:.30, fork:.30, multi:.85, leaf:.016, lw:.72, dens:1.50, gap:.02, droop:.55, spread:.90, up:.04 },
+  eucalyptus: { rx:.38, ry:.47, fork:.14, multi:.45, leaf:.017, lw:.20, dens:1.15, gap:.10, droop:.55, silver:.40 },
+  neem:       { rx:.54, ry:.45, fork:.26, multi:.35, leaf:.0052, lw:.21, dens:1.52, gap:.03 },
+  bamboo:     { rx:.26, ry:.52, fork:.02, multi:1.0, leaf:.014, lw:.13, dens:1.30, gap:.08, droop:.30, maxDepth:2 },
+  grape:      { rx:.64, ry:.28, fork:.24, multi:.70, leaf:.026, lw:.98, dens:1.20, gap:.06, droop:.28 },
+  banana:     { bush:1, rx:.42, ry:.88, leaf:.300, lw:1.15, dens:.36, gap:.01, flowers:"dots", fcol:"#C8A23A" },
+  taro:       { bush:1, rx:.72, ry:.48, leaf:.225, lw:1.10, dens:.44, gap:.02, flowers:"dots", fcol:"#D8CC8E" },
+  fern:       { bush:1, rx:.80, ry:.54, leaf:.072, lw:.20, dens:1.55, gap:.02 },
+  coleus:     { bush:1, rx:.62, ry:.52, leaf:.070, lw:.78, dens:1.35, gap:.04, flowers:"spike", fcol:"#B8A2CC" }
 };
 /* هاش ثابت (٠..١) لكل غصن/ورقة — الشكل ما يتغيّر بين رسمة ورسمة */
 function tHash(seed,a,b){ return h01((Math.imul(a|0,73856093)^Math.imul(b|0,19349663)^seed)|0, 2749); }
@@ -4904,7 +4963,8 @@ function drawTreeM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small,Hover){
 }
 
 /* شجيرات الأعشاب والزهور: نفس محرّك الكتل الواقعي بحجم ونمط الشجيرة */
-const BUSH_SPECIES = new Set(["basil","mint","thyme","jasmine","rose","hibiscus","arfaj","strawberry","lavender","chamomile"]);
+const BUSH_SPECIES = new Set(["basil","mint","thyme","jasmine","rose","hibiscus","arfaj","strawberry","lavender","chamomile",
+                              "banana","taro","fern","coleus"]);
 function drawBushM(ctx,sp,cx,gy,s,M,rnd,sway,withered,bloom,small,Hover,qGrow){
   const id=SCENE_SPECIES, fit=fitOf(M), hb=TREE_SPECIES_HABIT[id]||{};
   const H=Hover || Math.min(s*(.46+.26*fit), capH(gy,1.6))*(hb.flowers==="lavender"?.95:1);
@@ -6442,7 +6502,7 @@ const el = {
   cv:$("#plantCanvas"), clock:$("#clock"), tierText:$("#tierText"), tierDot:$("#tierDot"),
   tierBadge:$("#tierBadge"), fill:$("#growthFill"), next:$("#nextLine"),
   setup:$("#setupBlock"), run:$("#runBlock"), runTitle:$("#runTitle"), runNote:$("#runNote"), pauseBtn:$("#pauseBtn"),
-  seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), coinBar:$("#coinBar"), codesBtn:$("#codesBtn"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
+  seedChips:$("#seedChips"), seedHint:$("#seedHint"), seedLockNote:$("#seedLockNote"), coinBar:$("#coinBar"), codesBtn:$("#codesBtn"), shopBtn:$("#shopBtn"), tagChips:$("#tagChips"), graceChips:$("#graceChips"),
   modeChips:$("#modeChips"), durPanel:$("#durPanel"),
   durVal:$("#durVal"), durMinus:$("#durMinus"), durPlus:$("#durPlus"),
   breakVal:$("#breakVal"), breakMinus:$("#breakMinus"), breakPlus:$("#breakPlus"),
@@ -6767,7 +6827,7 @@ async function buySeed(k){
   return true;
 }
 /* تأكيد الشراء — نافذة صغيرة بدل confirm() المتصفح، عشان تحترم ثيم التطبيق */
-function confirmBuySeed(k){
+function confirmBuySeed(k, after){
   const price = seedPrice(k), sp = SPECIES[k];
   if(!sp || !price) return;
   if(CURRENT && CURRENT.guest){ buySeed(k); return; }
@@ -6798,7 +6858,7 @@ function confirmBuySeed(k){
     btns[1].disabled = true; btns[1].textContent = TR("جارٍ الشراء…");
     const ok = await buySeed(k);
     overlay.remove();
-    if(ok){ renderSetup(); previewSeed(); }
+    if(ok){ if(after) after(); else { renderSetup(); previewSeed(); } }
   };
   /* ما يكفي الرصيد: زر واحد هادئ بدل زر شراء أخضر ما يسوّي شي — الزر البارز
      لازم يكون دايماً فعلاً ممكن، وإلا صار وعداً كاذباً */
@@ -7509,23 +7569,16 @@ function checkAch(){
 /* ─── الإعداد ───────────────────────────────────────────────── */
 function renderSetup(){
   const guest = !!(CURRENT && CURRENT.guest);
-  const seedList = guest ? GUEST_SEEDS : SP_ORDER;
+  /* هنا نعرض المملوك فقط (المجاني + المشترى) — شريحة باسم النبتة وبس، زي ما
+     كانت. المقفلة ومعها أسعارها مكانها "كيس البذور"، فيبقى هذا الصف نظيفاً. */
+  const seedList = (guest ? GUEST_SEEDS : SP_ORDER).filter(k=>seedOwned(k));
   el.seedChips.innerHTML="";
   seedList.forEach(k=>{
-    const price = seedPrice(k), owned = seedOwned(k);
     const b=document.createElement("button");
-    b.className = "chip" + (owned ? "" : " locked");
+    b.className = "chip";
     b.textContent = TR(SPECIES[k].n);
-    if(!owned){
-      const tag=document.createElement("small");
-      tag.textContent = "🔒 " + price + TR(" كوينز");
-      b.appendChild(tag);
-      b.setAttribute("aria-label", TR(SPECIES[k].n)+TR(" — مقفلة، سعرها ")+price+TR(" كوينز"));
-    }
-    b.setAttribute("aria-pressed", owned && DB.seed===k);
-    b.onclick = owned
-      ? (()=>{ DB.seed=k; writeStore(); renderSetup(); previewSeed(); })
-      : (()=>confirmBuySeed(k));
+    b.setAttribute("aria-pressed", DB.seed===k);
+    b.onclick = ()=>{ DB.seed=k; writeStore(); renderSetup(); previewSeed(); };
     el.seedChips.appendChild(b);
   });
   if(!seedList.includes(DB.seed) || !seedOwned(DB.seed)){
@@ -7539,9 +7592,15 @@ function renderSetup(){
     el.coinBar.hidden = guest;
     if(!guest){
       el.coinBar.textContent = "🪙 " + coinBalance() + TR(" كوينز") +
-        (locked ? (TR(" · باقي ")+locked+TR(" نبتة بالمتجر")) : TR(" · ملكت كل النباتات 🏆")) +
         TR(" · كل ساعة تركيز = ")+COINS_PER_HOUR;
     }
+  }
+  /* زر يوصّل لكيس البذور حيث المتجر — يختفي لمن ملك كل النباتات */
+  if(el.shopBtn){
+    const locked = SP_ORDER.filter(k=>!seedOwned(k)).length;
+    el.shopBtn.hidden = guest || !locked;
+    el.shopBtn.textContent = TR("🌱 افتح المتجر · ")+locked+TR(" نبتة مقفلة");
+    el.shopBtn.onclick = ()=>{ go("seeds"); renderGallery(); };
   }
   /* الأكواد تحتاج سيرفر: نخفي الزر عن الضيف وعن الحساب المحلي بدل ما
      يضغطه المستخدم ويتفاجأ برفض */
@@ -8672,26 +8731,54 @@ function renderGallery(){
     if(cta) cta.onclick=()=>{ leaveGuest(); const t=$("#tabSignup"); if(t) t.click(); };
     return;
   }
+  /* شريط الرصيد أعلى المعرض، مع زر الأكواد — عشان المستخدم يعرف كم عنده
+     وهو يتصفّح المقفلة، بلا ما يرجع لشاشة الزراعة */
+  {
+    const bar=document.createElement("div"); bar.className="gall-coins";
+    const locked = SP_ORDER.filter(k=>!seedOwned(k)).length;
+    const bal=document.createElement("span"); bal.className="coin-bar";
+    bal.textContent = "🪙 " + coinBalance() + TR(" كوينز") +
+      (locked ? (TR(" · باقي ")+locked+TR(" نبتة")) : TR(" · ملكت كل النباتات 🏆"));
+    bar.appendChild(bal);
+    if(CURRENT && CURRENT.cloud){
+      const cb=document.createElement("button");
+      cb.className="chip ghost"; cb.type="button"; cb.textContent=TR("🎁 عندك كود؟");
+      cb.onclick=openCodesDialog;
+      bar.appendChild(cb);
+    }
+    el.gallery.appendChild(bar);
+  }
   FAMS.forEach(f=>{
     const ttl=document.createElement("div"); ttl.className="famtitle"; ttl.textContent=TR(f.n);
     el.gallery.appendChild(ttl);
     const grid=document.createElement("div"); grid.className="seedgrid";
     el.gallery.appendChild(grid);
     SP_ORDER.filter(k=>SPECIES[k].fam===f.id).forEach(k=>{
-      const sp=SPECIES[k];
+      const sp=SPECIES[k], price=seedPrice(k), owned=seedOwned(k);
       const card=document.createElement("div");
-      card.className="card"+(DB.seed===k?" active":"");
+      card.className="card"+(owned&&DB.seed===k?" active":"")+(owned?"":" locked");
       card.tabIndex=0; card.setAttribute("role","button");
       const cv=document.createElement("canvas");
       const nm=document.createElement("div"); nm.className="nm"; nm.textContent=TR(sp.n);
-      const sub=document.createElement("div"); sub.className="sub"; sub.textContent=DB.seed===k?TR("المزروعة الآن"):TR(sp.note);
+      const sub=document.createElement("div"); sub.className="sub";
+      sub.textContent = owned ? (DB.seed===k?TR("المزروعة الآن"):TR(sp.note)) : TR(sp.note);
       card.appendChild(cv); card.appendChild(nm); card.appendChild(sub);
+      /* المقفلة: شارة سعر فوق الصورة، والنبتة نفسها باهتة — تبيّن إنها موجودة
+         وتستاهل الشراء بدل ما تختفي تماماً */
+      if(!owned){
+        const tag=document.createElement("div"); tag.className="pricetag";
+        tag.textContent = "🔒 " + price;
+        card.appendChild(tag);
+        card.setAttribute("aria-label", TR(sp.n)+TR(" — مقفلة، سعرها ")+price+TR(" كوينز"));
+      }
       grid.appendChild(card);
       paint(cv,102,118,{ species:k, minutes:480, seedStr:"g-"+k, glow:false });
-      const pick=()=>{ DB.seed=k; writeStore(); renderGallery(); renderSetup(); previewSeed();
-        toast(TR(sp.n)+TR(" صارت هي المزروعة."),"🌿"); };
-      card.onclick=pick;
-      card.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(); } };
+      const act = owned
+        ? (()=>{ DB.seed=k; writeStore(); renderGallery(); renderSetup(); previewSeed();
+                 toast(TR(sp.n)+TR(" صارت هي المزروعة."),"🌿"); })
+        : (()=>confirmBuySeed(k, ()=>{ renderGallery(); renderSetup(); previewSeed(); }));
+      card.onclick=act;
+      card.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); act(); } };
     });
   });
 }
