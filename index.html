@@ -9579,7 +9579,10 @@ function cloudErr(e){
   if(/Email not confirmed/i.test(m))        return TR("الحساب يبي تفعيل إيميل. اقفل خيار Confirm email من لوحة Supabase.");
   if(/already registered|already been registered|User already/i.test(m))
                                             return TR("فيه حساب بهذا الإيميل. سجّل دخول بدل ما تنشئ.");
-  if(/Password should be at least/i.test(m))return TR("كلمة السر لازم ٦ خانات فأكثر.");
+  /* السيرفر يرفض كلمة السر لقصرها أو لنقص نوع حرف فيها — في الحالتين
+     نعرض نفس الشرط المكتوب بالواجهة، عشان ما يقرأ المستخدم رقمين مختلفين */
+  if(/Password should be at least|Password should contain|password.*too short|weak.?password/i.test(m))
+    return TR(PASS_RULE_MSG);
   if(/Unable to validate email|invalid format|valid email/i.test(m)) return TR("الإيميل غير صحيح.");
   if(/TOO_MANY_ATTEMPTS/.test(m))            return TR("محاولات خاطئة كثيرة. انتظر ربع ساعة وجرّب.");
   if(/rate limit|too many|For security purposes/i.test(m)) return TR("محاولات كثيرة. انتظر دقيقة وجرّب.");
