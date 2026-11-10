@@ -7543,8 +7543,10 @@ function renderSetup(){
         TR(" · كل ساعة تركيز = ")+COINS_PER_HOUR;
     }
   }
+  /* الأكواد تحتاج سيرفر: نخفي الزر عن الضيف وعن الحساب المحلي بدل ما
+     يضغطه المستخدم ويتفاجأ برفض */
   if(el.codesBtn){
-    el.codesBtn.hidden = guest;
+    el.codesBtn.hidden = !(CURRENT && CURRENT.cloud);
     el.codesBtn.onclick = openCodesDialog;
   }
   if(el.seedLockNote){
@@ -9359,7 +9361,14 @@ $("#groupBody").addEventListener("click", e=>{
 
 const NAV_ORDER=["home","plant","garden","stats","seeds","uni","group"];
 if(document.startViewTransition) document.documentElement.classList.add("vt");
+let lastWalletSync = 0;
 function go(name){
+  /* نحدّث الرصيد عند دخول شاشة الزراعة (مرة كل دقيقتين على الأكثر) عشان
+     منحة من الأدمن أو كود استُخدم على جهاز ثاني تبان بلا إعادة تحميل */
+  if(name==="plant" && CURRENT && CURRENT.cloud && Date.now()-lastWalletSync > 120000){
+    lastWalletSync = Date.now();
+    walletSync();
+  }
   const curV=document.querySelector(".view.on"), cur=curV?curV.id.replace("view-",""):null;
   const fwd = NAV_ORDER.indexOf(name) >= NAV_ORDER.indexOf(cur);
   const rtl = document.documentElement.dir!=="ltr";
