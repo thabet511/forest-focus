@@ -502,7 +502,29 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .g-meta span{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--paper-2);border:1px solid var(--line);color:var(--ink-2)}
 .g-members{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-top:14px}
 .g-members.dense{grid-template-columns:repeat(auto-fill,minmax(98px,1fr))}
-.g-split{display:grid;gap:14px}
+.g-members.big{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-top:14px}
+.g-members.big.dense{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.g-pagehead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:6px}
+.g-pagehead .btn{flex:none;width:auto}
+.g-pagehead b{font-family:var(--kufi);font-size:17px}
+.g-timer.sm{font-size:26px}
+.g-code.sm{font-size:18px;letter-spacing:.2em}
+.g-link{margin-top:8px;font-size:11.5px;color:var(--ink-3);text-align:center;word-break:break-all;user-select:all;
+  background:var(--paper-2);border:1px dashed var(--line);border-radius:8px;padding:6px 8px}
+.g-mlist{display:flex;flex-direction:column}
+.g-mrow{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);border-radius:10px}
+.g-mrow:last-child{border-bottom:0}
+.g-mrow.me{background:var(--viridian-soft)}
+.g-mrow.focused{box-shadow:inset 0 0 0 2px var(--ochre)}
+.g-mrow.dead{opacity:.78}
+.g-mav{flex:none;width:54px;height:62px;display:grid;place-items:center;overflow:hidden}
+.g-mav canvas{display:block}
+.g-mtxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.g-mtxt b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-mtxt b em{font-style:normal;color:var(--viridian);font-size:11px;font-weight:600}
+.g-mtxt span{font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-st{flex:none;font-size:12px;font-weight:600}
+.g-split{display:grid;gap:14px;margin-top:10px}
 .g-split>.g-stage>.panel,.g-split>.g-side>.panel{margin:0}
 .g-side .g-members{margin-top:0}
 .g-stage .g-timer{font-size:clamp(46px,13vw,68px);line-height:1.1;margin:6px 0 2px}
@@ -1729,6 +1751,15 @@ const DICT = {
  "بحيرة الأصفر":"Al-Asfar Lake",
  "جبّة":"Jubbah",
  "داخل الجلسة":"in the session",
+ "نباتات الجميع":"Everyone's plants",
+ "كل شي جاهز؟ ابدأ الجلسة لما يوصل ربعك.":"All set? Start the session once your friends have joined.",
+ "رجوع للجلسة":"Back to session",
+ "نسخ الرابط":"Copy link",
+ "رابط الدعوة":"Invite link",
+ "نسخت رابط الدعوة.":"Invite link copied.",
+ "وصلتك دعوة لجلسة جماعية. اختر نبتتك واضغط انضم.":"You're invited to a group session. Pick your plant and tap Join.",
+ "أنت داخل جلسة أخرى. اخرج منها أول.":"You're in another session. Leave it first.",
+ "انضم لجلستي الجماعية بحصاد الإنتاجية.":"Join my group session on Hasad Productivity.",
  "شاطئ العقير":"Al-Uqair Beach",
  "شاطئ ينبع":"Yanbu Beach",
  "الجو في المشهد":"Scene weather", "حقيقي":"Live", "صافي":"Clear", "غائم":"Cloudy", "ممطر":"Rainy", "ضباب":"Foggy",
@@ -9894,7 +9925,7 @@ function renderPlaceChips(){
     b.className="chip"; b.type="button";
     b.setAttribute("aria-pressed", String(P.id===cur));
     b.innerHTML = escAttr(TR(P.n))+'<small>'+escAttr(TR(P.sub))+'</small>';
-    b.onclick=()=>{ setPlace(P.id); renderPlaceChips(); updatePlaceBadge(); lastDraw=0; drawHero(); };
+    b.onclick=()=>{ setPlace(P.id); renderPlaceChips(); updatePlaceBadge(); lastDraw=0; drawHero(); try{ writeRoute(); }catch(e){} };
     box.appendChild(b);
   });
   renderSkyChips();
@@ -11112,7 +11143,7 @@ const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" 
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false, focus:null,
           /* نطلب أكبر عدد ممكن. السيرفر القديم يقصّه لثمانية والجديد يفتحه — فالواجهة
              تشتغل صح على الحالتين بلا تزامن بين النشر والهجرة */
-          mode:"home", err:"", form:{ cat:null, max:9999, grace:60000, species:null, strict:true },
+          mode:"home", page:"main", invite:null, err:"", form:{ cat:null, max:9999, grace:60000, species:null, strict:true },
           lp:null, lo:0,           /* إيقاف مؤقت محلي: lp=وقت الإيقاف، lo=مجموع ms المتوقفة */
           chatMsgs:[], chatPoll:null, myTier:null, chatUnread:0 };  /* المحادثة + تتبّع رتبتي */
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
@@ -11170,7 +11201,7 @@ function gStartTimers(){
 function gClear(note){
   gStopTimers();
   if(G.chatPoll){ clearInterval(G.chatPoll); G.chatPoll=null; }
-  G.code=null; G.room=null; G.done=false; G.mode="home"; G.err=""; G.focus=null; gEndedAt=0;
+  G.code=null; G.room=null; G.done=false; G.mode="home"; G.page="main"; G.invite=null; G.err=""; G.focus=null; gEndedAt=0;
   G.lp=null; G.lo=0; G.chatMsgs=[]; G.myTier=null; G.chatUnread=0;
   gSave();
   renderGroup();
@@ -11355,7 +11386,7 @@ async function gJoin(raw){
   G.busy=true; G.err=""; renderGroup();
   try{
     const c = await gRpc("group_join", { p_code:code, p_name:CURRENT.name, p_uni:CURRENT.uni||null, p_species:(G.form.species||DB.seed) });
-    G.busy=false; G.code=String(c); G.room=null; G.done=false; gFails=0; gSave();
+    G.busy=false; G.code=String(c); G.room=null; G.done=false; G.invite=null; G.page="main"; gFails=0; gSave();
     renderGroup();
     gStartTimers(); await gRefresh();
     gRpc("group_set_wither", { p_code:G.code, p_strict:!!G.form.strict, p_grace_ms:G.form.grace }).then(gRefresh).catch(()=>{});
@@ -11393,12 +11424,19 @@ async function gSetWither(v){
        await gRefresh(); }
   catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
 }
+const gInviteURL = code => siteURL()+"#/group/"+code;
 async function gShare(){
   const code=G.code; if(!code) return;
-  const text = TR("انضم لجلستي الجماعية بحصاد الإنتاجية. الرمز: ")+code;
-  try{ if(navigator.share){ await navigator.share({ text, url:siteURL() }); return; } }catch(e){ return; }
-  try{ await navigator.clipboard.writeText(code); toast(TR("نسخت الرمز."),"📋"); }
-  catch(e){ toast(TR("الرمز: ")+code,"📋"); }
+  const url=gInviteURL(code);
+  const text = TR("انضم لجلستي الجماعية بحصاد الإنتاجية.")+" "+TR("الرمز: ")+code;
+  try{ if(navigator.share){ await navigator.share({ text, url }); return; } }catch(e){ return; }
+  return gCopyLink();
+}
+async function gCopyLink(){
+  const code=G.code; if(!code) return;
+  const url=gInviteURL(code);
+  try{ await navigator.clipboard.writeText(url); toast(TR("نسخت رابط الدعوة."),"📋"); }
+  catch(e){ toast(url,"📋"); }
 }
 function gResume(){
   if(!gCanUse()) return;
@@ -11444,6 +11482,7 @@ function gChips(act, items, cur){
 function renderGroup(){
   const box=$("#groupBody"); if(!box) return;
   gSyncChatFab();
+  try{ writeRoute(); }catch(e){}
   try{ renderGroupInner(box); }
   catch(e){
     box.innerHTML='<section class="panel"><p class="g-note" style="color:var(--brick);margin:0">'+
@@ -11497,6 +11536,7 @@ function renderGroupInner(box){
     }
     if(G.mode==="join"){
       box.innerHTML='<section class="panel"><h3>'+TR("انضمام لجلسة")+'</h3>'+
+        (G.invite?'<p class="g-note" style="text-align:start;margin:0 0 4px;color:var(--viridian)">'+TR("وصلتك دعوة لجلسة جماعية. اختر نبتتك واضغط انضم.")+'</p>':"")+
         '<span class="g-label">'+TR("اكتب الرمز اللي أرسله لك صاحبك")+'</span>'+
         '<input class="g-input" id="gCodeIn" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123">'+
         '<span class="g-label">'+TR("نبتتك بهالجلسة")+'</span>'+
@@ -11534,7 +11574,9 @@ function renderGroupInner(box){
     (r.locked?'<span>🔒 '+TR("الدخول مقفول")+'</span>':"")+'</div>';
   let head;
   if(!running && !ended) head='<section class="panel"><h3>'+TR("رمز الجلسة")+'</h3><div class="g-codebox"><div class="g-code">'+r.code+'</div>'+
-    '<button class="btn btn-quiet" type="button" data-act="share" style="flex:none;padding:9px 14px;font-size:14px">'+TR("شارك")+'</button></div>'+meta+'</section>';
+    '<button class="btn btn-quiet" type="button" data-act="share" style="flex:none;padding:9px 14px;font-size:14px">'+TR("شارك")+'</button></div>'+
+    '<div class="g-row" style="margin-top:10px"><button class="btn btn-quiet" type="button" data-act="copylink" style="padding:8px 14px;font-size:13px">🔗 '+TR("نسخ الرابط")+'</button></div>'+
+    '<div class="g-link" dir="ltr" title="'+escAttr(TR("رابط الدعوة"))+'">'+escAttr(gInviteURL(r.code))+'</div>'+meta+'</section>';
   else head='<section class="panel">'+
     (viewingOther?'<div class="g-row" style="margin:0 0 8px;justify-content:space-between;align-items:center">'+
         '<span class="g-label" style="margin:0">🌱 '+TR("نبتة")+' '+escAttr(fm.name||TR("مزارع"))+'</span>'+
@@ -11543,35 +11585,15 @@ function renderGroupInner(box){
     '<div id="gSky" style="margin:-2px 0 8px"></div>'+
     '<div class="g-timer" id="gTimer">'+gClock()+'</div>'+meta+'</section>';
   const minsNow = (running||ended) ? (gOpen()?gElapsedMs()/60000:Math.min(gElapsedMs(),gTotalMs())/60000) : 0;
-  const cards = r.members.map((m,i)=>{
-    const u=findUni(m.uni), dead=m.state!=="alive";
-    const st = (!running && !ended) ? '<div class="g-state" style="color:var(--ink-3)">'+TR("جاهز")+'</div>'
-      : m.state==="left" ? '<div class="g-state" style="color:var(--brick)">'+TR("انسحب")+'</div>'
-      : dead ? '<div class="g-state" style="color:var(--brick)">'+TR("ذبلت")+'</div>'
-      : done ? '<div class="g-state" style="color:var(--viridian)">'+TR("نجح")+' ✅</div>'
-      : '<div class="g-state" style="color:var(--viridian)">'+TR("يركّز")+'</div>';
-    const clickable = running||ended;
-    return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&(running||ended)?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+
-      (clickable?'" data-act="focus" data-v="'+escAttr(m.user_id)+'" style="cursor:pointer':'')+'"><div data-gcv="'+i+'"></div>'+
-      '<div class="g-name">'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?' <span title="'+escAttr(TR("المنشئ"))+'">👑</span>':"")+'</div>'+
-      '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div>'+st+'</div>';
-  });
-  /* الجلسة المفتوحة ما لها عدد مقاعد ثابت، فما نرسم صفّ "مكان فاضي" بطول الحدّ.
-     نخلّي مكانين فاضيين كإشارة إنها تستقبل غيرك، لا أكثر */
-  if(!running && !ended){
-    const slots = gCapped(r) ? Math.max(0, r.max_members-r.members.length)
-                             : (r.members.length<4 ? 2 : 1);
-    for(let k=0;k<slots;k++) cards.push('<div class="g-member g-empty">'+TR("مكان فاضي")+'</div>');
-  }
-  /* خانة "من دخل" — سطر لكل شخص باسمه وجامعته */
-  const joined='<section class="panel" style="margin-top:14px"><h3>'+TR("من دخل")+' ('+r.members.length+')</h3>'+
-    '<div class="g-joined">'+r.members.map(m=>{
-      const u=findUni(m.uni);
-      return '<div class="g-jrow"><b>'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?" 👑":"")+
-        (m.strict===false?" 🛡️":"")+
-        (m.user_id===gMyId()?' <span style="color:var(--viridian);font-size:11px">'+TR("أنت")+'</span>':"")+'</b>'+
-        '<span>'+(u?escAttr(TR(u.n)):TR("بدون جامعة"))+'</span></div>';
-    }).join("")+'</div></section>';
+  const stateOf = m => (!running && !ended) ? '<span class="g-st" style="color:var(--ink-3)">'+TR("جاهز")+'</span>'
+      : m.state==="left" ? '<span class="g-st" style="color:var(--brick)">'+TR("انسحب")+'</span>'
+      : m.state!=="alive" ? '<span class="g-st" style="color:var(--brick)">'+TR("ذبلت")+'</span>'
+      : done ? '<span class="g-st" style="color:var(--viridian)">'+TR("نجح")+' ✅</span>'
+      : '<span class="g-st" style="color:var(--viridian)">'+TR("يركّز")+'</span>';
+  const clickable = running||ended;
+  const focusAttr = m => clickable ? ' data-act="focus" data-v="'+escAttr(m.user_id)+'" style="cursor:pointer"' : '';
+  const plantsBtn = '<div class="g-row" style="margin-top:12px"><button class="btn btn-quiet" type="button" data-act="gpage" data-v="plants">🌿 '+
+      TR("نباتات الجميع")+' ('+r.members.length+')</button></div>';
   let foot;
   if(done){
     const mine=me&&me.state==="alive";
@@ -11592,7 +11614,7 @@ function renderGroupInner(box){
       '<button class="btn btn-danger" type="button" data-act="leave">'+TR("انسحاب")+'</button></div>';
   } else if(host){
     const can=r.members.length>=2;
-    foot='<p class="g-note">'+(can?TR("كل شي جاهز؟ ابدأ الجلسة، أو انتظرها تبدأ لحالها لما تمتلي (٨ أشخاص)."):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
+    foot='<p class="g-note">'+(can?(gCapped(r)?TR("كل شي جاهز؟ ابدأ الجلسة، أو انتظرها تبدأ لحالها لما تمتلي (٨ أشخاص)."):TR("كل شي جاهز؟ ابدأ الجلسة لما يوصل ربعك.")):TR("شارك الرمز مع ربعك، ولازم شخصين على الأقل عشان تبدأ."))+'</p>'+
       '<div class="g-row"><button class="btn btn-primary" type="button" data-act="start"'+(can?"":" disabled")+'>'+TR("ابدأ الجلسة")+'</button>'+
       '<button class="btn btn-quiet" type="button" data-act="lock" data-v="'+(r.locked?"0":"1")+'">'+TR(r.locked?"فتح الدخول":"قفل الدخول")+'</button>'+
       '<button class="btn btn-quiet" type="button" data-act="leave">'+TR("إلغاء الجلسة")+'</button></div>';
@@ -11600,9 +11622,33 @@ function renderGroupInner(box){
     foot='<p class="g-note">'+TR("بانتظار المنشئ يبدأ الجلسة…")+'</p>'+
       '<div class="g-row"><button class="btn btn-quiet" type="button" data-act="leave">'+TR("مغادرة")+'</button></div>';
   }
-  const dense = r.members.length>16;
-  box.innerHTML = '<div class="g-split"><div class="g-stage">'+head+foot+'</div>'+
-    '<div class="g-side"><div class="g-members'+(dense?' dense':'')+'">'+cards.join("")+'</div>'+joined+'</div></div>';
+  let html;
+  if(G.page==="plants"){
+    const cards = r.members.map((m,i)=>{
+      const u=findUni(m.uni), dead=m.state!=="alive";
+      return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&clickable?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+'"'+focusAttr(m)+'>'+
+        '<div data-gcv="'+i+'"></div>'+
+        '<div class="g-name">'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?' <span title="'+escAttr(TR("المنشئ"))+'">👑</span>':"")+'</div>'+
+        '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div><div class="g-state">'+stateOf(m)+'</div></div>';
+    });
+    const dense = r.members.length>24;
+    html = '<div class="g-pagehead"><button class="btn btn-quiet" type="button" data-act="gpage" data-v="main" style="padding:8px 14px;font-size:14px">→ '+TR("رجوع للجلسة")+'</button>'+
+           '<b>🌿 '+TR("نباتات الجميع")+' ('+r.members.length+')</b>'+
+           ((running||ended)?'<span class="g-timer sm" id="gTimer">'+gClock()+'</span>':'<span class="g-code sm">'+r.code+'</span>')+'</div>'+
+           '<div class="g-members big'+(dense?' dense':'')+'">'+cards.join("")+'</div>';
+  } else {
+    const rows = r.members.map((m,i)=>{
+      const u=findUni(m.uni), dead=m.state!=="alive";
+      return '<div class="g-mrow'+(m.user_id===gMyId()?" me":"")+(dead&&clickable?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+'"'+focusAttr(m)+'>'+
+        '<div class="g-mav" data-gcv="'+i+'"></div>'+
+        '<div class="g-mtxt"><b>'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?" 👑":"")+(m.strict===false?" 🛡️":"")+
+          (m.user_id===gMyId()?' <em>'+TR("أنت")+'</em>':"")+'</b>'+
+          '<span>'+(u?escAttr(TR(u.n)):TR("بدون جامعة"))+'</span></div>'+stateOf(m)+'</div>';
+    }).join("");
+    const joined='<section class="panel"><h3>'+TR("من دخل")+' ('+r.members.length+')</h3><div class="g-mlist">'+rows+'</div></section>';
+    html = '<div class="g-split"><div class="g-stage">'+head+plantsBtn+foot+'</div><div class="g-side">'+joined+'</div></div>';
+  }
+  box.innerHTML = html;
   const skyBox=$("#gSky");
   if(skyBox){
     const cv=document.createElement("canvas"); skyBox.appendChild(cv);
@@ -11613,11 +11659,11 @@ function renderGroupInner(box){
       withered: !!(fm && fm.state!=="alive"),
       tms:performance.now(), mdate:new Date() });
   }
-  const dense2=r.members.length>16;
-  r.members.forEach((m,i)=>{
+    r.members.forEach((m,i)=>{
     const holder=box.querySelector('[data-gcv="'+i+'"]'); if(!holder) return;
     const cv=document.createElement("canvas"); holder.appendChild(cv);
-    paint(cv,dense2?96:136,dense2?112:158,{ species:SPECIES[m.species]?m.species:"basil", minutes:Math.max(.4,minsNow),
+    const big = G.page==="plants", dn = r.members.length>24;
+    paint(cv, big?(dn?104:150):54, big?(dn?122:176):62,{ species:SPECIES[m.species]?m.species:"basil", minutes:Math.max(.4,minsNow),
       withered: running && m.state!=="alive", seedStr:r.code+m.user_id, glow:false });
   });
 }
@@ -11633,8 +11679,8 @@ $("#groupBody").addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b || b.disabled) return;
   const v=b.dataset.v, f=G.form;
   switch(b.dataset.act){
-    case "mode":   G.mode=v; G.err=""; break;
-    case "focus":  G.focus=(v===gMyId())?null:v; break;
+    case "mode":   G.mode=v; G.err=""; if(v==="home") G.invite=null; break;
+    case "focus":  G.focus=(v===gMyId())?null:v; if(G.page==="plants"){ G.page="main"; renderGroup(); writeRoute(); window.scrollTo(0,0); return; } break;
     case "species":
       if(G.mode==="join"){ const ci=$("#gCodeIn"); if(ci) G.form.code=ci.value; }
       f.species=v; break;
@@ -11651,6 +11697,8 @@ $("#groupBody").addEventListener("click", e=>{
     case "start":  return gStart();
     case "leave":  return gLeave();
     case "share":  return gShare();
+    case "copylink": return gCopyLink();
+    case "gpage":  G.page = (v==="plants"?"plants":"main"); renderGroup(); writeRoute(); window.scrollTo(0,0); return;
     case "lock":   return gLock(v==="1");
     case "endall": return gEnd();
     case "back":   return gClear();
@@ -11703,8 +11751,67 @@ function goCore(name){
   /* ترتيب الجامعات يتحدّث تلقائياً كل ٣٠ ثانية ما دام المستخدم بصفحته، ويتوقف لما يطلع منها */
   clearInterval(uniBoardTimer); uniBoardTimer=null;
   if(name==="uni") uniBoardTimer=setInterval(()=>{ uniBoardCache=null; renderUniBoard(); }, 30000);
+  writeRoute();
 }
 $$(".nav-btn").forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+/* ─── الروابط: كل صفحة ومكان وجلسة لها رابط ─────────────────────
+   #/plant            شاشة الزراعة          #/plant/<مكان>  مكان مزروع محدد
+   #/garden #/stats #/seeds #/uni #/home       باقي الصفحات
+   #/group            الجماعية             #/group/ABC123   دعوة/غرفة
+   #/group/ABC123/plants   صفحة نباتات الجميع
+   الأزرار تحدّث الرابط، والرجوع بالمتصفح يشتغل، وفتح الرابط يوديك للمكان نفسه. */
+const ROUTE_VIEWS = ["home","plant","garden","stats","seeds","uni","group"];
+let routeApplying = false;
+function parseRoute(){
+  const h = String(location.hash||"");
+  if(h.indexOf("#/")!==0) return null;
+  const p = h.slice(2).split("?")[0].split("/").filter(Boolean).map(x=>{ try{ return decodeURIComponent(x); }catch(e){ return x; } });
+  if(!p.length || ROUTE_VIEWS.indexOf(p[0])<0) return null;
+  const r = { view:p[0], place:null, code:null, page:null };
+  if(p[0]==="plant" && PLACES.some(x=>x.id===p[1])) r.place=p[1];
+  if(p[0]==="group"){
+    const c = String(p[1]||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(c.length===6){ r.code=c; r.page = p[2]==="plants" ? "plants" : "main"; }
+  }
+  return r;
+}
+function routeFor(){
+  const v = document.querySelector(".view.on"); if(!v) return null;
+  const name = v.id.replace("view-","");
+  let h = "#/"+name;
+  if(name==="plant"){ const pid=curPlaceId(); if(pid && pid!=="auto" && PLACES.some(x=>x.id===pid)) h += "/"+pid; }
+  if(name==="group"){
+    const code = G.code || G.invite;
+    if(code) h += "/"+code+(G.code && G.page==="plants" ? "/plants" : "");
+  }
+  return h;
+}
+function writeRoute(){
+  if(routeApplying || !CURRENT) return;
+  const cur = String(location.hash||"");
+  if(cur && cur.indexOf("#/")!==0) return;          /* لا نمس روابط الإيميل (استعادة كلمة السر) */
+  const h = routeFor(); if(!h || h===cur) return;
+  try{ history.pushState(null,"",location.pathname+location.search+h); }catch(e){}
+}
+function applyRoute(r){
+  if(!r || !CURRENT) return;
+  routeApplying = true;
+  try{
+    if(r.view==="plant" && r.place && r.place!==curPlaceId()){
+      setPlace(r.place);
+      try{ renderPlaceChips(); updatePlaceBadge(); lastDraw=0; drawHero(); }catch(e){}
+    }
+    if(r.view==="group" && r.code){
+      if(G.code && G.code!==r.code){ toast(TR("أنت داخل جلسة أخرى. اخرج منها أول."),"⚠️"); }
+      else if(G.code===r.code){ G.page=r.page; }
+      else { G.mode="join"; G.err=""; G.form.code=r.code; G.invite=r.code; G.page="main"; }
+    }
+    const cur=document.querySelector(".view.on");
+    if(!cur || cur.id!=="view-"+r.view) go(r.view); else if(r.view==="group") renderGroup();
+  } finally { routeApplying = false; }
+}
+window.addEventListener("hashchange", ()=>{ const r=parseRoute(); if(r && CURRENT) applyRoute(r); });
 
 /* المظهر: تلقائي (يتبع إعدادات جهازك فاتح/داكن) هو الوضع الأصلي، ويقدر المستخدم
    يبدّل يدوياً لفاتح أو داكن ثابت، والاختيار يُحفظ. DB.theme = null → تلقائي،
@@ -11785,7 +11892,9 @@ function bootApp(){
   applyTheme(); renderSetup(); sizeHero(); paintClock(0); restore();
   gResume();
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ lastDraw=0; drawHero(); });
-  go("plant");
+  const r0 = parseRoute();
+  go(r0 ? r0.view : "plant");
+  if(r0) applyRoute(r0);
 }
 
 /* ════════════════ الحساب والبوابة ════════════════ */
