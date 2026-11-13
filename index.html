@@ -525,6 +525,16 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .g-mtxt span{font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .g-st{flex:none;font-size:12px;font-weight:600}
 .g-split{display:grid;gap:14px;margin-top:10px}
+.g-sel{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper-2);color:var(--ink);font:inherit;font-size:14px}
+.g-scene .chips{margin-top:8px}
+.g-scap{text-align:center;font-size:12.5px;color:var(--ink-3);margin:0 0 6px}
+.g-voice .g-vrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.g-voice .g-vrow .btn{padding:8px 14px;font-size:13.5px;flex:none;width:auto}
+.g-vc{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:99px;border:1px solid var(--line);font-size:12.5px;background:var(--paper-2)}
+.g-vc.speaking,.g-mrow.speaking,.g-member.speaking{box-shadow:0 0 0 2px var(--viridian)}
+.g-vc.speaking{background:var(--viridian-soft)}
+.g-mrow.invoice .g-mtxt b::after,.g-member.invoice .g-name::after{content:" 🎙️";font-size:11px}
+.g-vhint{font-size:12px;color:var(--ink-3);margin:6px 0 0;line-height:1.6}
 .g-split>.g-stage>.panel,.g-split>.g-side>.panel{margin:0}
 .g-side .g-members{margin-top:0}
 .g-stage .g-timer{font-size:clamp(46px,13vw,68px);line-height:1.1;margin:6px 0 2px}
@@ -1752,6 +1762,22 @@ const DICT = {
  "جبّة":"Jubbah",
  "داخل الجلسة":"in the session",
  "نباتات الجميع":"Everyone's plants",
+ "مكاني ووقتي":"My place & time",
+ "تلقائي (موقعي)":"Auto (my location)",
+ "وقتي":"Time",
+ "متزامن":"Live",
+ "الصوت":"Voice",
+ "انضم للصوت":"Join voice",
+ "كتم":"Mute",
+ "فتح المايك":"Unmute",
+ "اخرج من الصوت":"Leave voice",
+ "تكلموا وانتو تركزون. المايك ما يفتح إلا بإذنك، والصوت مباشر بين الأجهزة (حتى ٨ أشخاص).":"Talk while you focus. The mic only opens with your permission; audio goes directly between devices (up to 8 people).",
+ "ما قدرت أوصل للمايك. اسمح له من إعدادات المتصفح.":"Couldn't reach the mic. Allow it in your browser settings.",
+ "جهازك ما يدعم الصوت.":"Your device doesn't support voice.",
+ "غرفة الصوت ممتلئة (٨).":"Voice room is full (8).",
+ "ما اشتغل الصوت. جرّب مرة ثانية.":"Voice didn't start. Try again.",
+ "داخل الصوت":"In voice",
+ "نهار":"Day","غروب":"Sunset","ليل":"Night",
  "كل شي جاهز؟ ابدأ الجلسة لما يوصل ربعك.":"All set? Start the session once your friends have joined.",
  "رجوع للجلسة":"Back to session",
  "نسخ الرابط":"Copy link",
@@ -2633,6 +2659,7 @@ function siteLatLon(){
    التخزين محلي فقط (localStorage) — ما يلمس قاعدة البيانات.
    ═══════════════════════════════════════════════════════════════ */
 const PLACE_KEY = "hasad.place";
+let SCENE_OVR = null;   /* مؤقت: يرسم مشهد عضو آخر (مكانه/وقته) بدل مشهدي */
 const PLACES = [
   /* "موقعي" ما يتحدّد بإحداثيات GPS فعلية (تلك تتحكّم بموقع الشمس/القمر الفلكي بس، مو بمكان
      التضاريس) — فهذا المكان هو اللي يبين فعلياً لأي مستخدم جديد قبل ما يختار مكان من القائمة،
@@ -2722,7 +2749,7 @@ const PLACES = [
 ];
 const GEO_KEY="hasad.geo";
 function geoSaved(){ try{ const g=JSON.parse(localStorage.getItem(GEO_KEY)||"null"); return (g&&Number.isFinite(g[0])&&Number.isFinite(g[1]))?g:null; }catch(e){ return null; } }
-function curPlaceId(){ try{ return localStorage.getItem(PLACE_KEY)||"auto"; }catch(e){ return "auto"; } }
+function curPlaceId(){ if(SCENE_OVR&&SCENE_OVR.place) return SCENE_OVR.place; try{ return localStorage.getItem(PLACE_KEY)||"auto"; }catch(e){ return "auto"; } }
 function curPlace(){ const id=curPlaceId(); return PLACES.find(p=>p.id===id)||PLACES[0]; }
 function setPlace(id){
   try{ localStorage.setItem(PLACE_KEY,id); }catch(e){}
@@ -3018,7 +3045,7 @@ function mixList(A,B,t){ return A.map((c,i)=> c.indexOf("rgba")===0 ? (t<.5?c:B[
 
 /* يرجّع لوحة السماء الكاملة لهذه اللحظة، مُمزَّجة بين مرحلتين */
 const SKY_KEY="hasad.skymode", SKY_FIXED={ day:10.5, sunset:18.15, night:22.5 };
-function skyMode(){ try{ const m=localStorage.getItem(SKY_KEY); return SKY_FIXED[m]!=null ? m : "sync"; }catch(e){ return "sync"; } }
+function skyMode(){ if(SCENE_OVR&&SCENE_OVR.sky) return SCENE_OVR.sky; try{ const m=localStorage.getItem(SKY_KEY); return SKY_FIXED[m]!=null ? m : "sync"; }catch(e){ return "sync"; } }
 function skyAt(hr){
   let astro=null, fixedNight=false;
   if(hr==null){ const sm=skyMode(), fm=SKY_FIXED[sm]; if(fm!=null){ hr=fm; fixedNight = sm==="night"; } else { astro=solarState(); hr=astro.hour; } }
@@ -11143,7 +11170,7 @@ const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" 
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false, focus:null,
           /* نطلب أكبر عدد ممكن. السيرفر القديم يقصّه لثمانية والجديد يفتحه — فالواجهة
              تشتغل صح على الحالتين بلا تزامن بين النشر والهجرة */
-          mode:"home", page:"main", invite:null, err:"", form:{ cat:null, max:9999, grace:60000, species:null, strict:true },
+          mode:"home", page:"main", invite:null, sceneKey:null, err:"", form:{ cat:null, max:9999, grace:60000, species:null, strict:true },
           lp:null, lo:0,           /* إيقاف مؤقت محلي: lp=وقت الإيقاف، lo=مجموع ms المتوقفة */
           chatMsgs:[], chatPoll:null, myTier:null, chatUnread:0 };  /* المحادثة + تتبّع رتبتي */
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
@@ -11199,9 +11226,9 @@ function gStartTimers(){
   gSyncChatFab();
 }
 function gClear(note){
-  gStopTimers();
+  gStopTimers(); try{ voiceLeave(true); }catch(e){}
   if(G.chatPoll){ clearInterval(G.chatPoll); G.chatPoll=null; }
-  G.code=null; G.room=null; G.done=false; G.mode="home"; G.page="main"; G.invite=null; G.err=""; G.focus=null; gEndedAt=0;
+  G.code=null; G.room=null; G.done=false; G.mode="home"; G.page="main"; G.invite=null; G.sceneKey=null; G.err=""; G.focus=null; gEndedAt=0;
   G.lp=null; G.lo=0; G.chatMsgs=[]; G.myTier=null; G.chatUnread=0;
   gSave();
   renderGroup();
@@ -11424,6 +11451,186 @@ async function gSetWither(v){
        await gRefresh(); }
   catch(e){ toast(TR(gErrMsg(e)),"⚠️"); }
 }
+
+/* ═══ مكاني ووقتي: كل عضو يحدد وين يبي يزرع ونهار/ليل، والكل يشوف ═══ */
+const SKY_LABELS = { sync:"متزامن", day:"نهار", sunset:"غروب", night:"ليل" };
+const SKY_ICON   = { sync:"🕒", day:"☀️", sunset:"🌇", night:"🌙" };
+const placeOf = id => PLACES.find(p=>p.id===id) || PLACES[0];
+function gMyScene(){ return { pl:curPlaceId(), sk:skyMode() }; }
+function gPushScene(){
+  if(!G.code) return;
+  const sc=gMyScene(), key=G.code+"|"+sc.pl+"|"+sc.sk;
+  if(G.sceneKey===key) return;
+  G.sceneKey=key;                       /* نحدّد المفتاح قبل الإرسال: لو فشل ما نكرر كل ٤ ثواني */
+  gRpc("group_set_scene", { p_code:G.code, p_place:sc.pl, p_sky:sc.sk }).then(()=>setTimeout(gRefresh,300)).catch(()=>{});
+}
+function gSceneLabel(m){
+  const pl = m && m.pl ? placeOf(m.pl) : null;
+  if(!pl) return "";
+  const sk = SKY_LABELS[m.sk] ? m.sk : "sync";
+  return "📍 "+TR(pl.n)+" · "+SKY_ICON[sk]+" "+TR(SKY_LABELS[sk]);
+}
+function gScenePanel(){
+  const cur=curPlaceId(), sk=skyMode();
+  const opts = ['<option value="auto"'+(cur==="auto"?" selected":"")+'>'+TR("تلقائي (موقعي)")+'</option>']
+    .concat(PLACES.filter(p=>p.id!=="auto").map(p=>'<option value="'+p.id+'"'+(p.id===cur?" selected":"")+'>'+escAttr(TR(p.n))+' — '+escAttr(TR(p.sub))+'</option>')).join("");
+  const chips = ["sync","day","sunset","night"].map(k=>
+    '<button class="chip" type="button" data-act="gsky" data-v="'+k+'" aria-pressed="'+(k===sk)+'">'+SKY_ICON[k]+" "+TR(SKY_LABELS[k])+'</button>').join("");
+  return '<section class="panel g-scene"><h3>📍 '+TR("مكاني ووقتي")+'</h3>'+
+    '<select class="g-sel" data-gsel="place" aria-label="'+escAttr(TR("المكان"))+'">'+opts+'</select>'+
+    '<div class="chips" role="group">'+chips+'</div></section>';
+}
+
+/* ═══ الصوت الجماعي: WebRTC مباشر بين الأعضاء، والإشارات عبر Supabase Realtime ═══
+   لا صوت يمر بسيرفر: كل جهاز يتصل بالباقين (حتى ٨). المايك ما يفتح إلا بإذنك وبضغطتك. */
+const VOICE_MAX = 8;
+const ICE_CFG = { iceServers:[{ urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"] }] };
+const V = { on:false, joining:false, ws:null, hb:null, ref:0, topic:"", code:"", me:"", stream:null, muted:false,
+            peers:new Map(), roster:new Map(), ac:null, ana:new Map(), meter:null, speaking:new Set() };
+function vSend(p){
+  if(!V.ws || V.ws.readyState!==1) return;
+  try{ V.ws.send(JSON.stringify({ topic:V.topic, event:"broadcast", ref:String(++V.ref),
+        payload:{ type:"broadcast", event:"sig", payload:p } })); }catch(e){}
+}
+async function voiceJoin(){
+  if(V.on || V.joining || !G.code) return;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection){
+    toast(TR("جهازك ما يدعم الصوت."),"⚠️"); return; }
+  V.joining=true; voiceUI();
+  try{
+    V.stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }, video:false });
+  }catch(e){ V.joining=false; voiceUI(); toast(TR("ما قدرت أوصل للمايك. اسمح له من إعدادات المتصفح."),"🎙️"); return; }
+  V.code=G.code; V.me=gMyId(); V.topic="realtime:hasad-voice-"+V.code; V.muted=false; V.roster=new Map(); V.ref=1;
+  const url = CLOUD.url.replace(/^http/,"ws")+"/realtime/v1/websocket?apikey="+encodeURIComponent(CLOUD.key)+"&vsn=1.0.0";
+  let ws; try{ ws=new WebSocket(url); }catch(e){ voiceFail(); return; }
+  V.ws=ws;
+  ws.onopen=()=>{
+    ws.send(JSON.stringify({ topic:V.topic, event:"phx_join", ref:"1", join_ref:"1",
+      payload:{ config:{ broadcast:{ self:false, ack:false }, presence:{ key:V.me }, private:false }, access_token:(TOK&&TOK.access)||undefined } }));
+    V.hb=setInterval(()=>{ try{ ws.send(JSON.stringify({ topic:"phoenix", event:"heartbeat", payload:{}, ref:String(++V.ref) })); }catch(e){} }, 25000);
+  };
+  ws.onmessage=ev=>{
+    let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+    if(m.topic!==V.topic) return;
+    if(m.event==="phx_reply" && m.ref==="1"){ (m.payload&&m.payload.status==="ok") ? voiceJoined() : voiceFail(); }
+    else if(m.event==="broadcast" && m.payload && m.payload.event==="sig") voiceSig(m.payload.payload||{});
+  };
+  ws.onclose=()=>{ if(V.on||V.joining) voiceFail(); };
+  ws.onerror=()=>{};
+}
+function voiceFail(){ const was=V.joining; voiceLeave(true); if(was) toast(TR("ما اشتغل الصوت. جرّب مرة ثانية."),"⚠️"); }
+function voiceJoined(){
+  V.joining=false; V.on=true;
+  try{ V.ac = new (window.AudioContext||window.webkitAudioContext)(); vWatch(V.me, V.stream); }catch(e){}
+  V.meter = setInterval(vMeter, 140);
+  vSend({ t:"hello", from:V.me, name:(CURRENT&&CURRENT.name)||"" });
+  voiceUI();
+  setTimeout(()=>{ if(V.on && V.roster.size>=VOICE_MAX){ toast(TR("غرفة الصوت ممتلئة (٨)."),"🎙️"); voiceLeave(); } }, 1600);
+}
+function vPeer(id){
+  let P=V.peers.get(id);
+  if(P && P.pc.connectionState!=="failed" && P.pc.connectionState!=="closed") return P;
+  if(P) vDrop(id,true);
+  const pc=new RTCPeerConnection(ICE_CFG);
+  P={ pc, audio:null, pend:[] };
+  V.peers.set(id,P);
+  V.stream.getTracks().forEach(t=>pc.addTrack(t,V.stream));
+  pc.onicecandidate=e=>{ if(e.candidate) vSend({ t:"ice", from:V.me, to:id, c:e.candidate }); };
+  pc.ontrack=e=>{
+    if(!P.audio){ const a=document.createElement("audio"); a.autoplay=true; a.playsInline=true; a.style.display="none"; document.body.appendChild(a); P.audio=a; }
+    P.audio.srcObject=e.streams[0]; const pr=P.audio.play(); if(pr&&pr.catch) pr.catch(()=>{});
+    vWatch(id, e.streams[0]);
+  };
+  pc.onconnectionstatechange=()=>{ if(pc.connectionState==="failed"||pc.connectionState==="closed") { vDrop(id); voiceUI(); } };
+  return P;
+}
+async function vConnect(id){
+  if(!V.on) return;
+  const P=vPeer(id);
+  if(V.me<id && !P.offered){                       /* الأصغر رمزاً يبدأ العرض، عشان ما يتصادموا */
+    P.offered=true;
+    try{ const o=await P.pc.createOffer(); await P.pc.setLocalDescription(o); vSend({ t:"offer", from:V.me, to:id, sdp:o.sdp }); }catch(e){}
+  }
+}
+async function voiceSig(p){
+  if(!V.on || !p || p.from===V.me || (p.to && p.to!==V.me)) return;
+  try{
+    switch(p.t){
+      case "hello": V.roster.set(p.from,p.name||""); vSend({ t:"here", from:V.me, to:p.from, name:(CURRENT&&CURRENT.name)||"" }); vConnect(p.from); voiceUI(); break;
+      case "here":  V.roster.set(p.from,p.name||""); vConnect(p.from); voiceUI(); break;
+      case "offer": {
+        const P=vPeer(p.from);
+        await P.pc.setRemoteDescription({ type:"offer", sdp:p.sdp });
+        for(const c of P.pend.splice(0)) await P.pc.addIceCandidate(c).catch(()=>{});
+        const a=await P.pc.createAnswer(); await P.pc.setLocalDescription(a);
+        vSend({ t:"answer", from:V.me, to:p.from, sdp:a.sdp }); break; }
+      case "answer": { const P=V.peers.get(p.from); if(P && !P.pc.currentRemoteDescription){
+        await P.pc.setRemoteDescription({ type:"answer", sdp:p.sdp });
+        for(const c of P.pend.splice(0)) await P.pc.addIceCandidate(c).catch(()=>{}); } break; }
+      case "ice": { const P=V.peers.get(p.from); if(!P||!p.c) break;
+        if(P.pc.remoteDescription) await P.pc.addIceCandidate(p.c).catch(()=>{}); else P.pend.push(p.c); break; }
+      case "bye": V.roster.delete(p.from); vDrop(p.from); voiceUI(); break;
+    }
+  }catch(e){}
+}
+function vDrop(id,quiet){
+  const P=V.peers.get(id); if(!P) return;
+  try{ P.pc.close(); }catch(e){}
+  if(P.audio){ try{ P.audio.srcObject=null; P.audio.remove(); }catch(e){} }
+  V.peers.delete(id); V.ana.delete(id); V.speaking.delete(id);
+}
+function vWatch(id,stream){
+  if(!V.ac||!stream) return;
+  try{
+    const an=V.ac.createAnalyser(); an.fftSize=512;
+    V.ac.createMediaStreamSource(stream).connect(an);
+    V.ana.set(id,{ an, buf:new Uint8Array(an.fftSize) });
+  }catch(e){}
+}
+function vMeter(){
+  let changed=false;
+  V.ana.forEach((o,id)=>{
+    o.an.getByteTimeDomainData(o.buf);
+    let sum=0; for(let i=0;i<o.buf.length;i++){ const d=(o.buf[i]-128)/128; sum+=d*d; }
+    const on = Math.sqrt(sum/o.buf.length) > 0.045 && !(id===V.me && V.muted);
+    if(on!==V.speaking.has(id)){ on?V.speaking.add(id):V.speaking.delete(id); changed=true; }
+  });
+  if(changed) voiceMarks();
+}
+function voiceMarks(){
+  document.querySelectorAll("[data-uid]").forEach(el=>{
+    const id=el.getAttribute("data-uid");
+    el.classList.toggle("speaking", V.speaking.has(id));
+    el.classList.toggle("invoice", V.on && (id===V.me || V.roster.has(id)));
+  });
+  document.querySelectorAll("[data-vid]").forEach(el=>el.classList.toggle("speaking", V.speaking.has(el.getAttribute("data-vid"))));
+}
+function voiceMute(){
+  if(!V.on||!V.stream) return;
+  V.muted=!V.muted; V.stream.getAudioTracks().forEach(t=>t.enabled=!V.muted); voiceUI();
+}
+function voiceLeave(silent){
+  try{ if(V.on) vSend({ t:"bye", from:V.me }); }catch(e){}
+  V.peers.forEach((P,id)=>vDrop(id,true));
+  if(V.stream){ V.stream.getTracks().forEach(t=>t.stop()); V.stream=null; }
+  clearInterval(V.hb); clearInterval(V.meter); V.hb=V.meter=null;
+  if(V.ws){ try{ V.ws.onclose=null; V.ws.close(); }catch(e){} V.ws=null; }
+  if(V.ac){ try{ V.ac.close(); }catch(e){} V.ac=null; }
+  V.ana.clear(); V.speaking.clear(); V.roster.clear(); V.on=false; V.joining=false; V.muted=false;
+  voiceUI();
+}
+window.addEventListener("pagehide", ()=>{ if(V.on) voiceLeave(true); });
+function voiceHTML(){
+  if(V.joining) return '<h3>🎙️ '+TR("الصوت")+'</h3><p class="g-vhint">…</p>';
+  if(!V.on) return '<h3>🎙️ '+TR("الصوت")+'</h3><button class="btn btn-quiet" type="button" data-act="vjoin" style="width:100%">🎙️ '+TR("انضم للصوت")+'</button>'+
+      '<p class="g-vhint">'+TR("تكلموا وانتو تركزون. المايك ما يفتح إلا بإذنك، والصوت مباشر بين الأجهزة (حتى ٨ أشخاص).")+'</p>';
+  const chips = ['<span class="g-vc" data-vid="'+escAttr(V.me)+'">'+(V.muted?"🔇":"🎙️")+' '+TR("أنت")+'</span>']
+    .concat([...V.roster.entries()].map(([id,n])=>'<span class="g-vc" data-vid="'+escAttr(id)+'">🎙️ '+escAttr(n||TR("مزارع"))+'</span>')).join("");
+  return '<h3>🎙️ '+TR("داخل الصوت")+' ('+(V.roster.size+1)+')</h3><div class="g-vrow">'+chips+'</div>'+
+    '<div class="g-vrow"><button class="btn btn-quiet" type="button" data-act="vmute">'+(V.muted?"🎙️ "+TR("فتح المايك"):"🔇 "+TR("كتم"))+'</button>'+
+    '<button class="btn btn-quiet" type="button" data-act="vleave">'+TR("اخرج من الصوت")+'</button></div>';
+}
+function voiceUI(){ const el=document.getElementById("gVoice"); if(el) el.innerHTML=voiceHTML(); voiceMarks(); }
 const gInviteURL = code => siteURL()+"#/group/"+code;
 async function gShare(){
   const code=G.code; if(!code) return;
@@ -11483,6 +11690,7 @@ function renderGroup(){
   const box=$("#groupBody"); if(!box) return;
   gSyncChatFab();
   try{ writeRoute(); }catch(e){}
+  try{ gPushScene(); }catch(e){}
   try{ renderGroupInner(box); }
   catch(e){
     box.innerHTML='<section class="panel"><p class="g-note" style="color:var(--brick);margin:0">'+
@@ -11582,7 +11790,7 @@ function renderGroupInner(box){
         '<span class="g-label" style="margin:0">🌱 '+TR("نبتة")+' '+escAttr(fm.name||TR("مزارع"))+'</span>'+
         '<button class="btn btn-quiet" type="button" data-act="focus" data-v="'+escAttr(gMyId())+'" style="padding:7px 13px;font-size:13px">'+TR("رجوع لنبتتك")+'</button></div>'
       :'')+
-    '<div id="gSky" style="margin:-2px 0 8px"></div>'+
+    '<div id="gSky" style="margin:-2px 0 8px"></div><div class="g-scap" id="gScap"></div>'+
     '<div class="g-timer" id="gTimer">'+gClock()+'</div>'+meta+'</section>';
   const minsNow = (running||ended) ? (gOpen()?gElapsedMs()/60000:Math.min(gElapsedMs(),gTotalMs())/60000) : 0;
   const stateOf = m => (!running && !ended) ? '<span class="g-st" style="color:var(--ink-3)">'+TR("جاهز")+'</span>'
@@ -11626,10 +11834,10 @@ function renderGroupInner(box){
   if(G.page==="plants"){
     const cards = r.members.map((m,i)=>{
       const u=findUni(m.uni), dead=m.state!=="alive";
-      return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&clickable?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+'"'+focusAttr(m)+'>'+
+      return '<div class="g-member'+(m.user_id===gMyId()?" me":"")+(dead&&clickable?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+'" data-uid="'+escAttr(m.user_id)+'"'+focusAttr(m)+'>'+
         '<div data-gcv="'+i+'"></div>'+
         '<div class="g-name">'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?' <span title="'+escAttr(TR("المنشئ"))+'">👑</span>':"")+'</div>'+
-        '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div><div class="g-state">'+stateOf(m)+'</div></div>';
+        '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div>'+(gSceneLabel(m)?'<div class="g-uni">'+escAttr(gSceneLabel(m))+'</div>':"")+'<div class="g-state">'+stateOf(m)+'</div></div>';
     });
     const dense = r.members.length>24;
     html = '<div class="g-pagehead"><button class="btn btn-quiet" type="button" data-act="gpage" data-v="main" style="padding:8px 14px;font-size:14px">→ '+TR("رجوع للجلسة")+'</button>'+
@@ -11639,14 +11847,14 @@ function renderGroupInner(box){
   } else {
     const rows = r.members.map((m,i)=>{
       const u=findUni(m.uni), dead=m.state!=="alive";
-      return '<div class="g-mrow'+(m.user_id===gMyId()?" me":"")+(dead&&clickable?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+'"'+focusAttr(m)+'>'+
+      return '<div class="g-mrow'+(m.user_id===gMyId()?" me":"")+(dead&&clickable?" dead":"")+(clickable&&m.user_id===focusId?" focused":"")+'" data-uid="'+escAttr(m.user_id)+'"'+focusAttr(m)+'>'+
         '<div class="g-mav" data-gcv="'+i+'"></div>'+
         '<div class="g-mtxt"><b>'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?" 👑":"")+(m.strict===false?" 🛡️":"")+
           (m.user_id===gMyId()?' <em>'+TR("أنت")+'</em>':"")+'</b>'+
-          '<span>'+(u?escAttr(TR(u.n)):TR("بدون جامعة"))+'</span></div>'+stateOf(m)+'</div>';
+          '<span>'+(u?escAttr(TR(u.n)):TR("بدون جامعة"))+'</span>'+(gSceneLabel(m)?'<span>'+escAttr(gSceneLabel(m))+'</span>':"")+'</div>'+stateOf(m)+'</div>';
     }).join("");
     const joined='<section class="panel"><h3>'+TR("من دخل")+' ('+r.members.length+')</h3><div class="g-mlist">'+rows+'</div></section>';
-    html = '<div class="g-split"><div class="g-stage">'+head+plantsBtn+foot+'</div><div class="g-side">'+joined+'</div></div>';
+    html = '<div class="g-split"><div class="g-stage">'+head+gScenePanel()+'<section class="panel g-voice" id="gVoice">'+voiceHTML()+'</section>'+plantsBtn+foot+'</div><div class="g-side">'+joined+'</div></div>';
   }
   box.innerHTML = html;
   const skyBox=$("#gSky");
@@ -11654,10 +11862,20 @@ function renderGroupInner(box){
     const cv=document.createElement("canvas"); skyBox.appendChild(cv);
     const sw=Math.max(220, skyBox.clientWidth||box.clientWidth||300);
     const sh=Math.round(Math.min(380, sw*0.78));
-    paint(cv,sw,sh,{ species:(fm&&SPECIES[fm.species])?fm.species:"basil",
-      minutes:Math.max(.4,minsNow), seedStr:r.code+"-"+focusId, glow:true,
-      withered: !!(fm && fm.state!=="alive"),
-      tms:performance.now(), mdate:new Date() });
+    const other = fm && fm.user_id!==gMyId() && fm.pl;
+    SCENE_OVR = other ? { place:(PLACES.some(x=>x.id===fm.pl)&&fm.pl!=="auto")?fm.pl:null, sky:SKY_ICON[fm.sk]&&fm.sk!=="sync"?fm.sk:null } : null;
+    try{
+      paint(cv,sw,sh,{ species:(fm&&SPECIES[fm.species])?fm.species:"basil",
+        minutes:Math.max(.4,minsNow), seedStr:r.code+"-"+focusId, glow:true,
+        withered: !!(fm && fm.state!=="alive"),
+        tms:performance.now(), mdate:new Date() });
+    } finally { SCENE_OVR=null; }
+    const cap=$("#gScap");
+    if(cap){
+      const sc = other ? fm : Object.assign({}, gMyScene());
+      const tm = new Date().toLocaleTimeString(LANG==="ar"?"ar-SA":"en-US",{hour:"2-digit",minute:"2-digit"});
+      cap.textContent = gSceneLabel(sc) + ((sc.sk||"sync")==="sync" ? " · "+tm : "");
+    }
   }
     r.members.forEach((m,i)=>{
     const holder=box.querySelector('[data-gcv="'+i+'"]'); if(!holder) return;
@@ -11674,6 +11892,14 @@ document.addEventListener("click", e=>{
   inp.type = show?"text":"password";
   b.textContent = show?"🙈":"👁";
   b.setAttribute("aria-label", TR(show?"إخفاء كلمة السر":"عرض كلمة السر"));
+});
+$("#groupBody").addEventListener("change", e=>{
+  const sel=e.target.closest("[data-gsel]"); if(!sel) return;
+  if(sel.dataset.gsel==="place"){
+    setPlace(sel.value);
+    try{ renderPlaceChips(); updatePlaceBadge(); lastDraw=0; drawHero(); }catch(err){}
+    G.sceneKey=null; renderGroup();
+  }
 });
 $("#groupBody").addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b || b.disabled) return;
@@ -11698,6 +11924,10 @@ $("#groupBody").addEventListener("click", e=>{
     case "leave":  return gLeave();
     case "share":  return gShare();
     case "copylink": return gCopyLink();
+    case "vjoin":  return voiceJoin();
+    case "vmute":  return voiceMute();
+    case "vleave": return voiceLeave();
+    case "gsky":   try{ localStorage.setItem(SKY_KEY,v); }catch(e){} try{ renderSkyChips(); updatePlaceBadge(); if(typeof updateDayPart==="function") updateDayPart(); lastDraw=0; drawHero(); }catch(e){} G.sceneKey=null; break;
     case "gpage":  G.page = (v==="plants"?"plants":"main"); renderGroup(); writeRoute(); window.scrollTo(0,0); return;
     case "lock":   return gLock(v==="1");
     case "endall": return gEnd();
