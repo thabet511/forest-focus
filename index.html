@@ -500,7 +500,21 @@ body.landing #view-home{min-height:calc(100dvh - 64px);display:flex;flex-directi
 .g-codebox{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 .g-meta{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
 .g-meta span{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--paper-2);border:1px solid var(--line);color:var(--ink-2)}
-.g-members{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:10px;margin-top:14px}
+.g-members{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-top:14px}
+.g-members.dense{grid-template-columns:repeat(auto-fill,minmax(98px,1fr))}
+.g-split{display:grid;gap:14px}
+.g-split>.g-stage>.panel,.g-split>.g-side>.panel{margin:0}
+.g-side .g-members{margin-top:0}
+.g-stage .g-timer{font-size:clamp(46px,13vw,68px);line-height:1.1;margin:6px 0 2px}
+@media (min-width:760px){
+  .app:has(#view-group.on){max-width:1180px}
+  .g-split{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:start;gap:18px}
+  .g-stage{position:sticky;top:12px}
+  .g-side{max-height:calc(100dvh - 90px);overflow-y:auto;padding:2px;scrollbar-width:thin}
+  .g-members{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .g-members.dense{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+}
+@media (max-width:420px){ .g-members{grid-template-columns:repeat(2,minmax(0,1fr))} .g-members.dense{grid-template-columns:repeat(3,minmax(0,1fr))} }
 .g-member{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:8px 6px 10px;text-align:center;min-width:0}
 .g-member.me{border-color:var(--viridian);box-shadow:0 0 0 2px var(--viridian-soft)}
 .g-member.focused{border-color:var(--ochre);box-shadow:0 0 0 2px var(--ochre-soft)}
@@ -999,7 +1013,7 @@ body,.panel,.stage,.btn,.chip,.switch-row,.isofarm{
   <main class="view" id="view-group">
     <div class="view-head">
       <h2>جلسة جماعية</h2>
-      <p>ركّزوا سوا من ٢ إلى ٨ أشخاص، لكل واحد نبتته. أنشئ جلسة وشارك الرمز، أو انضم برمز من صاحبك.</p>
+      <p>ركّزوا سوا بلا حدّ للعدد، لكل واحد نبتته. أنشئ جلسة وشارك الرمز، أو انضم برمز من صاحبك.</p>
     </div>
     <div id="groupBody"></div>
   </main>
@@ -1187,7 +1201,7 @@ const DICT = {
  "ابدأ جلسة تركيز":"Start a focus session",
  "جلسة جماعية":"Group session",
  "جماعية":"Group",
- "ركّزوا سوا من ٢ إلى ٨ أشخاص، لكل واحد نبتته. أنشئ جلسة وشارك الرمز، أو انضم برمز من صاحبك.":"Focus together, 2 to 8 people, each with their own plant. Create a session and share the code, or join with a friend's code.",
+ "ركّزوا سوا بلا حدّ للعدد، لكل واحد نبتته. أنشئ جلسة وشارك الرمز، أو انضم برمز من صاحبك.":"Focus together with no limit on numbers, each with their own plant. Create a session and share the code, or join with a friend's code.",
  "ما لقينا جلسة بهالرمز. تأكد منه.":"No session found with that code. Please check it.",
  "الجلسة بدأت خلاص، ما تقدر تنضم الحين.":"The session has already started; you can't join now.",
  "الجلسة ممتلئة.":"The session is full.",
@@ -1708,6 +1722,13 @@ const DICT = {
  "جبل اللوز":"Jabal Al-Lawz", "تبوك":"Tabuk",
  "جدة":"Jeddah", "ساحل البحر الأحمر":"Red Sea coast",
  "الأحساء":"Al-Ahsa", "الواحة":"The oasis",
+ "حرّة خيبر":"Harrat Khaybar", "خيبر":"Khaybar",
+ "ذي عين الأثرية":"Dhee Ayn Village", "الباحة":"Al-Baha",
+ "روضة خريم":"Rawdhat Khuraim", "الرياض":"Riyadh",
+ "وادي لجب":"Wadi Lajab",
+ "بحيرة الأصفر":"Al-Asfar Lake",
+ "جبّة":"Jubbah",
+ "داخل الجلسة":"in the session",
  "شاطئ العقير":"Al-Uqair Beach",
  "شاطئ ينبع":"Yanbu Beach",
  "الجو في المشهد":"Scene weather", "حقيقي":"Live", "صافي":"Clear", "غائم":"Cloudy", "ممطر":"Rainy", "ضباب":"Foggy",
@@ -1924,7 +1945,7 @@ const DICT = {
  "وصل ":"Reached ",
  "نبتتك بهالجلسة":"Your plant in this session",
  "ذبول نبتتك لو طلعت من التطبيق":"Your plant wilting if you leave the app",
- "الجلسة مفتوحة بلا مدة — تبدأ لما تمتلي (٨ أشخاص) أو لما تضغط ابدأ بنفسك. وكل واحد يحدد الذبول عنده بنفسه، وتقدر تغيّره أي وقت من داخل الجلسة.":"The session is open-ended — it starts when it's full (8 people) or when you press start yourself. Everyone sets their own wilting grace period, and you can change yours anytime from inside the session.",
+ "الجلسة مفتوحة بلا مدة ولا حدّ للأشخاص — تبدأ لما تضغط ابدأ بنفسك. وكل واحد يحدد الذبول عنده بنفسه، وتقدر تغيّره أي وقت من داخل الجلسة.":"The session is open-ended — it starts when it's full (8 people) or when you press start yourself. Everyone sets their own wilting grace period, and you can change yours anytime from inside the session.",
  "رجوع لنبتتك":"Back to your plant",
  "استئناف ▶":"Resume ▶",
  "إيقاف مؤقت ⏸":"Pause ⏸",
@@ -2601,8 +2622,9 @@ const PLACES = [
     hill:["#6E8B66","#4B6D44","#33542F"], soil:"#62523E", trees:"#1A3A1E" },
   { id:"thuwairat", n:"الثويرات",      sub:"الزلفي",   ll:[26.30,44.80], terr:"dune",    clim:"najd",
     hill:["#DDA673","#CB8651","#B96E3D"], soil:"#C98A55" },
+  /* رمل الربع الخالي مشبع بأكسيد الحديد: لونه مشمشي-برتقالي غامق، مو كريمي باهت */
   { id:"rubkhali",  n:"الربع الخالي",  sub:"صحراء الربع الخالي", ll:[20.00,50.00], terr:"bigdune", clim:"empty",
-    hill:["#EDCB93","#E0B271","#D09B57"], soil:"#DEB27C" },
+    hill:["#E7B578","#D79853","#BE7B3A"], soil:"#D8A165" },
   { id:"alula",     n:"العلا",         sub:"المدينة المنورة", ll:[26.61,37.92], terr:"mesa", clim:"dry",
     hill:["#CC9A6E","#B27E55","#94623F"], soil:"#BC8E65", mark:"elephant" },
   { id:"hegra",     n:"الحِجر",        sub:"العلا",    ll:[26.79,37.95], terr:"mesa",    clim:"dry",
@@ -2611,14 +2633,17 @@ const PLACES = [
     hill:["#A08E80","#827166","#675952"], soil:"#8C7868" },
   { id:"disah",     n:"وادي الديسة",   sub:"تبوك",     ll:[27.62,36.47], terr:"mesa",    clim:"north",
     hill:["#C98666","#A9684A","#8A4F36"], soil:"#B97856" },
+  /* خليج العقبة: جبال جرانيتية جرداء تنزل على الماء مباشرة، والماء أزرق غامق لأن القاع
+     ينحدر بسرعة — مو فيروزي ضحل مثل شواطئ الجنوب */
   { id:"neom",      n:"نيوم",          sub:"خليج العقبة", ll:[28.04,35.20], terr:"coast", clim:"north",
-    hill:["#B8A07E","#2A8FA0","#237E92"], soil:"#D8C49E", sea:["#1F7E95","#5FC6D2"] },
+    hill:["#A08A6C","#7E6A54","#5C4E42"], soil:"#CBBA98", sea:["#0C557C","#2E93AE"] },
   { id:"jeddah",    n:"جدة",           sub:"ساحل البحر الأحمر", ll:[21.54,39.17], terr:"coast", clim:"coast",
-    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
+    hill:["#CBB893","#2F8A93","#2A7F8C"], soil:"#E6D5AE", sea:["#176F8C","#5FC3C6"] },
+  /* الخليج العربي ضحل جداً وقاعه طيني: ماؤه أخضر مائل للحليبي لا أزرق نيلي */
   { id:"uqair",     n:"شاطئ العقير",   sub:"الأحساء",  ll:[25.65,50.21], terr:"coast", clim:"east",
-    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
+    hill:["#C9B994","#3A8D8A","#35817E"], soil:"#E4D6B2", sea:["#2E8488","#86C9B6"] },
   { id:"yanbu",     n:"شاطئ ينبع",     sub:"ساحل البحر الأحمر", ll:[24.09,38.05], terr:"coast", clim:"coast",
-    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
+    hill:["#BFA986","#2F8A93","#2A7F8C"], soil:"#E0CEA4", sea:["#145F84","#4FB9C4"] },
   { id:"ahsa",      n:"الأحساء",       sub:"الواحة",   ll:[25.38,49.59], terr:"oasis",   clim:"east",
     hill:["#A89C7C","#5F7A4B","#4A6639"], soil:"#B89C74", mark:"qarah" },
   { id:"dumat",     n:"دومة الجندل",   sub:"الجوف",    ll:[29.81,39.87], terr:"oasis",   clim:"north",
@@ -2629,10 +2654,12 @@ const PLACES = [
     hill:["#A47A5E","#83604A","#664B3A"], soil:"#9C7558" },
   { id:"fayfa",     n:"جبال فيفاء",    sub:"جازان",    ll:[17.26,43.12], terr:"mount",   clim:"sw",    fog:.35,
     hill:["#728F6A","#4F7446","#355A30"], soil:"#6B5840", trees:"#1D3D21", terraces:true },
+  /* فرسان: شُعب مرجانية وماء ضحل شفّاف فوق رمل مرجاني أبيض — أفتح وأخضر من البحر المفتوح */
   { id:"farasan",   n:"جزر فرسان",     sub:"جازان",    ll:[16.70,41.98], terr:"coast",   clim:"coast",
-    hill:["#E8DAB4","#1F8E9A","#1A8090"], soil:"#EADCB8", sea:["#1D8796","#7BDACB"] },
+    hill:["#EFE4C4","#1F8E9A","#1A8090"], soil:"#F2E7CC", sea:["#1E95A0","#A6ECD9"] },
+  /* أملج: مياه فيروزية ساطعة فوق رمل أبيض ناصع */
   { id:"umluj",     n:"أملج",          sub:"ساحل البحر الأحمر", ll:[25.02,37.27], terr:"coast", clim:"coast",
-    hill:["#C8B48E","#2F8A93","#2A7F8C"], soil:"#E2CFA6", sea:["#237A86","#6FC8BC"] },
+    hill:["#E4D9BC","#2F8A93","#2A7F8C"], soil:"#F1E8D2", sea:["#1388A6","#93E4DF"] },
   { id:"tuwaiq",    n:"جبال طويق",     sub:"الرياض",   ll:[24.71,46.68], terr:"escarp",  clim:"najd",
     hill:["#CDAC82","#B39066","#977750"], soil:"#B9996F" },
   { id:"edge",      n:"حافة العالم",   sub:"الرياض",   ll:[24.95,45.99], terr:"escarp",  clim:"najd",
@@ -2640,7 +2667,27 @@ const PLACES = [
   { id:"diriyah",   n:"الدرعية",       sub:"الرياض",   ll:[24.73,46.57], terr:"oasis",   clim:"najd",
     hill:["#B89C76","#6F804F","#56693E"], soil:"#B0906A" },
   { id:"ghadha",    n:"الغضا",         sub:"عنيزة",    ll:[26.0445,43.8753], terr:"dune", clim:"najd",
-    hill:["#E2B37C","#D4975A","#C07F43"], soil:"#D29860" }
+    hill:["#E2B37C","#D4975A","#C07F43"], soil:"#D29860" },
+  /* ── أماكن مضافة ── */
+  /* حرّة خيبر: حقل حِمَم بازلتية سوداء وفوّهات مخروطية — أغرب منظر طبيعي بالمملكة وأبعده
+     عن أي مكان ثاني بالقائمة، كله أسود تحت سما زرقا */
+  { id:"harrah",    n:"حرّة خيبر",      sub:"خيبر",      ll:[25.70,39.92], terr:"mount",  clim:"dry",
+    hill:["#6E6A68","#4A4745","#2E2C2B"], soil:"#3A3736" },
+  /* ذي عين الأثرية: قرية حجرية فوق جبل رخام أبيض، وتحتها نخل وموز على عين جارية */
+  { id:"dheeain",   n:"ذي عين الأثرية", sub:"الباحة",   ll:[19.93,41.44], terr:"mount",  clim:"sw", fog:.22,
+    hill:["#D6D2C6","#BAB5A6","#9A9486"], soil:"#8C8470", trees:"#2A4A24" },
+  /* روضة خريم: بعد المطر تنفرش عشبة خضرا على رمل أحمر، ويتفرّق فيها السمر */
+  { id:"khuraim",   n:"روضة خريم",      sub:"الرياض",   ll:[25.17,47.28], terr:"hills",  clim:"najd",
+    hill:["#B79A6E","#9C7F54","#7E653F"], soil:"#9A7E52", trees:"#4A5E30" },
+  /* وادي لجب: شقّ ضيّق بين جدارين صخريين عاليين، أرضه خضرا ومويه جارية */
+  { id:"lajab",     n:"وادي لجب",       sub:"جازان",    ll:[17.47,42.98], terr:"mesa",   clim:"sw", fog:.30,
+    hill:["#8A8068","#6A6250","#4C463A"], soil:"#5E5A44", trees:"#24481F" },
+  /* بحيرة الأصفر: بحيرة ضحلة وسط السبخة، حولها قصب وطيور مهاجرة */
+  { id:"asfar",     n:"بحيرة الأصفر",   sub:"الأحساء",  ll:[25.47,49.78], terr:"coast",  clim:"east",
+    hill:["#C4B48C","#7E8A5E","#6E7A52"], soil:"#CFC098", sea:["#5A7352","#A8B882"] },
+  /* جبّة: نتوءات حجر رملي فيها نقوش ما قبل التاريخ، قائمة وسط رمل النفود الأبيض */
+  { id:"jubbah",    n:"جبّة",           sub:"حائل",     ll:[28.02,40.95], terr:"mesa",   clim:"najd",
+    hill:["#C2A585","#A6886A","#86694F"], soil:"#DCC79C" }
 ];
 const GEO_KEY="hasad.geo";
 function geoSaved(){ try{ const g=JSON.parse(localStorage.getItem(GEO_KEY)||"null"); return (g&&Number.isFinite(g[0])&&Number.isFinite(g[1]))?g:null; }catch(e){ return null; } }
@@ -3368,8 +3415,8 @@ function drawClouds(ctx,w,gy,s,WX,K,nightF,tms,sx,sy){
     const hs=(k)=>h01(i*13+k,i*7+k*31);
     const speed = .0026 + (hs(1))*.0022;
     const cx = ((((i*.6180339887) + t*speed) % 1.32) - .16) * w;
-    const cy = gy*(.12 + hs(2)*.30);
-    const cw = s*(.105 + hs(3)*.085) * (.86+cov*.40);
+    const cy = gy*(.09 + hs(2)*.26);
+    const cw = s*(.135 + hs(3)*.115) * (.86+cov*.40);
     const a  = clamp(.52+cov*.44,0,1) * (nightF>.5 ? .78 : 1);
     clouds.push({cx,cy,cw,a});
     const sunL = (sx!=null && sx<cx) ? -1 : 1;            /* الشمس يمين الغيمة ولا يسارها */
@@ -3399,73 +3446,87 @@ function drawClouds(ctx,w,gy,s,WX,K,nightF,tms,sx,sy){
 }
 const CLOUD_SPR=new Map();
 function buildCloudSprite(cw,hs,sunL,TOP,MID,BAS,heavy,nightF){
-  const PADL=cw*1.15, PADT=cw*.95, W=Math.ceil(cw*2.30), H=Math.ceil(cw*1.35);
-  const dpr=Math.min(2,(typeof devicePixelRatio!=="undefined"?devicePixelRatio:1)||1);
-  const cv=document.createElement("canvas");
-  cv.width=Math.max(2,Math.ceil(W*dpr)); cv.height=Math.max(2,Math.ceil(H*dpr));
+  /* الغيمة كانت مبنيّة من دوائر ملساء متداخلة فوق مستطيل قاعدة — وهذا بالضبط شكل غيمة
+     الكرتون: حافة ناعمة منتظمة ولون واحد. الغيمة الحقيقية كتلة بخار كسوريّة (fractal):
+     حافتها مفصّصة بتفاصيل على كل المقاسات، وداخلها فيه كتل وفجوات، وأطرافها شفّافة يبان
+     منها السما. فنبنيها كحقل كثافة: غلاف عام من كتل ناعمة × ضجيج fbm ملتوٍ، والإضاءة
+     تتحسب من ميل الكثافة نفسها (الضوء يدخل من جهة الشمس ويخفت كل ما غاص بالكتلة). */
+  const PADL=cw*1.30, PADT=cw*.78, W=Math.ceil(cw*2.60), H=Math.ceil(cw*1.10);
+  const pw=Math.max(24,Math.min(176,Math.round(W*.55))), ph=Math.max(16,Math.round(pw*H/W));
+  const cv=document.createElement("canvas"); cv.width=pw; cv.height=ph;
   const ctx=cv.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.translate(PADL,PADT);
-  {
-    /* الصورة الظلّية: صفّ نفخات سفلي بقاعدة شبه مستوية، وفوقه نفخات أصغر تبني القمّة */
-    const puffs=[];
-    const nb = 4+Math.round(hs(4)*3);
-    for(let k=0;k<nb;k++){
-      const u=(k/(nb-1))*2-1;
-      const r=cw*(.26+.20*(1-u*u)+hs(10+k)*.07);
-      puffs.push({ x:u*cw*.72, y:-r*(.12+.30*(1-u*u)) + cw*.05, r });
+  const img=ctx.createImageData(pw,ph), Dd=img.data;
+  const T=TOP.split(",").map(Number), M=MID.split(",").map(Number), B=BAS.split(",").map(Number);
+  const sd=Math.round(hs(60)*9999);
+  /* الكتل: صفّ سفلي عريض يرسم القاعدة المستوية، وفوقه كتل أصغر تبني القمّة */
+  /* كتل كثيرة صغيرة بدل أربع كتل عريضة: الكتل العريضة تطلع لوحاً مسطّحاً، والكثيرة
+     الصغيرة تعطي القمّة شكل قرنبيط الركام المعروف */
+  /* سحاب رقيق ممتد (ركام متوسط/صفائحي) لا ركام ضخم: هذا هو الغالب على سما الجزيرة،
+     وهو أسهل ما يُقنع العين لأنه واطي التباين وحوافه كسورية تذوب بالسما. محاولة بناء
+     ركام ضخم بقاعدة مستوية كانت تطلع ألواحاً رمادية بقمم بيضا = غيوم كرتون */
+  const blobs=[];
+  const nb=7+Math.round(hs(4)*5);
+  for(let k=0;k<nb;k++){
+    const u=(k/(nb-1))*2-1;
+    blobs.push({ x:u*.74, y:.50+(hs(70+k)-.5)*.16,
+                 rx:.18+.10*(1-u*u)+hs(10+k)*.07, ry:.075+.055*(1-u*u)+hs(50+k)*.025 });
+  }
+  const nt=5+Math.round(hs(5)*5);
+  for(let k=0;k<nt;k++){
+    const u=((k+.5)/nt)*2-1+(hs(20+k)-.5)*.55;
+    blobs.push({ x:u*.62, y:.36-.10*(1-Math.abs(u))+hs(40+k)*.10,
+                 rx:.11+.08*(1-Math.abs(u)), ry:.050+.040*(1-Math.abs(u)) });
+  }
+  const shape=(u,v)=>{
+    let a=0;
+    for(let i=0;i<blobs.length;i++){
+      const b2=blobs[i], dx=(u-b2.x)/b2.rx, dy=(v-b2.y)/b2.ry;
+      const d2=dx*dx+dy*dy;
+      if(d2<5) a+=Math.exp(-d2*.80);
     }
-    const nt = 2+Math.round(hs(5)*3);
-    for(let k=0;k<nt;k++){
-      const u=((k+.5)/nt)*2-1 + (hs(20+k)-.5)*.35;
-      const r=cw*(.17+.15*(1-Math.abs(u))+hs(30+k)*.06);
-      puffs.push({ x:u*cw*.52, y:-cw*(.26+.20*(1-Math.abs(u))+hs(40+k)*.10), r });
-    }
-    const P=new Path2D();
-    puffs.forEach(q=>{ P.moveTo(q.x+q.r,q.y); P.arc(q.x,q.y,q.r,0,TAU); });
-    /* قاعدة شبه مستوية (علامة سحاب الركام) لكن بتموّج خفيف — المستقيم التام يطبع
-       خطاً حادّاً تحت الغيمة يبان مصطنعاً */
-    const flat=cw*.14;
-    P.moveTo(-cw*.86, flat-cw*.34);
-    P.lineTo( cw*.86, flat-cw*.34);
-    for(let k=10;k>=0;k--){
-      const u=(k/10)*2-1;
-      P.lineTo(u*cw*.86, flat - cw*.055*Math.abs(Math.sin(u*3.1+hs(6)*6))*(1-u*u*.5));
-    }
-    P.closePath();
-    const yTop=-cw*.52, yBot=flat;
-    const vg=ctx.createLinearGradient(0,yTop,0,yBot);
-    vg.addColorStop(0,"rgb("+TOP+")"); vg.addColorStop(.46,"rgb("+MID+")"); vg.addColorStop(1,"rgb("+BAS+")");
-    ctx.fillStyle=vg; ctx.fill(P);
-    ctx.save(); ctx.clip(P);
-    /* نحت النفخات: كل نفخة لها جانب مضيء ناحية الشمس وقوس ظل تحتها وبعكسها */
-    puffs.forEach(q=>{
-      /* ضوء على كتف النفخة الناحية للشمس — بلا حلقة داكنة على الحافة، لأن الحلقة
-         تطبع دوائر واضحة داخل جسم الغيمة فتبان كفقاعات ملصوقة */
-      const hx=q.x-sunL*q.r*.40, hy=q.y-q.r*.44;
-      const sg=ctx.createRadialGradient(hx,hy,q.r*.05,hx,hy,q.r*.95);
-      sg.addColorStop(0,"rgba("+TOP+",.50)"); sg.addColorStop(.55,"rgba("+TOP+",.16)"); sg.addColorStop(1,"rgba("+TOP+",0)");
-      ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(hx,hy,q.r*.95,0,TAU); ctx.fill();
-      const dx2=q.x+sunL*q.r*.22, dy2=q.y+q.r*.52;
-      const dg=ctx.createRadialGradient(dx2,dy2,q.r*.05,dx2,dy2,q.r*.86);
-      dg.addColorStop(0,"rgba("+BAS+",.30)"); dg.addColorStop(.6,"rgba("+BAS+",.12)"); dg.addColorStop(1,"rgba("+BAS+",0)");
-      ctx.fillStyle=dg; ctx.beginPath(); ctx.arc(dx2,dy2,q.r*.86,0,TAU); ctx.fill();
-    });
-    /* ظل القاعدة: شريط داكن يلتصق بأسفل الغيمة */
-    const bgg=ctx.createLinearGradient(0,flat-cw*.34,0,flat);
-    bgg.addColorStop(0,"rgba("+BAS+",0)"); bgg.addColorStop(1,"rgba("+BAS+","+(.42+heavy*.34).toFixed(2)+")");
-    ctx.fillStyle=bgg; ctx.fillRect(-cw*1.1, flat-cw*.34, cw*2.2, cw*.36);
-    ctx.restore();
-    /* حافة فضية: الحد المواجه للشمس أنصع من جسم الغيمة */
-    if(nightF<.6){
-      ctx.save(); ctx.clip(P);
-      ctx.globalCompositeOperation="lighter";
-      const rg=ctx.createLinearGradient(-sunL*cw*.95, -cw*.5, sunL*cw*.35, cw*.1);
-      rg.addColorStop(0,"rgba(255,246,224,"+(.30*(1-heavy*.55)).toFixed(2)+")");
-      rg.addColorStop(.42,"rgba(255,246,224,0)");
-      ctx.fillStyle=rg; ctx.fillRect(-cw*1.1,-cw*1.1,cw*2.2,cw*2.2);
-      ctx.restore();
+    return a;
+  };
+  const dens=(u,v)=>{
+    /* التواء المجال: يلوي الضجيج فتطلع الأطراف مفصّصة ومتعرّجة بدل ما تكون دوائر */
+    const wx=(fbm2(u*1.9+3.1, v*1.9, sd+11, 2)-.5)*.42;
+    const wy=(fbm2(u*1.9-5.7, v*1.9+2.3, sd+17, 2)-.5)*.42;
+    const n=fbm2((u+wx)*2.5, (v+wy)*3.1, sd+23, 4);
+    const S=shape(u,v);
+    /* القاعدة المستوية: تحت خط معيّن تنقطع الكثافة بسرعة (علامة سحاب الركام) */
+    const fl=clamp(1-(v-.58)/.42, 0, 1);      /* ما فيه قاعدة مستوية: السحاب الرقيق يخفت */
+    return S*(.46+1.00*n)*fl - .46;
+  };
+  const e=.045;
+  for(let y=0;y<ph;y++){
+    const v=(y+.5)/ph;
+    for(let x=0;x<pw;x++){
+      const u=(x+.5)/pw*2-1;
+      const d0=dens(u,v);
+      /* حافة طريّة عريضة: الحافة الحادّة تخلّي الغيمة تبان صخرة مقصوصة. بخار الماء
+         ينتهي بتدرّج، وأطرافه الرقيقة يمرّ منها الضوء وتذوب بالسما */
+      let al=clamp(d0/.50,0,1); al=al*al*(3-2*al)*.80;   /* شفّاف: يبان منه زرقة السما */
+      const o=(y*pw+x)*4;
+      if(al<=.004){ Dd[o+3]=0; continue; }
+      /* الإضاءة: نقارن الكثافة هنا بالكثافة باتجاه الشمس — لو الطريق للشمس فاضي يوصل
+         ضوء كثير فالبكسل أبيض، ولو ورا كتلة سميكة يصير رمادياً. وهذا بالضبط اللي يعطي
+         الركام قمّة ناصعة وبطناً رمادياً وحافة فضية */
+      const du=dens(u - sunL*e*1.5, v - e*1.7);
+      const dd=dens(u, v + e*1.9);
+      let lt=clamp(.66 + (d0-du)*.42 + (dd-d0)*.14, 0, 1);
+      lt=lt*lt*(3-2*lt);
+      /* ميل رأسي عام: القمّة ألقط للضوء والقاع بالظل — بتدرّج لا بقفزة */
+      lt=clamp(lt*(1.00-.12*v) + .26*(1-v) - heavy*.08, 0, 1);
+      let R,G,Bc;
+      if(lt>.5){ const f=(lt-.5)*2; R=M[0]+(T[0]-M[0])*f; G=M[1]+(T[1]-M[1])*f; Bc=M[2]+(T[2]-M[2])*f; }
+      else     { const f=lt*2;      R=B[0]+(M[0]-B[0])*f; G=B[1]+(M[1]-B[1])*f; Bc=B[2]+(M[2]-B[2])*f; }
+      /* الحافة الرقيقة شفّافة ويمرّ منها الضوء فتبان أفتح — هذا اللي يذوّب الغيمة بالسما */
+      const edge=1-al;
+      R+= (T[0]-R)*edge*.55; G+=(T[1]-G)*edge*.55; Bc+=(T[2]-Bc)*edge*.55;
+      Dd[o]=R<0?0:R>255?255:R; Dd[o+1]=G<0?0:G>255?255:G; Dd[o+2]=Bc<0?0:Bc>255?255:Bc;
+      Dd[o+3]=Math.round(al*255);
     }
   }
+  ctx.putImageData(img,0,0);
   return { cv, w:W, h:H, ox:PADL, oy:PADT };
 }
 function mixRGB(a,b,t){ return [Math.round(a[0]+(b[0]-a[0])*t),Math.round(a[1]+(b[1]-a[1])*t),Math.round(a[2]+(b[2]-a[2])*t)]; }
@@ -3503,11 +3564,69 @@ function fbm(x,seed,oct){ let v=0,a=.5,f=1,n=0; for(let k=0;k<oct;k++){ v+=a*vno
 function ridged(x,seed,oct){ let v=0,a=.5,f=1,n=0; for(let k=0;k<oct;k++){ const r=1-Math.abs(2*vnoise(x*f,seed+k*47)-1); v+=a*r*r; n+=a; f*=2.1; a*=.5; } return v/n; }
 const TERR_H = { mount:[.64,.55,.45,.36,.27,.19,.11], dune:[.12,.095,.075,.055,.035], bigdune:[.16,.125,.095,.07,.045], mesa:[.31,.21,.10],
                  escarp:[.29,.18,.085], hills:[.21,.15,.09,.05], oasis:[.05,.035,.02], coast:[.045] };
+/* ── بصمة كل مكان ──────────────────────────────────────────────
+   كل الأماكن اللي تشترك بنوع تضاريس واحد كانت تمرّ على نفس المولّد بنفس الأرقام، فيختلف
+   لونها فقط ويبقى شكلها واحداً: ست سلاسل جبلية متطابقة، وأربع صحاري متطابقة، وست شواطئ
+   متطابقة. هذي الأرقام مأخوذة من شكل المكان نفسه على الأرض:
+     scale   — ضخامته (السودة ٣٠٠٠م فوق سهل، ورغدان تلال واطية)
+     sharp   — حدّة القمم (جرانيت اللوز مدبّب، وهضاب عسير مستديرة)
+     treeLine— من أي ارتفاع يختفي الشجر ويبان الصخر (قمم عسير جرداء فوق الغابة)
+     treeDens— كثافة الغطاء
+     rock    — كم ينكشف الصخر على السفح
+     mist    — كثافة الضباب (السودة أشهر مكان بالمملكة بالسحاب اللي ينزل بين الأودية)
+     terrace — المدرّجات الزراعية (رجال ألمع وفيفاء مدرّجة من القاع للقمة) */
+const PSIG = {
+  soudah:   { scale:1.30, sharp:.85, treeLine:.16, treeDens:1.30, rock:.85, mist:1.45 },
+  raghadan: { scale:.80,  sharp:.70, treeLine:.06, treeDens:1.35, rock:.55, mist:1.15 },
+  rijal:    { scale:1.08, sharp:1.00, treeLine:.22, treeDens:.80, rock:1.05, mist:.85, terrace:1.0, towers:1 },
+  fayfa:    { scale:1.14, sharp:1.25, treeLine:.10, treeDens:1.00, rock:.70, mist:.95, terrace:1.35 },
+  hada:     { scale:1.00, sharp:1.05, treeLine:.30, treeDens:.62, rock:1.25, mist:.80 },
+  lawz:     { scale:1.22, sharp:1.55, treeLine:0,   treeDens:0,   rock:1.55, mist:.45 },
+  aja:      { scale:.78,  sharp:.45, treeLine:0,   treeDens:0,   rock:1.45, mist:.40 },
+  rubkhali: { scale:1.45, sharp:1.0 },
+  nafud:    { scale:1.15, sharp:1.0 },
+  thuwairat:{ scale:.92,  sharp:1.0 },
+
+  alula:    { scale:1.06, sharp:1.0, butte:1.0 },
+
+  disah:    { scale:1.80, sharp:1.0, butte:1.35, pillarF:2.3 },  /* وادي الديسة: أعمدة حجر رملي عالية ضيّقة */
+  tuwaiq:   { scale:1.00, sharp:1.0 },
+  edge:     { scale:1.16, sharp:1.0 },
+  auto:     { scale:1.00, sharp:1.0, scrub:"acacia" },
+  neom:     { coastMount:1, reef:.25 },                 /* جبال العقبة على حافة الماء */
+  farasan:  { reef:1.70, shelf:1.45 },                  /* شُعب كثيفة ورفّ ضحل واسع */
+  umluj:    { reef:1.25, shelf:1.30 },
+  uqair:    { reef:.55,  shelf:1.55 },                  /* الخليج: ضحل جداً وبلا شعب بارزة */
+  jeddah:   { reef:.95,  shelf:1.00 },
+  harrah:   { scale:.74, sharp:1.60, treeLine:0, treeDens:0, rock:1.70, mist:.30 },
+  dheeain:  { scale:.96, sharp:1.05, treeLine:.34, treeDens:.55, rock:1.30, mist:.70, towers:1 },
+  khuraim:  { scale:.82, sharp:1.0, scrub:"acacia", greenGround:1 },
+  lajab:    { scale:1.35, sharp:1.0, butte:1.10, pillarF:1.7, mist:1.25, greenGround:1 },
+  asfar:    { reef:0, shelf:1.70, scrub:"reed" },
+  jubbah:   { scale:.80, sharp:1.0, butte:1.15, pillarF:1.5 },
+  ahsa:     { grove:1.45 },                             /* أكبر واحة نخيل بالعالم */
+  dumat:    { grove:.85 },
+  diriyah:  { grove:1.00, village:1 },                   /* الدرعية: طين الطريف بين النخل */
+  ghadha:   { scale:.88, sharp:1.0, scrub:"ghada" },    /* كثبان الغضا: سميت باسم شجرها */
+  hegra:    { scale:.92, sharp:1.0, butte:1.0, tombs:1 },
+  yanbu:    { reef:.80,  shelf:.90 }
+};
+const SIG_DEF = { scale:1, sharp:1, treeLine:0, treeDens:1, rock:1, mist:1, terrace:0, butte:0,
+                  pillarF:1, coastMount:0, reef:1, shelf:1, grove:1, village:0,
+                  scrub:0, towers:0, tombs:0, greenGround:0 };
+function sigOf(PL){ return Object.assign({}, SIG_DEF, PSIG[PL&&PL.id]||{}); }
 function pick3(arr,f){ const x=clamp(f,0,1)*2, a=Math.min(1,Math.floor(x)); return mix(arr[a],arr[a+1],x-a); }
-function terrainH(terr,t,i,seed){
+function terrainH(terr,t,i,seed,sig){
+  const SH=(sig&&sig.sharp)||1;
   switch(terr){
-    case "mount": { const tw=t+(fbm(t*2.3+i,seed+5,3)-.5)*.14;       /* تشويه المجال: قمم غير متكررة */
-      const b=.42*Math.pow(ridged(tw*1.7+i*.9,seed,4),1.05)+.58*fbm(tw*1.05+i*2.3,seed+9,4); return Math.min(1.1,b*1.35); }
+    case "mount": {
+      const tw=t+(fbm(t*2.3+i,seed+5,3)-.5)*.14;       /* تشويه المجال: قمم غير متكررة */
+      /* وزن "ridged" هو اللي يحدّد حدّة القمة: جرانيت جبل اللوز قممه مدبّبة ومسنّنة، وقباب
+         أجا الجرانيتية مستديرة ملساء، وهضاب عسير بينهما. كانت كلها بنفس الوزن ٠٫٤٢ فتطلع
+         ست سلاسل بنفس الصورة */
+      const wR=clamp(.42*SH,.14,.80), wF=1-wR;
+      const b=wR*Math.pow(ridged(tw*1.7+i*.9,seed,4),1.05)+wF*fbm(tw*1.05+i*2.3,seed+9,4);
+      return Math.min(1.1,b*1.35); }
     case "dune": case "bigdune": {
       /* مقطع الكثيب الحقيقي: ظهر محدّب ناعم يصعد للحافة، ثم وجه انزلاق شديد ينتهي بتقعّر عند القاع.
          كثيبين بمقاسين متراكبين + ضجيج بالارتفاع عشان ما تتكرر ولا تصير أهرامات */
@@ -3521,15 +3640,35 @@ function terrainH(terr,t,i,seed){
          منحنى خطّي لأس قريب من ١) يعطي خط قمة مستقيماً تماماً عبر مئات البكسلات، والنتيجة
          أشكال شبه منحرفة بأسطح مستوية وحواف مستقيمة — "كرتون مقصوص". smooth() يعطي ميلاً
          صفرياً عند القمة والقاع، فتطلع انحناءات رمل حقيقية. */
-      const prof = fr<.62 ? smooth(fr/.62) : Math.pow(1-(fr-.62)/.38, 1.9);
+      /* الكثيب الحقيقي غير متماثل: ظهر طويل ناعم يصعد مع الريح، ثم قمّة شبه حادّة، ثم وجه
+         انزلاق قصير شديد الانحدار بزاوية ثبات الرمل (٣٤°) — وجه الانزلاق هذا هو اللي يعطي
+         الصحراء خطوط القمم الحادّة اللي تشوفها بأي صورة للربع الخالي. الأس ١٫٩ القديم كان
+         يحوّل وجه الانزلاق لمنحنى محدّب ناعم، فتطلع الصحراء تلال رمل مستديرة بلا خطوط قمم */
+      const cw=.66, crn=.045;                       /* نهاية الظهر، ثم تدوير بسيط للقمة */
+      let prof;
+      if(fr<cw) prof=smooth(fr/cw);
+      else if(fr<cw+crn){ const t2=(fr-cw)/crn; prof=1-.055*t2*t2; }
+      else { const t2=(fr-cw-crn)/(1-cw-crn); prof=.945*Math.pow(1-t2,1.12)*(1-.10*t2*(1-t2)*4); }
       const hv = .70 + .46*fbm(t*.85+i*.5,seed+6,2);
       return prof*hv + .13*fbm(t*2.4+i,seed+3,3);
     }
     case "mesa": {
       /* الهضبة الحقيقية: سطح علوي مستوٍ، جدران شبه عمودية، وحافة علوية حادّة. نافذة الانتقال
          كانت عريضة (٠٫١) فتطلع كتل مدوّرة "ذائبة" بدل جروف — ضيّقناها كثيراً وأضفنا شقوقاً */
-      const v=fbm(t*2.4+i*1.3,seed,3), plate=smooth(clamp((v-.46)/.035,0,1));
+      /* نافذة انتقال أعرض: قمم كتل العلا مدوّرة الأكتاف لا مستوية بحوافّ قائمة */
+      const B=(sig&&sig.butte)||0, PF=(sig&&sig.pillarF)||1;
+      const v=fbm(t*2.4*PF+i*1.3,seed,3);
+      const thr=.46-.13*(PF-1);                        /* الأعمدة الضيّقة لازم عتبة أوطى وإلا نادراً ترتفع */
+      const plate=smooth(clamp((v-thr)/.075,0,1));
       const notch=fbm(t*7.5+i*2.1,seed+8,2);
+      if(B>0){
+        /* العلا والحِجر ووادي الديسة: كتل حجر رملي منفصلة قائمة وسط وادٍ رملي مفتوح، بينها
+           فجوات واسعة يبان منها الرمل والسما ورا. القاعدة الثابتة (٠٫١٠) كانت تربط الكتل
+           كلها بجدار متّصل يقطع الإطار من حافة لحافة = ستارة كرتون لا وادي العلا */
+        const g=fbm(t*1.15*PF+i*3.1,seed+55,2);
+        const gap=smooth(clamp((g-(.455-.10*(PF-1)))/.075,0,1));
+        return .010 + plate*gap*(.82+notch*.20)*(.80+.40*B) + fbm(t*26,seed+5,2)*.028;
+      }
       return .10 + plate*(.76+notch*.18) + fbm(t*26,seed+5,2)*.04;
     }
     case "escarp": {
@@ -3537,11 +3676,14 @@ function terrainH(terr,t,i,seed){
          وتحته منحدر ركام مقعّر ينزل بهدوء للسهل. القديم كان منحدر مائل واحد (smoothstep)
          فتطلع الهضبة كأنها كعكة مدوّرة الحواف */
       const nz=fbm(t*9,seed,3);
-      const d=Math.min(t-(.12+i*.07), (.94-i*.025)-t);
-      let p;
-      if(d<=0) p=.46*Math.pow(Math.max(0,1+d/.12),2.2);
-      else if(d<.012) p=.46+.54*smooth(d/.012);
-      else p=1;
+      /* جرف طويق وحافة العالم: خط جرف متّصل يمتد عرض المشهد كله، سطحه العلوي شبه مستوٍ،
+         تبرز منه ألسنة صخرية وتقطعه أودية غائرة. النسخة القديمة كانت ترفع الجرف عند t=٠٫١٢
+         وتنزله عند ٠٫٩٤ بمنحدرين، فتطلع هضبة معزولة وسط الإطار بطرفين مثل منحدر تزلّج —
+         وحافة العالم بالواقع جدار ما له طرف يبين، تقف فوقه وتشوف سهلاً لا ينتهي */
+      const head=fbm(t*2.0+i*1.7,seed+12,2);                                  /* تقدّم الجرف وتراجعه */
+      const spur=Math.pow(fbm(t*5.2+i*3.3,seed+22,2),1.4);                    /* ألسنة بارزة */
+      const wadi=smooth(clamp((.32-fbm(t*3.1+i*2.9,seed+18,2))/.075,0,1));    /* أودية تقطع الجرف */
+      const p=(.80+.20*head+.10*spur)*(1-wadi*.70);
       return .15 + p*(.72+nz*.2) + (fbm(t*48,seed+3,2)-.5)*.025; }
     case "coast": return .25+fbm(t*3,seed,3)*.6;
     case "oasis": return .3+fbm(t*4+i,seed,3)*.5;
@@ -3625,13 +3767,27 @@ function drawTerrain(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
   const f = prev ? clamp((performance.now()-last.at)/700,0,1) : 1;
   if(f<1){ ctx.drawImage(prev.cv,0,0,w,H2); ctx.globalAlpha=f; ctx.drawImage(last.cv,0,0,w,H2); ctx.globalAlpha=1; }
   else { if(prev){ TERR_PREV.delete(base); TERR_GEN++; } ctx.drawImage(last.cv,0,0,w,H2); }
-  if(PL.terr==="coast") drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR);
+  if(PL.terr==="coast"){
+    drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR);
+    /* قصب بحيرة الأصفر يقف داخل الماء، فلازم يُرسم بعد البحر لا قبله وإلا غطّاه الماء */
+    const sgC=sigOf(PL);
+    if(sgC.scrub) drawDesertScrub(ctx,w,gy,s,K,C,nightF,[...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),7)|0,sgC.scrub);
+  }
 }
 /* كل سلسلة جبلية = قمة رئيسية + نتوءات (أكتاف) متداخلة تحتها؛ لكل نتوء وجه مضاء حسب الشمس،
    وخط قمة لامع، وأخدود مظلم تحته. هذا اللي يعطي العمق الحقيقي بدل الرسمة المسطّحة.
    الكثبان نفس الفكرة: كثبان ثانوية بقمم حادة، وجه مضاء ووجه انزلاق مظلم. */
 function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
-  const terr=PL.terr||"hills", H=TERR_H[terr]||TERR_H.hills, NL=H.length;
+  const terr=PL.terr||"hills";
+  const sigPre=sigOf(PL);
+  /* خليج العقبة ما هو شاطئ منبسط: جباله الجرداء تنزل على الماء مباشرة. نوع "coast" كان
+     شريطاً واطياً واحداً فيطلع نيوم نسخة من جدة والعقير */
+  /* الشاطئ المفتوح: الأفق بحر يلاقي سما. الشريط الأرضي القديم (٤٫٥٪ من المشهد) كان يقطع
+     الأفق بقضيب رمادي عريض يمرّ قدّام الشمس وقت الغروب. نخلّيه خيطاً بعيداً باهتاً فقط */
+  const H = (terr==="coast")
+            ? (sigPre.coastMount ? [.32,.21,.115] : [.013])
+            : (TERR_H[terr]||TERR_H.hills);
+  const NL=H.length;
   const seed=[...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),7)|0;
   const Hh=Math.ceil(gy+2);
   /* دقّة الرسم الداخلية: كانت واطية (q≈٠٫٦٨) فحواف الغطاء النباتي تتدرّج بشكل "سلالم"
@@ -3642,12 +3798,15 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
   const cv=document.createElement("canvas"); cv.width=W; cv.height=HH;
   const g2=cv.getContext("2d");
   const ridge=[], cols=[], amps=[], fis=[], styles=[], airA=[];
+  const sig=sigOf(PL);
   for(let i=0;i<NL;i++){
-    const fi = NL>1 ? i/(NL-1) : 0; fis.push(fi); styles.push(terr);
+    const fi = NL>1 ? i/(NL-1) : 0; fis.push(fi);
+    styles.push((terr==="coast" && sig.coastMount) ? "mount" : terr);
     const base = terr==="coast" ? gy-s*.17 : gy - s*lerp(.08,.004, NL>1?fi:1);
-    const amp=s*H[i]; amps.push(amp);
+    const amp=s*H[i]*sig.scale; amps.push(amp);
     const r=new Float32Array(W);
-    for(let x=0;x<W;x++) r[x]=(base-terrainH(terr,(x/q)/w,i,seed+i*101)*amp)*q;
+    const tH=(terr==="coast" && sig.coastMount) ? "mount" : terr;
+    for(let x=0;x<W;x++) r[x]=(base-terrainH(tH,(x/q)/w,i,seed+i*101,sig)*amp)*q;
     if(terr==="mount"){
       /* جبال عسير/السودة الحقيقية هضاب متموّجة بمنحدرات متدرّجة، مو قمم جبال الألب الحادة.
          ridged noise وحدها تعطي ذرى حادة متكرّرة شكلها "لو-بولي" مصطنع. نمرّر تمويه مثلّثي خفيف
@@ -3698,8 +3857,10 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
          الجرانيت المحمر واضح بدل ما تذوب كلها برمادي مزرق */
       /* التلال الواطية قريبة ومنخفضة فهواها شفّاف — الضباب القوي هنا كان يغسل نص المشهد
          أبيض ويخفي الأرض. الضباب الثقيل للسلاسل الجبلية العالية فقط */
-      const k = terr==="mount" ? (PL.trees ? .56 : .38) : .14;
-      airA.push(lerp(k,0,Math.pow(fi,1.05))*(1-nightF*.55));
+      const k = (terr==="mount" ? (PL.trees ? .46 : .30) : terr==="coast" ? .42 : .13) * sig.mist;
+      /* الأس أعلى: الضباب يتركّز على السلاسل البعيدة وينحسر بسرعة عن القريبة، فتبقى للسلسلة
+         اللي قدّامك تفاصيلها وتباينها. الأس الواطي كان يغسل المشهد كله بحليبي أزرق */
+      airA.push(lerp(k,0,Math.pow(fi,1.55))*(1-nightF*.55));
     }
     cols.push(hex2rgb(col));
   }
@@ -3736,6 +3897,7 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
   const rockRGB=hex2rgb(C(mix(PL.hill ? mix(rockBase,pick3(PL.hill,.45),PL.trees?.25:.70) : rockBase, K.hills[2], .2+.7*nightF)));
   /* لون التربة المكشوفة بين الغابات — بني رمادي، مو لون العشب النعناعي اللي كان يبين ضباباً */
   const soilRGB=hex2rgb(C(mix(mix(PL.soil||"#7A6A52","#7E7A62",.35), K.hills[2], .2+.7*nightF)));
+  const fogP=clamp(PL.fog||0,0,1)*sig.mist;
   const Lx=clamp((sx-w/2)/(w*.42),-1,1)*(1-clamp(elev,0,1)*.5);
   const Ly=.30+clamp(elev,0,1)*.55, day=1-nightF*.85, warm=K.warmth||0;
   const img=g2.createImageData(W,HH), Dd=img.data, out=[0,0,0];
@@ -3780,11 +3942,16 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
       /* الحجر الرملي المنحوت بالريح: أعمدة رأسية مدوّرة (fluting) تتلوّى ببطء — ميلها الأفقي
          هو اللي يعطي كل عمود جهة مضاءة وجهة ظل. فوقها تجاويف عميقة (تعرية خلوية) وطبقات
          ترسيبية خفيفة. القديم كان كتل ضجيج بتردد واطي جداً فتطلع لطخات ضبابية ضخمة */
+      /* سطح حجر العلا الرملي: الوزن الأكبر كان لنحت رأسي طويل جداً (تردد رأسي ٢٫٠ فقط)،
+         فيطلع الجرف بخطوط رأسية متوازية طويلة = لوح خشب أو كرتون مضلّع. الحجر الحقيقي فيه
+         ثلاثة أشياء: طبقات ترسيبية أفقية، وتجاويف تعرية خلوية (قرص العسل) اللي تميّز صخر
+         العلا والحِجر، ونحت رأسي أقصر من مسايل المطر */
       const wv  = fbm2(u*2.0, v*1.5, seed+120, 2)*1.5;
-      const f2  = vn2(u*27+wv*1.7, v*2.0, seed+9);
-      const bedS = st==="escarp" ? .16 : .05;
-      const bed = fbm2(u*1.4+v*.2, v*9+fbm2(u*1.2,v*1.2,seed+21,2)*1.6, seed+27, 2);
-      return f2*.09 + bed*bedS;
+      const flut= vn2(u*24+wv*1.6, v*3.4, seed+9);                                      /* نحت رأسي أقصر */
+      const bedS = st==="escarp" ? .17 : .075;
+      const bed = fbm2(u*1.2+v*.18, v*12+fbm2(u*1.1,v*1.1,seed+21,2)*2.0, seed+27, 2);  /* طبقات أوضح */
+      const pock= st==="escarp" ? .5 : fbm2(u*44, v*50, seed+131, 2);                   /* تجاويف قرص العسل */
+      return flut*.052 + bed*bedS + (pock-.5)*.034;
     }
     if(st==="hills"){
       /* تلال متدحرجة ناعمة — مو قمم جبال حادة (مود "mount") ولا كثبان بوجه انزلاق ("dune")،
@@ -3835,8 +4002,19 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
       /* انكشاف الصخر يتبع ميل السفح الكبير (خط القمة)، مو مشتقة الضجيج الدقيقة. الاعتماد
          على المشتقة الدقيقة كان يشبّع القيمة عند حدّها الأعلى في بكسلات ويصفّرها في جارتها،
          فتطلع رقع صخرية فاتحة بحواف مربّعة حادّة — هذا مصدر "البكسلات" على وجه الجبل */
-      rockMix = clamp(.08 + .48*smooth(clamp(Math.abs(m)*.45,0,1)) - dMain*.18 + Math.abs(nxS)*.10, 0, .56);
-      if(treeRGB && fi>.12 && dMain>-.002 && rockMix<.55){
+      rockMix = clamp((.08 + .48*smooth(clamp(Math.abs(m)*.45,0,1)) - dMain*.18 + Math.abs(nxS)*.10)*sig.rock, 0, .62);
+      /* خط الشجر: فوق ارتفاع معيّن ما يعيش الشجر وتبان القمة صخراً عارياً. هذا أوضح ملمح
+         بجبال عسير وفيفاء وجبل اللوز بالصور الحقيقية، وبدونه تطلع السلسلة خضراء من القاع
+         للقمة مثل تلة عشب. الخط نفسه متموّج مو أفقياً: يرتفع بالأودية المحميّة وينزل على
+         الأكتاف المكشوفة للريح */
+      let aboveTL=0;
+      if(sig.treeLine>0){
+        const tl=sig.treeLine*(.62+.80*fbm2(u*1.9,v*1.1,seed+311,3));
+        aboveTL=clamp(1-dMain/Math.max(.02,tl),0,1);
+        aboveTL*=aboveTL;
+        rockMix=clamp(rockMix+aboveTL*.46*sig.rock,0,.78);
+      }
+      if(treeRGB && fi>.12 && dMain>-.002 && rockMix<.70){
         /* الشجر يتجمّع بقطع غابة واسعة (patch) بدل ما يتوزّع كبقع متناثرة بانتظام على كل
            المنحدر — هذا أقرب لتوزيع الغطاء النباتي الحقيقي اللي يتبع الرطوبة والميل */
         /* الغطاء الشجري: قبل كذا كان عتبة حادّة على ضجيج تردده عالي جداً (u*95) — وبدقّة الرسم
@@ -3850,11 +4028,12 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
           /* نافذة انتقال عريضة: الحافة الحادّة بين لون الشجر ولون الصخر هي اللي تتحوّل
              لسلالم مربّعة عند التكبير، والغطاء الحقيقي أصلاً يخفّ بالتدريج مو بخط قاطع */
           const soft=clamp((tn-th)/.13,0,1);
-          if(soft>0) mixTree=smooth(soft)*.92*patchF;
+          if(soft>0) mixTree=smooth(soft)*.92*patchF*clamp(sig.treeDens,0,1.4);
           if(mixTree>0){ const clump=fbm2(u*14,v*14,seed+77,2); mixTree*=.80+.30*clump; }  /* تفاوت لوني بين كتل الشجر */
           /* السلاسل البعيدة: الفراغات الصغيرة بين الغابة ما تنشاف من هالمسافة — كانت تطلع بقع
              فاتحة كأنها عفن على الجبل. نخلّي الفراغات الواضحة للسلسلة القريبة بس */
-          mixTree = lerp(mixTree, .90, clamp((1-fi)/.5,0,1)*.92);
+          mixTree = lerp(mixTree, .90*clamp(sig.treeDens,0,1.2), clamp((1-fi)/.5,0,1)*.92);
+          mixTree *= (1-aboveTL);                        /* فوق خط الشجر: صخر عارٍ */
           /* الصخر داخل منطقة الغابة أغمق وأقل بياضاً — بدونها تبين فجوات فاتحة بين الكتل
              كأنها بقع ضباب على السفح */
           if(patchF>.05) dark += patchF*.15;
@@ -3873,12 +4052,35 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
         bright += (rn2(u*110,v*88,seed+301)-.5)*.34*rockMix*tK3;         /* حبيبات الصخر */
         bright += (rn2(u*150,v*42,seed+307)-.5)*.12*rockMix*tK3;         /* شقوق أفقية خفيفة */
       }
-      if(PL.terraces && fi>.4){ const band=(dMain*amps[i]/(s*.0085))%1; if(band<.2) dark+=.14; else if(band<.34) bright+=.06; }
+      /* المدرّجات الزراعية: رجال ألمع وفيفاء مدرّجة بجدران حجرية من قاع الوادي للقمة، وهي
+         أول شي تشوفه بأي صورة لهما. كانت أشرطة خافتة جداً (ظل ١٤٪ على طبقة واحدة بعيدة) ما
+         تبين إطلاقاً. الحين: سطح المدرّجة مستوٍ ومضاء، وتحته جدار ساند بظل واضح، والخط
+         نفسه يتموّج مع كنتور الجبل بدل ما يكون مسطرة أفقية */
+      if(sig.terrace>0 && fi>.80){
+        /* المدرّجات مزارع متفرّقة لا غطاء يلفّ الجبل كله: تنحصر بالسفوح المعتدلة القريبة من
+           القرى، وتنقطع عند الأودية والجروف. تغطية السفح كامله بأشرطة منتظمة تطلع كقماش
+           مضلّع منسوج — وهذا اللي كان يصير */
+        const fieldN=fbm2(u*1.7,v*2.0,seed+341,3);
+        const field=smooth(clamp((fieldN-.52)/.13,0,1));                /* رقع حقول متفرّقة فقط */
+        const gentle=1-smooth(clamp((Math.abs(m)*.45-.26)/.30,0,1));    /* السفح الحادّ ما يُدرَّج */
+        const vis=clamp(sig.terrace,0,1.6)*field*gentle*(1-rockMix*.8)*.75;
+        if(vis>.03){
+          /* المدرّجة عريضة بما يكفي تبين كمصطبة لا كخط: الأشرطة الرفيعة المتقاربة كانت
+             تطلع كخطوط كنتور خريطة على وش الجبل. وطورها يتغيّر من رقعة لرقعة فما تنتظم */
+          const bh=s*.026;
+          const wob=(fbm2(u*2.1,v*1.1,seed+331,3)-.5)*1.6;
+          const band=(((dMain*amps[i]/bh)+wob)%1+1)%1;
+          if(band<.20)      dark   += .26*vis;            /* ظل الجدار الساند الحجري */
+          else if(band<.30) bright += .15*vis;            /* حرف الجدار الملقّط للضوء */
+        }
+      }
     } else if(st==="dune"||st==="bigdune"){
       /* بلا عتبات حادّة: أي عتبة (if lee>.08) تتحوّل لخط فاصل حاد على السطح */
       const sgn=Math.sign(Lx||1);
-      dark += .26*smooth(clamp(-nxS*sgn,0,1));                                         /* وجوه الانزلاق الصغيرة */
-      dark += .30*smooth(clamp(-nxBig*sgn,0,1));                                       /* الوجه البعيد عن الشمس */
+      dark += .30*smooth(clamp(-nxS*sgn,0,1));                                         /* وجوه الانزلاق الصغيرة */
+      dark += .44*smooth(clamp(-nxBig*sgn,0,1));                                       /* وجه الانزلاق: أوضح علامة للكثيب */
+      /* شفة القمة: الرمل عند الحافة نفسها يلقط الضوء فيبين خط القمة كخيط مضيء يفصل الوجهين */
+      bright += smooth(clamp(1-dMain*11,0,1))*.13*day;
       /* حبيبات الرمل: ضجيج خشن + ضجيج دقيق فوقه، يعطي ملمس حبيبي حقيقي بدل تدرّج أملس */
       bright += (h01(x*7919+(y|0),seed)-.5)*.032;
       bright += (h01((x*131+y*977)|0,seed+41)-.5)*.018;
@@ -3931,7 +4133,10 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
       bright += (fbm2(u*1.4+v*.2, bedV, seed+27, 2)-.5)*bedS;
       /* حدّ الطبقة الرسوبية: خط ظل رفيع أفقي يتبع تموّج الطبقة — أبرز ما يميّز صخر العلا */
       const bedT = bedV-Math.floor(bedV);
-      dark += smooth(clamp((.12-Math.abs(bedT-.5)*.9)/.12,0,1))*.13*rk;
+      dark += smooth(clamp((.12-Math.abs(bedT-.5)*.9)/.12,0,1))*.15*rk;
+      /* كل طبقة ترسيبية لها درجتها: صخر العلا طبقاته تتراوح بين كريمي وبرتقالي وبنّي محمر،
+         واللون الواحد على الجرف كامل هو اللي يخلّيه يبان لوحاً مصبوغاً */
+      bright += (h01(Math.floor(bedV)*53, seed+181)-.5)*.13*rk;
       /* التجاويف: ظل عميق داخلها وحافة سفلية أفتح (ضوء مرتد من أرضية التجويف) */
       /* أعمدة النحت مرسومة مباشرة بمقطع عرضي مدوّر: كل عمود له حافة مضاءة وحافة ظل،
          وبين كل عمودين شقّ معتم. العرض يتفاوت والعمود ينقطع عند الطبقات. حسابها عبر الميل
@@ -3941,7 +4146,7 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
       const fi7 = fi*7.3;
       const seg = Math.floor(v*4.2 + vn2(u*3,fi7,seed+151)*2.2);
       const segOff = (h01(seg*131+Math.round(fi*10)*7, seed+153)-.5)*1.4;
-      const warpU = fbm2(u*1.8, v*2.4, seed+141, 3)*3.2;
+      const warpU = fbm2(u*2.1, v*5.8, seed+141, 3)*3.0;   /* الأعمدة تتلوّى رأسياً فما تتحوّل لألواح سياج */
       const sideK = (Lx>=0?1:-1)*(Math.abs(Lx)*.7+.32);
       const cuB = u*15 + warpU + segOff + fi7;
       const cB = Math.floor(cuB), tB = cuB-cB;
@@ -3953,8 +4158,11 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
       const tS = cuS-Math.floor(cuS);
       bright += (tS-.5)*2*sideK*.08*day*rk;
       /* ورنيش الصحراء: خطوط داكنة رأسية طويلة تنزل من الحواف — من أوضح ملامح صخر العلا */
-      const vs = rn2(u*46, v*2.6, seed+161);
-      dark += smooth(clamp((vs-.60)/.14,0,1))*.20*rk;
+      /* ورنيش الصحراء يسيل من حافة الصخرة لتحت ويخفّ كل ما نزل، وعرضه متفاوت. الخط
+         المتواصل بنفس القتامة من القمة للقاع هو اللي كان يعطي الجرف شكل عروق خشب */
+      const vsW = .52+.22*rn2(u*7.5, v*1.1, seed+163);
+      const vs  = rn2(u*40, v*3.4, seed+161);
+      dark += smooth(clamp((vs-vsW)/.16,0,1))*.30*rk*clamp(1.08-dMain*1.25,0,1);
       /* (التجاويف أُلغيت: على هذا البعد تطلع بقع طلاء على جدار، مو حفر بالصخر) */
       bright += (rn2(u*90,v*80,seed+51)-.5)*.15*rk;           /* خشونة سطح الحجر */
       bright += (rn2(u*170,v*150,seed+57)-.5)*.06*rk;
@@ -4046,8 +4254,17 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
     /* ضباب الأودية: بين كل سلسلة والتي قدّامها وادٍ يتجمّع فيه الهوا الرطب، فقاعدة كل
        سلسلة أبهت من قمّتها — هذا اللي يفصل الطبقات بصرياً بالصور الحقيقية (القمة واضحة
        وتذوب تحت بالضباب) بدل طبقات مسطّحة بلون واحد كأنها ورق مقصوص */
-    const valley = airA[i]>.20 && fi<.99 ? smooth(clamp(dMain*1.15,0,1))*(.10+.30*airA[i])*(1-nightF*.6)*(PL.trees?1:.45) : 0;
-    const hz=Math.min(.88, Math.pow(1-fi,1.6)*(sandyT?.19:.22)*(1-nightF*.5) + airA[i] + valley);
+    /* بحر السحاب: الصورة اللي يعرفها الناس عن السودة ورغدان هي خطوط القمم غامقة حادّة
+       وبينها أودية مليانة ضباب أبيض. الحجاب المتساوي على الطبقة كلها كان يعطي العكس تماماً:
+       كل سلسلة لوح ورق بلون واحد باهت، والقمة والوادي بنفس الدرجة. الحين الضباب يتبع العمق
+       داخل الطبقة نفسها (dMain): القمة صافية والوادي يغرق، وبتموّج يكسره لبنوك سحاب */
+    let valley=0;
+    if(fi<.99 && (airA[i]>.05 || fogP>0)){
+      const bank=.55+.90*fbm2(u*1.25+i*3.7, v*2.3, seed+401, 3);
+      valley = smooth(clamp((dMain-.06)*1.25,0,1)) * (.06+.62*fogP+.26*airA[i]) * bank
+               * (1-nightF*.6) * (PL.trees?1:.55);
+    }
+    const hz=Math.min(.90, Math.pow(1-fi,1.6)*(sandyT?.19:.22)*(1-nightF*.5) + airA[i]*.72 + valley);
     out[0]=lerp(R,skyRGB[0],hz); out[1]=lerp(G,skyRGB[1],hz); out[2]=lerp(B,skyRGB[2],hz);
     return out;
   }
@@ -4092,7 +4309,13 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
         g2.stroke();
       }
       if(PL.mark==="elephant") drawElephantRock(g2,w*.2,gy-s*.004,s,rgb2hex(cols[NLx-1]),nightF,sx);
-      if(terr==="oasis") drawPalmGrove(g2,w,gy,s,K,C,nightF,seed);
+      if(terr==="oasis"){
+        drawPalmGrove(g2,w,gy,s,K,C,nightF,seed,sig.grove);
+        if(sig.village) drawMudVillage(g2,w,gy,s,K,C,nightF,seed);
+      }
+      if(sig.scrub && terr!=="coast") drawDesertScrub(g2,w,gy,s,K,C,nightF,seed,sig.scrub);
+      if(sig.towers) drawStoneTowers(g2,w,gy,s,K,C,nightF,seed);
+      if(sig.tombs)  drawRockTombs(g2,w,gy,s,K,C,nightF,seed,ridge,q,cols);
       this.done=true;
     } };
   return job;
@@ -4109,19 +4332,30 @@ function seaBase(w,gy,s,PL,K,C,nightF,sx,sy,elev){
   const hy=gy-s*.17, D=gy-hy;
   const key=[w|0,gy|0,s|0,Math.round(sx/12),Math.round(sy/12),Math.round(nightF*12),Math.round(elev*40),Math.round((K.warmth||0)*20),K.sky.join(","),C("#808080")].join("|");
   const old=SEA_CACHE.get(PL.id); if(old && old.key===key) return old;
-  const q=clamp(Math.sqrt(170000/(w*(D+1))),.6,Math.min(2,window.devicePixelRatio||1));
+  const q=clamp(Math.sqrt(620000/(w*(D+1))),.9,Math.min(2.4,(window.devicePixelRatio||1)*1.2));
   const W=Math.max(2,Math.round(w*q)), H=Math.max(2,Math.round((D+1)*q));
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   const g=cv.getContext("2d"), img=g.createImageData(W,H), Dd=img.data;
   const seed=[...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),23)|0;
   const zen=hex2rgb(C(K.sky[0])), mid=hex2rgb(C(K.sky[1])), hor=hex2rgb(C(K.sky[2]));
   const deep=hex2rgb(C(mix(PL.sea[0],K.hills[2],.75*nightF))), shal=hex2rgb(C(mix(PL.sea[1],K.hills[2],.78*nightF)));
-  const reef=hex2rgb(C(mix(shade(PL.sea[1],.16),K.hills[2],.8*nightF)));
+  /* قاع الماء الضحل ما هو لون واحد: رؤوس مرجانية داكنة، وألسنة رمل فاتحة، وقنوات فيروزية
+     بينها — هذي الفسيفساء هي صورة فرسان وأملج المعروفة. اللون الواحد الباهت كان يخلّي كل
+     شواطئ المملكة الستة شريطاً فيروزياً واحداً */
+  const reef=hex2rgb(C(mix(mix(PL.sea[0],"#15614C",.45),K.hills[2],.8*nightF)));
+  const bar =hex2rgb(C(mix(mix(PL.sea[1],PL.soil||"#E8DCBC",.55),K.hills[2],.8*nightF)));
   const sandU=hex2rgb(C(mix(mix(PL.soil||"#D8C49E", PL.sea[1], .42), K.hills[2], .72*nightF)));   /* رمل تحت ماء ضحل */
+  const sg2=sigOf(PL), REEF=sg2.reef, SHELF=sg2.shelf;
   const sunUp = sy<hy && nightF<.6, sunC = elev<.25 ? [255,206,150] : [255,246,226];
   const warmL = clamp(K.warmth||0,0,1)*clamp(1-elev/.35,0,1);
   const FOC=s*q*.55;
-  const hgt=(X,Z)=>.55*fbm2(X*.9,Z*2.6,seed,3)+.30*rn2(X*3.2+Z*.8,Z*6.5,seed+5)+.15*vn2(X*9,Z*15,seed+9);
+  /* الموج الحقيقي طبقتان: هَبّة طويلة قممها شبه موازية للشاطئ (تردد واطي بالعرض وعالي
+     بالعمق)، وفوقها نَبْر قصير مبعثر. الخلطة القديمة كانت متقاربة الترددات فتطلع شرطات
+     بيضا أفقية مكرّرة كأنها مرسومة بالفرشاة */
+  const hgt=(X,Z)=>.46*fbm2(X*.42,Z*3.8,seed,4)
+                  +.26*rn2(X*1.7+Z*.5,Z*9.5,seed+5)
+                  +.16*vn2(X*6.5,Z*24,seed+9)
+                  +.12*vn2(X*17,Z*52,seed+13);
   for(let y=0;y<H;y++){
     const v=(y+.5)/H, Z=1/(v*.95+.05), eZ=Math.max(.02,Z*Z*.95/H);
     const graze=.03+v*.24;
@@ -4131,7 +4365,7 @@ function seaBase(w,gy,s,PL,K,C,nightF,sx,sy,elev){
          بدون هالتخفيت يطلع البعيد مبقّع ومتشقلب (aliasing) كأنه رخام مكسّر */
       const fadeN=clamp((v-.02)*2.4,0,1);
       const h0=(hgt(X,Z)-.5)*fadeN+.5, hx=(hgt(X+eX,Z)-hgt(X,Z))/eX, hz=(hgt(X,Z+eZ)-hgt(X,Z))/eZ;
-      const nX=clamp(-hx*.10,-1,1)*fadeN, nZ=clamp(-hz*.07,-1,1)*fadeN;
+      const nX=clamp(-hx*.14,-1,1)*fadeN, nZ=clamp(-hz*.11,-1,1)*fadeN;
       const r=clamp(graze+nZ*.55,0,1);
       const tS=clamp(r/.55,0,1);
       let sr,sg,sb;
@@ -4140,25 +4374,38 @@ function seaBase(w,gy,s,PL,K,C,nightF,sx,sy,elev){
       /* الشمس الواطية = ضوء يجي شبه موازي للسطح، فالماء يصير مراية للسما كلها لا بس عند
          الأفق — بدونها يبقى البحر فيروزي نهار تحت سما غروب برتقالية */
       const F=clamp((.04+.96*Math.pow(1-clamp(graze*2.0+nZ*.9,0,1),5))*(1+1.5*warmL),.04,1);
-      const sv=Math.pow(smooth(v),1.15);
+      const sv=Math.pow(smooth(v),1.15/SHELF);      /* الرفّ الضحل الواسع: الفيروزي يمتد أبعد عن الشاطئ */
       let br=deep[0]+(shal[0]-deep[0])*sv, bg=deep[1]+(shal[1]-deep[1])*sv, bb=deep[2]+(shal[2]-deep[2])*sv;
-      if(v>.40){
-        const pt=fbm2(X*.32,Z*.85,seed+21,3), rk=smooth(clamp((pt-.50)/.18,0,1))*smooth(clamp((v-.40)/.35,0,1))*.55;
+      if(v>.36/SHELF && REEF>0){
+        const v0=.36/SHELF, band=smooth(clamp((v-v0)/.32,0,1));
+        const pt=fbm2(X*.34,Z*.95,seed+21,3);
+        const rk=smooth(clamp((pt-.54)/.13,0,1))*band*.72*REEF;      /* رؤوس مرجانية */
         br+=(reef[0]-br)*rk; bg+=(reef[1]-bg)*rk; bb+=(reef[2]-bb)*rk;
+        const pb=fbm2(X*.52+9.3,Z*1.25,seed+29,3);
+        const sb=smooth(clamp((.44-pb)/.11,0,1))*band*.50*REEF;      /* ألسنة رمل ضحلة */
+        br+=(bar[0]-br)*sb; bg+=(bar[1]-bg)*sb; bb+=(bar[2]-bb)*sb;
       }
       /* آخر شبر قبل الشاطئ: الماء يصير سنتيمترات فيبين الرمل من تحته — الماء ما ينتهي بخط
          حاد على رمل ناشف، يروح يفتح ويصفرّ لين يذوب بلون الشاطئ */
       if(v>.80){ const sh2=Math.pow(clamp((v-.80)/.20,0,1),1.5)*.85;
         br+=(sandU[0]-br)*sh2; bg+=(sandU[1]-bg)*sh2; bb+=(sandU[2]-bb)*sh2; }
-      const tr=.88+.24*h0; br*=tr; bg*=tr; bb*=tr;                   /* قيعان الموج أغمق */
+      /* ميل وجه الموجة يغيّر لونها فعلاً: الوجه المائل للعين يوري عمق الماء (أغمق وأزرق)،
+         والوجه المائل للسما يوري لونها. التفاوت القديم (±١٢٪ بالارتفاع فقط) كان يخلّي
+         السطح تدرّجاً أملس تقريباً بلا حسّ موج */
+      const tr=.80+.40*h0 - nZ*.18; br*=tr; bg*=tr; bb*=tr;
       void 0;
       let R=br+(sr-br)*F, G=bg+(sg-bg)*F, B=bb+(sb-bb)*F;
       if(sunUp){                                                     /* لمعان ناعم بدرب الشمس */
-        const dxs=((x+.5)/q-sx)/(s*(.035+.20*v)) + nX*2.2;
-        const sp=Math.exp(-dxs*dxs)*clamp(.35+nZ*2.4,0,1.4)*(.30+.45*(1-elev));
-        R+=(sunC[0]-R)*sp*.55; G+=(sunC[1]-G)*sp*.55; B+=(sunC[2]-B)*sp*.55;
+        /* البريق المرآتي ما هو شريط متّصل: هو آلاف الوجوه الصغيرة اللي صدف ميلها يسدّد
+           انعكاس الشمس للعين. نرفع حساسية الميل ونرفعه لأس عالٍ فينكسر الدرب لشرر */
+        const dxs=((x+.5)/q-sx)/(s*(.035+.20*v)) + nX*3.0;
+        const facet=Math.pow(clamp(.22+nZ*3.9,0,1),1.9);
+        const sp=Math.exp(-dxs*dxs)*facet*(.62+.85*(1-elev));
+        R+=(sunC[0]-R)*sp*.85; G+=(sunC[1]-G)*sp*.85; B+=(sunC[2]-B)*sp*.85;
       }
-      const hzz=Math.pow(1-v,3)*.45; R+=(hor[0]-R)*hzz; G+=(hor[1]-G)*hzz; B+=(hor[2]-B)*hzz;
+      /* قبل: ٤٥٪ من لون الأفق على أول صف ماء، فيطلع خيط فاتح حاد يفصل الماء عن قاعدة
+         التضاريس. الحين خفيف ويتلاشى أسرع، والانعكاس الحقيقي هو اللي يوصل اللونين */
+      const hzz=Math.pow(1-v,4)*.20; R+=(hor[0]-R)*hzz; G+=(hor[1]-G)*hzz; B+=(hor[2]-B)*hzz;
       const o=(y*W+x)*4; Dd[o]=R; Dd[o+1]=G; Dd[o+2]=B; Dd[o+3]=255;
     }
   }
@@ -4167,11 +4414,71 @@ function seaBase(w,gy,s,PL,K,C,nightF,sx,sy,elev){
   if(SEA_CACHE.size>4) SEA_CACHE.delete(SEA_CACHE.keys().next().value);
   return e;
 }
+/* ─── مرآة الماء ───────────────────────────────────────────────
+   الماء كان يعكس تدرّج سما محسوباً داخلياً فقط، فأي شي واقف فوق الأفق — جبال العقبة،
+   الغيم، حمرة الغروب — ما له أي انعكاس. وهذا أول شي تمسكه العين وتحس إن الصورة مرسومة
+   لا حقيقية. سطح الماء مرآة مستوية، فانعكاس أي نقطة يكون بنفس الزاوية تحت الأفق تماماً
+   (١:١، بلا ضغط)، لكنه يتكسّر أفقياً مع الموج ويضعف كل ما نزلنا (قانون فرينل: عند الأفق
+   النظرة ماسحة فينعكس كل شي تقريباً، وتحت أقدامك تشوف داخل الماء أكثر مما تشوف انعكاساً). */
+let REFL_CV=null, WARP_CV=null;
+function waterMirror(ctx,w,hy,D,s,t,nightF){
+  if(D<6||hy<6) return;
+  const k=(()=>{ try{ return ctx.getTransform().a||1; }catch(e){ return 1; } })();
+  /* شريط الماء المرئي قصير (١٧٪ من ارتفاع المشهد) بينما الجبال ترتفع فوقه أضعافاً. المرآة
+     الهندسية ١:١ تعني إننا ما نشوف إلا انعكاس قاعدة الجبل — شريط لون واحد مسطّح. بالصور
+     الحقيقية يبان الجبل كامل منعكساً لأن الماء يمتد من قدم المصوّر لين الشاطئ المقابل.
+     فنضغط المرآة: نجيب كل اللي فوق الأفق ونحشره بعرض شريط الماء، فيبان الجبل منعكساً
+     مضغوطاً رأسياً — وهذا بالضبط شكل الانعكاس على ماء متموّج */
+  const RH=Math.min(hy,D*2.8);
+  const sw=Math.max(2,Math.round(w*k)), sh=Math.max(2,Math.round(RH*k));
+  if(!REFL_CV) REFL_CV=document.createElement("canvas");
+  if(REFL_CV.width!==sw||REFL_CV.height!==sh){ REFL_CV.width=sw; REFL_CV.height=sh; }
+  const rc=REFL_CV.getContext("2d");
+  rc.setTransform(1,0,0,1,0,0); rc.globalAlpha=1; rc.globalCompositeOperation="copy";
+  rc.save(); rc.translate(0,sh); rc.scale(1,-1);              /* نقلبه رأسياً مرّة وحدة */
+  rc.drawImage(ctx.canvas, 0, Math.max(0,Math.round((hy-RH)*k)), sw, sh, 0, 0, sw, sh);
+  rc.restore(); rc.globalCompositeOperation="source-over";
+  /* نبني الانعكاس المتموّج على لوح مستقل بدقّة الجهاز، صفّاً صفّاً بلا تداخل، ثم نلصقه
+     دفعة وحدة بتدرّج شفافية. الرسم المباشر على المشهد صفوفاً متداخلة كان يضاعف الشفافية
+     عند التداخل فتطلع خطوط أفقية واضحة عبر الماء */
+  const dh=Math.max(2,Math.round(D*k));
+  if(!WARP_CV) WARP_CV=document.createElement("canvas");
+  if(WARP_CV.width!==sw||WARP_CV.height!==dh){ WARP_CV.width=sw; WARP_CV.height=dh; }
+  const wc=WARP_CV.getContext("2d");
+  wc.setTransform(1,0,0,1,0,0); wc.globalAlpha=1;
+  wc.globalCompositeOperation="copy"; wc.clearRect(0,0,sw,dh);
+  wc.globalCompositeOperation="source-over"; wc.imageSmoothingEnabled=true;
+  for(let r=0;r<dh;r++){
+    const f=(r+.5)/dh;
+    const amp=(s*.0022+s*.0260*f*f)*k;                        /* الموجة القريبة أعرض */
+    const dx=Math.sin(t*.85+f*19.0)*amp + Math.sin(t*1.63-f*33.0)*amp*.55
+            +Math.sin(t*.37+f*7.3)*amp*.35 + Math.sin(t*2.4-f*61.0)*amp*.20;
+    /* ميل الموجة يغيّر أي ارتفاع تعكسه كل نقطة، فينمطّ الانعكاس رأسياً ويتموّج */
+    const vw=(Math.sin(t*1.10+f*23.0)*.6+Math.sin(t*.62-f*11.0)*.4)*(.006+.070*f);
+    const sy=clamp(f+vw,0,.999)*sh;
+    wc.drawImage(REFL_CV, 0, sy, sw, 1, dx, r, sw, 1);
+  }
+  /* تدرّج فرينل: عند الأفق النظرة ماسحة فينعكس كل شي، وتحت أقدامك تشوف داخل الماء */
+  wc.globalCompositeOperation="destination-in";
+  const A=(nightF>.55?.42:.66);
+  const gr=wc.createLinearGradient(0,0,0,dh);
+  gr.addColorStop(0,    "rgba(0,0,0,0)");
+  gr.addColorStop(.05,  "rgba(0,0,0,"+(A*.92).toFixed(3)+")");
+  gr.addColorStop(.42,  "rgba(0,0,0,"+(A*.60).toFixed(3)+")");
+  gr.addColorStop(.78,  "rgba(0,0,0,"+(A*.26).toFixed(3)+")");
+  gr.addColorStop(1,    "rgba(0,0,0,0)");
+  wc.fillStyle=gr; wc.fillRect(0,0,sw,dh);
+  wc.globalCompositeOperation="source-over";
+  ctx.save(); ctx.imageSmoothingEnabled=true;
+  ctx.drawImage(WARP_CV,0,0,sw,dh, 0,hy,w,D);
+  ctx.restore();
+}
 function drawSea(ctx,w,gy,s,PL,K,C,nightF,tms,sx,sy,elev,dR){
   const hy=gy-s*.17, t=(tms||0)/1000, D=gy-hy;
   ctx.drawImage(seaBase(w,gy,s,PL,K,C,nightF,sx,sy,elev).cv,0,hy,w,D+1);
   ctx.save(); ctx.beginPath(); ctx.rect(0,hy,w,D+1); ctx.clip();
   ctx.shadowBlur=0;
+  waterMirror(ctx,w,hy,D,s,t,nightF);
   /* درب لمعان الشمس/القمر يتلألأ */
   const glow = nightF>.5 ? .45+.5*(K.disc==="moon"?1:0) : clamp(1-elev*.55,.35,1);
   if(sy<hy){
@@ -4354,8 +4661,189 @@ function drawElephantRock(ctx,cx,by,s,col,nightF,sx){
 }
 function drawPalmSilhouettes(ctx,w,gy,s,K,C,nightF){ drawPalmGrove(ctx,w,gy,s,K,C,nightF,99); }
 /* بساتين نخيل الأحساء: صفّين (بعيد باهت وقريب أوضح)، جذوع مقوّسة وسعف متدلّي بخوص */
-function drawPalmGrove(ctx,w,gy,s,K,C,nightF,seed){
-  const rows=[{n:34,y:gy-s*.030,h:[.045,.07],haze:.42},{n:18,y:gy-s*.010,h:[.075,.12],haze:.12}];
+/* قرية نجدية طينية: جدران مائلة قليلاً بلون الطين، شرفات مثلّثة على السطح، وفتحات صغيرة.
+   الدرعية بدونها كانت نسخة من دومة الجندل والأحساء — نفس صفّ النخل على نفس الخضرة */
+function drawMudVillage(ctx,w,gy,s,K,C,nightF,seed){
+  const base=gy-s*.016;
+  const wall=C(mix(mix("#C2A173",K.sky[2],.18), K.hills[2], .18+.70*nightF));
+  const lit =C(mix(mix("#D9BC90",K.sky[2],.14), K.hills[2], .16+.70*nightF));
+  const shad=C(mix(mix("#8E7048",K.sky[2],.16), K.hills[2], .22+.70*nightF));
+  const dark=C(mix("#4A3827", K.hills[2], .30+.62*nightF));
+  const n=13;
+  for(let k=0;k<n;k++){
+    const x=(h01(k,seed+311)*1.06-.03)*w;
+    const bw=s*(.030+h01(k,seed+313)*.042), bh=s*(.034+h01(k,seed+317)*.046);
+    const by=base+h01(k,seed+319)*s*.008;
+    const tp=bw*.07;                                   /* الجدار الطيني يضيق للأعلى */
+    ctx.fillStyle=wall;
+    ctx.beginPath();
+    ctx.moveTo(x-bw/2, by); ctx.lineTo(x-bw/2+tp, by-bh);
+    ctx.lineTo(x+bw/2-tp, by-bh); ctx.lineTo(x+bw/2, by); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=lit;                                  /* الجهة المضاءة */
+    ctx.beginPath();
+    ctx.moveTo(x-bw/2, by); ctx.lineTo(x-bw/2+tp, by-bh);
+    ctx.lineTo(x-bw*.14, by-bh); ctx.lineTo(x-bw*.14, by); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=shad;
+    ctx.fillRect(x+bw*.22, by-bh, bw*.28-tp, bh);
+    const cn=Math.max(2,Math.round(bw/(s*.009)));       /* شرفات مثلّثة */
+    ctx.fillStyle=lit;
+    for(let c=0;c<cn;c++){
+      const cx2=x-bw/2+tp+(bw-2*tp)*((c+.5)/cn), cwid=(bw-2*tp)/cn*.62;
+      ctx.beginPath(); ctx.moveTo(cx2-cwid/2,by-bh); ctx.lineTo(cx2,by-bh-s*.009); ctx.lineTo(cx2+cwid/2,by-bh); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle=dark;                                 /* فتحات صغيرة */
+    const wn=1+((h01(k,seed+323)*3)|0);
+    for(let q=0;q<wn;q++){
+      const wx=x-bw*.26+ (bw*.52)*((q+.5)/wn), wy=by-bh*(.42+h01(k*7+q,seed+329)*.26);
+      ctx.fillRect(wx-s*.0035, wy, s*.007, s*.011);
+    }
+  }
+}
+/* شجر وشجيرات الصحراء بالخلفية: سمرة مفرودة القمة بنجد، وغضا منتصب على كثبان عنيزة.
+   المشهد "موقعي" وكثبان الغضا كانا فاضيين تماماً — أرض جرداء بلا أي نبات، وهذا أبعد ما
+   يكون عن الواقع: حتى أقسى الصحاري فيها سمر وغضا ورمث متفرّق */
+function drawDesertScrub(ctx,w,gy,s,K,C,nightF,seed,kind){
+  const ghada = kind==="ghada";
+  /* على هذي المسافة النبات ما يبين بتفاصيله: يبين كظلّ داكن منخفض التباين. رسمه بألوان
+     ساطعة وأشكال واضحة يطلّعه قصاصات ملصوقة — وهذا اللي كان يصير (أقراص خضرا على عيدان) */
+  const reed = kind==="reed";
+  const rows=[{n:reed?22:(ghada?15:12), y:gy-s*.036, sc:.95, haze:.34, a:.78},
+              {n:reed?15:(ghada?10:8),  y:gy-s*.009, sc:1.70, haze:.10, a:.95}];
+  rows.forEach((row,ri)=>{
+    const dk0 = reed?"#5E6A3A" : ghada?"#55664C" : "#3C4A2C";
+    const lt0 = reed?"#8A9456" : ghada?"#6E7F62" : "#55623E";
+    const dark=C(mix(mix(dk0,K.sky[2],row.haze), K.hills[2], .16+.72*nightF));
+    const lite=C(mix(mix(lt0,K.sky[2],row.haze), K.hills[2], .16+.72*nightF));
+    const bark=C(mix(mix("#5E5240",K.sky[2],row.haze), K.hills[2], .20+.70*nightF));
+    for(let k=0;k<row.n;k++){
+      const x=(h01(k,seed+ri*61+(ghada?7:0))*1.10-.05)*w;
+      const sz=Math.pow(h01(k,seed+ri*67),1.8);
+      const hh=s*row.sc*(ghada ? (.012+sz*.026) : (.013+sz*.034));
+      const by=row.y+h01(k,seed+ri*73)*s*.009;
+      ctx.globalAlpha=row.a*(.72+.28*sz);
+      if(reed){
+        /* القصب: سيقان رفيعة قائمة متجاورة، على رؤوسها سنابل داكنة */
+        const nb=6+((h01(k,seed+ri*79)*7)|0);
+        ctx.lineCap="round";
+        for(let b=0;b<nb;b++){
+          const f=(h01(k*31+b,seed+81)-.5)*2, bx=x+f*hh*.30;
+          const th=hh*(.75+.45*h01(k*17+b,seed+83));
+          ctx.strokeStyle=(b%3)?dark:lite; ctx.lineWidth=Math.max(.5,hh*.045);
+          ctx.beginPath(); ctx.moveTo(x+f*hh*.10,by);
+          ctx.quadraticCurveTo(x+f*hh*.20, by-th*.55, bx, by-th); ctx.stroke();
+          if(h01(k*7+b,seed+85)>.45){
+            ctx.fillStyle=dark;
+            ctx.beginPath(); ctx.ellipse(bx,by-th-hh*.05,hh*.035,hh*.11,f*.25,0,TAU); ctx.fill();
+          }
+        }
+      } else if(ghada){
+        /* الغضا: كتلة كثيفة من أفرع رفيعة قائمة — نرسمها كخصلة لا كمروحة */
+        const nb=14+((h01(k,seed+ri*79)*10)|0);
+        ctx.lineCap="round";
+        for(let b=0;b<nb;b++){
+          const f=(h01(k*31+b,seed+81)-.5)*2;
+          const bx=x+f*hh*.40, tipy=by-hh*(.45+.55*(1-Math.abs(f))*h01(k*17+b,seed+83));
+          ctx.strokeStyle=(b%4)?dark:lite; ctx.lineWidth=Math.max(.5,hh*.055);
+          ctx.beginPath(); ctx.moveTo(x+f*hh*.10,by);
+          ctx.quadraticCurveTo(x+f*hh*.22, by-hh*.40, bx, tipy); ctx.stroke();
+        }
+      } else {
+        /* السمرة: تاج مفرود شبه مستوٍ من كتلتين أو ثلاث متداخلة، على جذع رفيع مائل */
+        /* السمرة: مظلّة مفرودة واطية بحافة سفلية مكسّرة وفروع تبان من تحتها. الكتل
+           البيضاوية الملساء الفاتحة كانت تطلع كأعواد فطر بيضا مغروسة بالأرض */
+        const cw=hh*(1.05+h01(k,seed+ri*89)*.65), cy=by-hh*.80, lean=(h01(k,seed+91)-.5)*hh*.22;
+        ctx.strokeStyle=bark; ctx.lineWidth=Math.max(.6,hh*.050); ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(x,by); ctx.lineTo(x+lean, cy+hh*.16); ctx.stroke();
+        for(let br=0;br<3;br++){                       /* فروع مائلة تحمل المظلّة */
+          const f2=(br-1)/1.1;
+          ctx.lineWidth=Math.max(.4,hh*.028);
+          ctx.beginPath(); ctx.moveTo(x+lean,cy+hh*.16);
+          ctx.lineTo(x+lean+f2*cw*.34, cy+hh*.02); ctx.stroke();
+        }
+        ctx.fillStyle=dark;
+        ctx.beginPath();
+        const NC=18;
+        for(let c=0;c<=NC;c++){                        /* الحافة العليا محدّبة */
+          const u2=c/NC*2-1, px=x+lean+u2*cw*.5;
+          const py=cy-hh*.13*Math.sqrt(Math.max(0,1-u2*u2))-hh*.02*h01(k*13+c,seed+103);
+          c?ctx.lineTo(px,py):ctx.moveTo(px,py);
+        }
+        for(let c=NC;c>=0;c--){                        /* والسفلى مكسّرة */
+          const u2=c/NC*2-1, px=x+lean+u2*cw*.5;
+          const py=cy+hh*(.05+.05*h01(k*29+c,seed+105))*(1-u2*u2*.5);
+          ctx.lineTo(px,py);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle=lite;
+        ctx.beginPath(); ctx.ellipse(x+lean-cw*.12, cy-hh*.10, cw*.22, hh*.045, 0,0,TAU); ctx.fill();
+      }
+    }
+  });
+  ctx.globalAlpha=1;
+}
+/* بيوت رجال ألمع: أبراج حجرية ضيّقة عالية متلاصقة بتجمّعات، بينها خطوط الكوارتز البيضاء
+   الرفيعة. على بُعد القرية تبين ككتل داكنة بجهة مضاءة — لا سلالم بيضا */
+function drawStoneTowers(ctx,w,gy,s,K,C,nightF,seed){
+  const base=gy-s*.050;
+  const wall=C(mix(mix("#6E5A43",K.sky[2],.30), K.hills[2], .22+.70*nightF));
+  const lite=C(mix(mix("#8C765A",K.sky[2],.26), K.hills[2], .20+.70*nightF));
+  const qz  =C(mix(mix("#B9B1A0",K.sky[2],.30), K.hills[2], .22+.70*nightF));
+  const dk  =C(mix("#2E251B", K.hills[2], .32+.62*nightF));
+  for(let g=0;g<3;g++){                                  /* ثلاثة تجمّعات: القرية متلاصقة */
+    const gx=(.18+.32*g+(h01(g,seed+431)-.5)*.10)*w;
+    const nT=3+((h01(g,seed+433)*3)|0);
+    for(let k=0;k<nT;k++){
+      const dep=.55+.45*h01(g*7+k,seed+417);
+      const x=gx+(k-(nT-1)/2)*s*.019+(h01(g*5+k,seed+401)-.5)*s*.010;
+      const bw=s*(.011+h01(g*3+k,seed+403)*.009)*dep, bh=s*(.034+h01(g*9+k,seed+407)*.048)*dep;
+      const by=base+h01(g*11+k,seed+409)*s*.016;
+      ctx.globalAlpha=.50+.42*dep;
+      ctx.fillStyle=wall; ctx.fillRect(x-bw/2,by-bh,bw,bh);
+      ctx.fillStyle=lite; ctx.fillRect(x-bw/2,by-bh,bw*.30,bh);
+      const rows=Math.max(2,Math.round(bh/(s*.020)));
+      ctx.fillStyle=qz; ctx.globalAlpha=(.50+.42*dep)*.40;
+      for(let r=1;r<rows;r++){ const yy=by-bh*(r/rows); ctx.fillRect(x-bw*.46, yy, bw*.92, Math.max(.6,s*.0011)); }
+      ctx.globalAlpha=.50+.42*dep;
+      ctx.fillStyle=dk; ctx.fillRect(x-bw*.12, by-bh*.46, bw*.20, Math.max(1,s*.005*dep));
+    }
+  }
+  ctx.globalAlpha=1;
+}
+/* واجهات مدائن صالح: القبر النبطي محفور داخل الصخرة، فالواجهة غائرة ومعتمة لا بناء قائم
+   أمامها. الدرج الهرمي المقلوب بالأعلى هو العلامة اللي تعرفها من بعيد */
+function drawRockTombs(ctx,w,gy,s,K,C,nightF,seed,ridge,q,cols){
+  const NL=ridge.length;
+  const cut =C(mix("#7A6245", K.hills[2], .26+.64*nightF));
+  const edge=C(mix("#A78C66", K.hills[2], .22+.66*nightF));
+  const dark=C(mix("#241B12", K.hills[2], .26+.64*nightF));
+  for(let k=0;k<4;k++){
+    const t=.12+.76*h01(k,seed+451);
+    const xq=Math.max(0,Math.min(ridge[0].length-1, Math.round(t*w*q)));
+    let top=1e9, li=-1;
+    for(let i=NL-1;i>=0;i--){ if(ridge[i][xq]<gy*q-s*q*.06){ top=ridge[i][xq]/q; li=i; break; } }
+    if(li<0) continue;
+    const x=t*w, hT=s*(.060+h01(k,seed+453)*.038), bw=hT*.52;
+    const by=Math.min(gy-s*.014, top+hT*1.30);
+    if(by-hT < top+hT*.08) continue;                     /* لازم تكون داخل وجه الصخرة */
+    ctx.globalAlpha=.88;
+    ctx.fillStyle=cut;  ctx.fillRect(x-bw/2, by-hT, bw, hT);               /* التجويف المنحوت */
+    ctx.fillStyle=edge;                                                    /* الدرج الهرمي */
+    for(let r=0;r<2;r++){
+      const ww=bw*(1-r*.26), yy=by-hT+r*hT*.085;
+      ctx.beginPath();
+      ctx.moveTo(x-ww/2,yy+hT*.085); ctx.lineTo(x-ww/2+ww*.15,yy);
+      ctx.lineTo(x+ww/2-ww*.15,yy); ctx.lineTo(x+ww/2,yy+hT*.085);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle=edge; ctx.fillRect(x-bw*.44, by-hT*.56, bw*.88, Math.max(.8,hT*.035));
+    ctx.fillStyle=dark; ctx.fillRect(x-bw*.15, by-hT*.34, bw*.30, hT*.34);  /* المدخل المعتم */
+    ctx.globalAlpha=1;
+  }
+}
+function drawPalmGrove(ctx,w,gy,s,K,C,nightF,seed,gro){
+  const G=gro||1;
+  const rows=[{n:Math.round(34*G),y:gy-s*.030,h:[.045*G,.07*G],haze:.42},
+              {n:Math.round(18*G),y:gy-s*.010,h:[.075*G,.12*G],haze:.12}];
   ctx.lineCap="round";
   rows.forEach((row,ri)=>{
     const leaf=C(mix(mix("#3F5E2C",K.sky[2],row.haze), K.hills[2], .15+.72*nightF));
@@ -4428,11 +4916,12 @@ const GND_JOBS=new Map(), GND_LAST=new Map();
 const GND_CACHE={ clear(){ GND_JOBS.clear(); GND_LAST.clear(); } };
 function groundKind(PL){
   const t=PL.terr||"hills";
+  if(PL && PSIG[PL.id] && PSIG[PL.id].greenGround) return "loam";   /* روضة خريم ووادي لجب أرضهما عشب */
   if(t==="dune"||t==="bigdune") return "sand";
   if(t==="coast")  return "beach";
   if(t==="oasis")  return "loam";
   if(t==="mesa"||t==="escarp") return "grit";
-  if(t==="mount")  return PL.trees ? "loam" : "rocky";   /* جبال عسير والباحة مكسوّة مرجاً، وجبال تبوك الجرداء صخرية */
+  if(t==="mount")  return PL.trees ? "loam" : "grit";    /* عسير والباحة مرج، وجبل اللوز وأجا حصى جرداء */
   return "najd";
 }
 function drawGroundPlane(ctx,w,h,gy,s,PL,K,C,nightF,sx,elev,WX){
@@ -4485,7 +4974,7 @@ function makeGroundJob(w,h,gy,s,PL,K,C,nightF,sx,elev,WX,horizonRow,dpr,qOver){
   const kind=groundKind(PL);
   const seed=[...PL.id].reduce((a,c)=>a*31+c.charCodeAt(0),17)|0;
   const y0=Math.floor(gy), bandH=Math.max(6,h-y0+1);
-  const q=qOver || clamp(Math.sqrt(240000/(w*bandH)), .7, Math.min(2,window.devicePixelRatio||1));
+  const q=qOver || clamp(Math.sqrt(900000/(w*bandH)), .9, Math.min(2.4,(window.devicePixelRatio||1)*1.2));
   const W=Math.max(2,Math.round(w*q)), HH=Math.max(2,Math.round(bandH*q));
   const cv=document.createElement("canvas"); cv.width=W; cv.height=HH;
   const g2=cv.getContext("2d");
@@ -4634,9 +5123,26 @@ function makeGroundJob(w,h,gy,s,PL,K,C,nightF,sx,elev,WX,horizonRow,dpr,qOver){
       const shb=(1-clamp(diff,0,1))*(sandy?.10:.22)*day*blend;  /* ظل الرمل دافئ، ظل الصخر مزرق */
       R=lerp(R,skyC[0]*.62,shb); G=lerp(G,skyC[1]*.66,shb); B=lerp(B,skyC[2]*.82,shb);
       const wl=warm*clamp(diff,0,1)*day*20*blend; R+=wl; G+=wl*.52;
-      /* حبيبات: نثار إضاءة دقيق جداً + تبقيع أوسع — بدونه يطلع السطح أملس كبلاستيك */
-      const sp=((h01((x*7919+y*104729)|0,seed+31)-.5)*.026 + (vn2(X*42,Z*42,seed+37)-.5)*.030)*blend;
+      /* الحبيبات: الرمل عند قدمك تبان حبّاته واحدة واحدة، وعلى بُعد خمسين متراً يصير سطحاً
+         أملس. النثار القديم كان بنفس القوّة على كل الأعماق وضعيفاً (±٢٫٦٪)، فيطلع الرمل
+         القريب أملس كالورق المقوّى — وهذا أوضح شي يكشف إن الأرض مرسومة */
+      const gk=blend*(.30+1.15*Math.pow(dy,.85));
+      const sp=((h01((x*7919+y*104729)|0,seed+31)-.5)*.058
+               +(h01((x*31337+y*6971)|0,seed+33)-.5)*.032
+               +(vn2(X*42,Z*42,seed+37)-.5)*.034
+               +(vn2(X*128,Z*128,seed+39)-.5)*.028)*gk;
       R*=1+sp; G*=1+sp; B*=1+sp;
+      /* بريق الكوارتز: حبّات نادرة جداً تلقط الشمس وتومض — هذا اللي يعطي الرمل لمعته */
+      if(day>.35 && diff>.70){
+        const q1=h01((x*2654435761+y*40503)|0, seed+41);
+        if(q1>.9962){ const gl=((q1-.9962)/.0038)*58*gk*day; R+=gl; G+=gl*.97; B+=gl*.86; }
+      }
+      /* كِسَر الصدف على الشاطئ: نقاط فاتحة صغيرة لها ظل رفيع تحتها */
+      if(kind==="beach"){
+        const c1=h01((x*40503+y*2654435761)|0, seed+43);
+        if(c1>.9975){ const cl=((c1-.9975)/.0025)*70*blend; R+=cl; G+=cl*.98; B+=cl*.92; }
+        else if(c1>.9965){ const cd=((c1-.9965)/.0010)*22*blend; R-=cd; G-=cd; B-=cd*.8; }
+      }
       const o=(y*W+x)*4;
       D[o]=R<0?0:R>255?255:R; D[o+1]=G<0?0:G>255?255:G; D[o+2]=B<0?0:B>255?255:B; D[o+3]=255;
     }
@@ -7389,7 +7895,9 @@ function castPlantShadow(ctx, L, gy, s, eK, nightF){
   /* مرّتين: قلب شبه واضح تبين فيه فتحات الضوء بين الورق، وهالة أنعم حوله (نصف الظل) */
   /* ثلاث طبقات بدل اثنتين: طبقة حادّة تنقل تخريم الورق (ظل الشجرة الحقيقي مرقّط بفتحات
      ضوء، مو بقعة صمّاء)، وطبقة وسطى، وطبقة واسعة ناعمة للظل شبه الظليل عند الحواف */
-  const divs=[ 2+3*low, 6+10*low, 18+26*low ], alphas=[ A*.62, A*.50, A*.34 ];
+  /* أصغر مقسوم (٢) كان يصغّر طبقة النبتة للنص ثم يكبّرها، فنقش الجذع المعيّن يتداخل مع
+     الشبكة ويطبع خطوطاً أفقية داخل الظل. نبدأ من ٣٫٥ فتختفي الخطوط ويبقى تخريم الورق */
+  const divs=[ 3.5+4*low, 9+13*low, 22+30*low ], alphas=[ A*.60, A*.50, A*.34 ];
   for(let pass=0;pass<3;pass++){
     const m=shadowMask(L, divs[pass], dark);
     ctx.globalAlpha=alphas[pass];
@@ -7437,6 +7945,22 @@ function gradeAndComposite(ctx, L, bl, w, h, gy, s, K, elev, sunX){
   if(m[0]<253||m[1]<253||m[2]<253){
     const col="rgb("+m.map(v=>Math.round(v)).join(",")+")";
     blendOnto(L, plantMasked(L, t=>{ t.fillStyle=col; t.fillRect(0,0,w,h); }), "multiply");
+  }
+  /* ١ب) ضغط التباين ليلاً.
+     بالليل ما فيه إلا ضوء سما وقمر خافت، وهو ضوء شبه منتشر من كل الجهات — فالفرق بين
+     ورقة مضاءة وورقة بالظل يضمر لين يختفي تقريباً. الضرب لحاله يصغّر كل القيم لكنه يحفظ
+     النِسَب بينها: الورقة اللي كانت أفتح من جارتها أربع مرّات تبقى أفتح منها أربع مرّات،
+     فيطلع التاج منقّطاً بنقاط فاتحة باردة تحس إنها توهّج أو ثلج مرشوش على الشجرة. الحل
+     إننا نسحب كل الورق نحو درجة ليلية واحدة بنسبة تتبع عتمة الليل. */
+  if(n>.20){
+    const flat=mixRGB([20,26,41],[40,50,76], bl.moon?clamp(bl.illum,0,1):0);
+    const fa=(.60*n).toFixed(3);
+    blendOnto(L, plantMasked(L, t=>{
+      t.globalAlpha=+fa;
+      t.fillStyle="rgb("+flat.map(v=>Math.round(v)).join(",")+")";
+      t.fillRect(0,0,w,h);
+      t.globalAlpha=1;
+    }), "source-over");
   }
   /* ٢) جمع: الورق القريب من قرص الشمس يعبره الضوء فيتوهّج، وحافة مضيئة من جهتها */
   if(d>0){
@@ -10586,7 +11110,9 @@ $("#homeGuest").onclick  = ()=>{ leaveLanding(); enterGuest(); };
 const GROUP_KEY = "hasad.group";
 const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" }, { ms:300000, n:"٥ دقائق" } ];
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false, focus:null,
-          mode:"home", err:"", form:{ cat:null, max:8, grace:60000, species:null, strict:true },
+          /* نطلب أكبر عدد ممكن. السيرفر القديم يقصّه لثمانية والجديد يفتحه — فالواجهة
+             تشتغل صح على الحالتين بلا تزامن بين النشر والهجرة */
+          mode:"home", err:"", form:{ cat:null, max:9999, grace:60000, species:null, strict:true },
           lp:null, lo:0,           /* إيقاف مؤقت محلي: lp=وقت الإيقاف، lo=مجموع ms المتوقفة */
           chatMsgs:[], chatPoll:null, myTier:null, chatUnread:0 };  /* المحادثة + تتبّع رتبتي */
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
@@ -10776,7 +11302,7 @@ async function gRefresh(){
     gFails = 0; G.err = "";
     gRecordMine();
     if(r.status==="waiting" && !r.locked && r.host===gMyId() && !G.autostarting &&
-       r.members.length>=r.max_members){
+       gCapped(r) && r.members.length>=r.max_members){
       G.autostarting = true;
       gRpc("group_start", { p_code:G.code }).then(()=>gRefresh()).catch(()=>{}).finally(()=>{ G.autostarting=false; });
     }
@@ -10908,6 +11434,8 @@ function gSeedChips(cur){
     TR(SPECIES[k].n)+'</button>').join("")+'</div>'+
     '<p class="g-note" style="text-align:start;margin:6px 0 0;opacity:.75">'+TR(SPECIES[sel].note)+'</p>';
 }
+/* الغرفة "محدودة" فقط لو لها سقف صغير فعلاً — السقف الكبير معناه جلسة مفتوحة */
+function gCapped(r){ const m=+(r&&r.max_members)||0; return m>0 && m<=50; }
 function gChips(act, items, cur){
   return '<div class="chips">'+items.map(it=>
     '<button class="chip" type="button" data-act="'+act+'" data-v="'+it.v+'" aria-pressed="'+(String(it.v)===String(cur))+'">'+it.n+'</button>'
@@ -10942,7 +11470,7 @@ function renderGroupInner(box){
         '<span class="g-label">'+TR("ذبول نبتتك لو طلعت من التطبيق")+'</span>'+
         gWitherChips(f.strict, f.grace, "wither")+
         '<p class="g-note" style="text-align:start;margin:14px 0 0">'+
-          TR("الجلسة مفتوحة بلا مدة — تبدأ لما تمتلي (٨ أشخاص) أو لما تضغط ابدأ بنفسك. وكل واحد يحدد الذبول عنده بنفسه، وتقدر تغيّره أي وقت من داخل الجلسة.")+'</p>'+
+          TR("الجلسة مفتوحة بلا مدة ولا حدّ للأشخاص — تبدأ لما تضغط ابدأ بنفسك. وكل واحد يحدد الذبول عنده بنفسه، وتقدر تغيّره أي وقت من داخل الجلسة.")+'</p>'+
         errHtml+
         '<div class="g-row"><button class="btn btn-primary" type="button" data-act="create"'+(G.busy?" disabled":"")+'>'+(G.busy?TR("لحظة…"):TR("أنشئ الجلسة"))+'</button>'+
         '<button class="btn btn-quiet" type="button" data-act="mode" data-v="home">'+TR("رجوع")+'</button></div></section>';
@@ -11001,7 +11529,8 @@ function renderGroupInner(box){
   const viewingOther = fm && focusId!==gMyId();
   const meta='<div class="g-meta"><span>'+gCatName(r.category)+'</span>'+
     (gOpen()?'<span>'+TR("مفتوحة")+'</span>':'<span>'+hhmm(r.duration_min)+'</span>')+
-    '<span>'+r.members.length+" / "+r.max_members+'</span>'+
+    '<span>'+(gCapped(r) ? r.members.length+" / "+r.max_members
+                          : r.members.length+" "+TR("داخل الجلسة"))+'</span>'+
     (r.locked?'<span>🔒 '+TR("الدخول مقفول")+'</span>':"")+'</div>';
   let head;
   if(!running && !ended) head='<section class="panel"><h3>'+TR("رمز الجلسة")+'</h3><div class="g-codebox"><div class="g-code">'+r.code+'</div>'+
@@ -11027,7 +11556,13 @@ function renderGroupInner(box){
       '<div class="g-name">'+escAttr(m.name||TR("مزارع"))+(m.user_id===r.host?' <span title="'+escAttr(TR("المنشئ"))+'">👑</span>':"")+'</div>'+
       '<div class="g-uni">'+(u?escAttr(TR(u.n)):"&nbsp;")+'</div>'+st+'</div>';
   });
-  if(!running && !ended) for(let k=r.members.length;k<r.max_members;k++) cards.push('<div class="g-member g-empty">'+TR("مكان فاضي")+'</div>');
+  /* الجلسة المفتوحة ما لها عدد مقاعد ثابت، فما نرسم صفّ "مكان فاضي" بطول الحدّ.
+     نخلّي مكانين فاضيين كإشارة إنها تستقبل غيرك، لا أكثر */
+  if(!running && !ended){
+    const slots = gCapped(r) ? Math.max(0, r.max_members-r.members.length)
+                             : (r.members.length<4 ? 2 : 1);
+    for(let k=0;k<slots;k++) cards.push('<div class="g-member g-empty">'+TR("مكان فاضي")+'</div>');
+  }
   /* خانة "من دخل" — سطر لكل شخص باسمه وجامعته */
   const joined='<section class="panel" style="margin-top:14px"><h3>'+TR("من دخل")+' ('+r.members.length+')</h3>'+
     '<div class="g-joined">'+r.members.map(m=>{
@@ -11065,21 +11600,24 @@ function renderGroupInner(box){
     foot='<p class="g-note">'+TR("بانتظار المنشئ يبدأ الجلسة…")+'</p>'+
       '<div class="g-row"><button class="btn btn-quiet" type="button" data-act="leave">'+TR("مغادرة")+'</button></div>';
   }
-  box.innerHTML = head+'<div class="g-members">'+cards.join("")+'</div>'+foot+joined;
+  const dense = r.members.length>16;
+  box.innerHTML = '<div class="g-split"><div class="g-stage">'+head+foot+'</div>'+
+    '<div class="g-side"><div class="g-members'+(dense?' dense':'')+'">'+cards.join("")+'</div>'+joined+'</div></div>';
   const skyBox=$("#gSky");
   if(skyBox){
     const cv=document.createElement("canvas"); skyBox.appendChild(cv);
     const sw=Math.max(220, skyBox.clientWidth||box.clientWidth||300);
-    const sh=Math.round(Math.min(230, sw*0.46));
+    const sh=Math.round(Math.min(380, sw*0.78));
     paint(cv,sw,sh,{ species:(fm&&SPECIES[fm.species])?fm.species:"basil",
       minutes:Math.max(.4,minsNow), seedStr:r.code+"-"+focusId, glow:true,
       withered: !!(fm && fm.state!=="alive"),
       tms:performance.now(), mdate:new Date() });
   }
+  const dense2=r.members.length>16;
   r.members.forEach((m,i)=>{
     const holder=box.querySelector('[data-gcv="'+i+'"]'); if(!holder) return;
     const cv=document.createElement("canvas"); holder.appendChild(cv);
-    paint(cv,96,112,{ species:SPECIES[m.species]?m.species:"basil", minutes:Math.max(.4,minsNow),
+    paint(cv,dense2?96:136,dense2?112:158,{ species:SPECIES[m.species]?m.species:"basil", minutes:Math.max(.4,minsNow),
       withered: running && m.state!=="alive", seedStr:r.code+m.user_id, glow:false });
   });
 }
