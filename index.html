@@ -1763,6 +1763,11 @@ const DICT = {
  "داخل الجلسة":"in the session",
  "نباتات الجميع":"Everyone's plants",
  "مكاني ووقتي":"My place & time",
+ "خلصت الجلسة! 🎉":"Session complete! 🎉",
+ "استراحة قصيرة (صلاة/حمام). تقدر تطلع من الصفحة، ونبتتك ما تذبل. ترجع تلقائياً بعد ٢٠ دقيقة.":"Short break (prayer/restroom). You can leave the page and your plant won't wither. It resumes automatically after 20 minutes.",
+ "انتهت الاستراحة، رجعنا للتركيز.":"Break over, back to focus.",
+ "أخذ استراحة قصيرة":"took a short break",
+ "رجع للتركيز":"is back to focus",
  "تلقائي (موقعي)":"Auto (my location)",
  "وقتي":"Time",
  "متزامن":"Live",
@@ -5350,12 +5355,78 @@ function drawGround(ctx,cx,gy,w,s,rnd){
   }
   ctx.restore();
 }
+
+/* ─── تلّة الزراعة: تراب مقلوب رطب فوق البذرة ───────────────────
+   لحظة الغرس لازم تبين: حفرة صغيرة، تراب مرفوع حولها أغمق لأنه رطب، فتات وكتل مضاءة من جهة
+   الشمس، والبذرة نصفها مدفون. مع نمو النبتة تنخفض التلّة وتستقر (prom تنزل من ١ إلى ٠). */
+function moundGeom(s,prom){ const rx=s*(.050+.026*prom), hh=rx*.62*(.35+.65*prom); return { rx, hh, ry:rx*.28 }; }
+function drawMound(ctx,cx,gy,s,prom,front,seedKey){
+  if(prom<=.03) return;
+  const PL=curPlace(), night=!!PAL.night;
+  const grassy = (k=>k==="loam"||k==="rocky")(groundKind(PL));
+  const base = PL.soil || PAL.soil;
+  const { rx, hh, ry } = moundGeom(s,prom);
+  const lit = Math.cos(LIGHT_ANG||-1.2) >= 0 ? 1 : -1;
+  const wet  = night ? "#16120d" : shade(base,-.46), body = night ? "#2a241b" : shade(base,-.22),
+        high = night ? "#4a4f55" : shade(base,.22);
+  ctx.save();
+  if(!front){
+    /* ١) هالة التراب الرطب: دائرة أغمق تذوب بحوافها بالأرض */
+    const g1=ctx.createRadialGradient(cx,gy+ry*.2,rx*.15,cx,gy+ry*.2,rx*1.75);
+    g1.addColorStop(0,"rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.50*prom).toFixed(3)+")");
+    g1.addColorStop(.6,"rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.26*prom).toFixed(3)+")");
+    g1.addColorStop(1,"rgba("+hex2rgb(wet).map(Math.round).join(",")+",0)");
+    ctx.fillStyle=g1; ctx.save(); ctx.translate(cx,gy+ry*.2); ctx.scale(1,.30); ctx.beginPath(); ctx.arc(0,0,rx*1.75,0,TAU); ctx.fill(); ctx.restore();
+    /* ٢) جسم التلّة: قبّة غير منتظمة بتدرّج من جهة الشمس */
+    const pts=[]; const N=22;
+    for(let i=0;i<=N;i++){
+      const t=i/N, a=Math.PI+(t*Math.PI);
+      const bump = 1+.10*(h01(i,seedKey+3)-.5)*2;
+      pts.push([cx+Math.cos(a)*rx*bump, gy+Math.sin(a)*hh*bump*(.85+.3*Math.sin(t*Math.PI))]);
+    }
+    ctx.beginPath(); ctx.moveTo(cx-rx,gy+ry*.1);
+    pts.forEach(p=>ctx.lineTo(p[0],p[1]));
+    ctx.lineTo(cx+rx,gy+ry*.1);
+    for(let i=N;i>=0;i--){ const t=i/N, x=cx-rx+(2*rx*t); ctx.lineTo(x, gy+ry*.1+Math.sin(t*Math.PI)*ry*.55); }
+    ctx.closePath();
+    const gb=ctx.createLinearGradient(cx-lit*rx,gy-hh,cx+lit*rx,gy+ry);
+    gb.addColorStop(0,high); gb.addColorStop(.38,body); gb.addColorStop(1,wet);
+    ctx.globalAlpha=Math.min(1,prom*1.25); ctx.fillStyle=gb; ctx.fill(); ctx.globalAlpha=1;
+    /* ٣) حفرة الغرس: بيضاوي أغمق بقمة التلّة */
+    ctx.fillStyle="rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.62*prom).toFixed(3)+")";
+    ctx.beginPath(); ctx.ellipse(cx,gy-hh*.86,rx*.30,ry*.50,0,0,TAU); ctx.fill();
+  }
+  /* ٤) فتات وكتل: كل كتلة وجهها مضاء وتحتها ظل — الخلفية على جسم التلّة، والأمامية فوق قاعدة النبتة */
+  const nC = front ? 9 : 26;
+  for(let i=0;i<nC;i++){
+    const a=h01(i*5+(front?91:0),seedKey+7)*TAU;
+    const rr=Math.pow(h01(i*7+(front?91:0),seedKey+11),front?.5:.7);
+    const px=cx+Math.cos(a)*rx*(front?(.35+.9*rr):(.95*rr));
+    const lift = front ? 0 : Math.max(0,1-Math.pow(Math.abs(px-cx)/rx,2))*hh*.85;
+    const py=gy+(front?(.18+.30*h01(i,seedKey+13))*ry:-lift*h01(i*3,seedKey+17)+ry*.15);
+    const cw=s*(.0016+h01(i*11,seedKey+19)*.0034), ch=cw*(.55+.25*h01(i*13,seedKey+23));
+    ctx.globalAlpha=front?.80*prom:.95*prom;
+    ctx.fillStyle=night?"rgba(10,8,6,.5)":"rgba(40,26,14,.40)";
+    ctx.beginPath(); ctx.ellipse(px+lit*-cw*.2,py+ch*.55,cw*1.1,ch*.8,0,0,TAU); ctx.fill();
+    ctx.fillStyle=h01(i,seedKey+29)>.5?body:shade(base,-.10);
+    ctx.beginPath(); ctx.ellipse(px,py,cw,ch,0,0,TAU); ctx.fill();
+    ctx.fillStyle=night?"rgba(150,166,180,.28)":"rgba(255,244,220,.34)";
+    ctx.beginPath(); ctx.ellipse(px-lit*cw*.28,py-ch*.3,cw*.52,ch*.42,0,0,TAU); ctx.fill();
+  }
+  ctx.globalAlpha=1; ctx.restore();
+}
+
 function drawSeed(ctx,cx,gy,s,g,sp){
   const r = s*.0085 + s*.010*smooth(clamp(g/.05,0,1));   /* بذرة صغيرة جداً */
+  const mg = SEED_MOUND ? moundGeom(s,1-clamp(g/.30,0,1)*.0) : null;
+  const sy = mg ? gy - mg.hh*.86 + r*.35 : gy-r*.7;          /* جالسة بحفرة قمة التلّة، نصفها مدفون */
+  ctx.save();
+  if(mg){ ctx.beginPath(); ctx.rect(cx-r*3,sy-r*3,r*6,r*3.05); ctx.clip(); }   /* ما يظهر منها إلا النصف العلوي */
   ctx.fillStyle = mix("#6B4E2E", sp.leaf, .22);
-  ctx.beginPath(); ctx.ellipse(cx,gy-r*.7,r*1.22,r,-.3,0,TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx,sy,r*1.22,r,-.3,0,TAU); ctx.fill();
   ctx.fillStyle="rgba(255,255,255,.26)";
-  ctx.beginPath(); ctx.ellipse(cx-r*.26,gy-r*1.0,r*.42,r*.22,-.35,0,TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-r*.26,sy-r*.3,r*.42,r*.22,-.35,0,TAU); ctx.fill();
+  ctx.restore();
 }
 
 /* ─── ٦. الطور الأول: فرد واحد ───────────────────────────────
@@ -5604,6 +5675,7 @@ let SCENE_SPECIES = "basil", LIGHT_WARM = 0, LIGHT_ELEV = .6;
    قبل أي رسم، ويقرأها محرّك الشجر/النخيل عشان يغيّر البنية نفسها (عدد الأغصان، عرض التاج،
    سماكة الجذع، حجم الورقة) مو بس المقاس — الفرق بين "نمو حقيقي" و"شجرة مصغّرة". */
 let SCENE_YOUNG = 1;
+let SEED_MOUND = false;   /* المشهد الرئيسي فقط يرسم تلّة الزراعة */
 function youthOf(g,M){
   if(M<=1.001) return clamp(.10+.50*clamp(g,0,1), .10, .60);   /* الطور الأول: بادرة → شتلة */
   return clamp(.60+.40*fitOf(M), .60, 1);                       /* بعدها: شتلة → شجرة بالغة */
@@ -7777,13 +7849,17 @@ function drawSceneCore(ctx,o){
   const hy = gy - h*(o.horizonLift||0);
   if(o.glow && o.ground!==false && !o.noEnv) drawEnvironment(ctx,w,h,hy,s,mins,o.withered,o.hour,o.tms,o.mdate);
   if(o.ground!==false && !o.noGround) drawGround(ctx,cx,gy,w,s,rnd);
+  const moundP = (o.glow && o.ground!==false && !o.noGround && s>=96) ? 1-clamp(g/.34,0,1) : 0;
+  SEED_MOUND = moundP>0;
+  const mseed = ((o.seedStr||"x").length*131 + (o.seedStr||"x").charCodeAt(0)*17)|0;
+  if(moundP>0) drawMound(ctx,cx,gy,s,moundP,false,mseed);
   /* ظل النبتة فوق التربة (بعد drawGround لا قبله) — قبل كذا كان يترسم قبل بقعة التربة فتغطّيه
      بقعة التربة العلوية بالكامل ويختفي بصرياً، فيبين النبات "طايف" بلا أي ارتباط فعلي بالأرض
      مهما كانت زاوية الشمس. اتجاهه وطوله يتبعان LIGHT_ANG الفعلي: ظل طويل منزاح وقت الشمس
        المنخفضة (شروق/غروب)، وقصير شبه تحت النبتة وقت الظهر. */
   const wantShade = g>.05 && !o.noShadow;   /* noShadow: المزرعة ترسم ظل النبتة على أرضها بنفسها */
 
-  if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); return; }
+  if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); if(moundP>0) drawMound(ctx,cx,gy,s,moundP,true,mseed); return; }
 
   const opt = { rnd, sway, withered:o.withered, bloom };
   /* الإضاءة الخلفية: بالمشهد الرئيسي الشمس دايماً بالسما ورا النبتة (الكاميرا تطالع
@@ -7816,6 +7892,7 @@ function drawSceneCore(ctx,o){
   /* نبات المقدّمة: عشب وتراب قدّام قاعدة النبتة. بدونه ينتهي الجذع بخط أفقي حاد على الأرض
      (لأن الصورة مقصوصة عند خط القاعدة) فتبين الشجرة ملصوقة فوق الأرض مو نابتة فيها */
   if(o.ground!==false && !o.noGround && g>.05) drawBaseFringe(ctx,cx,gy,s,g,M,rnd,K0);
+  if(moundP>0) drawMound(ctx,cx,gy,s,moundP,true,mseed);
 }
 function drawBaseFringe(ctx,cx,gy,s,g,M,rnd,K){
   const PL=curPlace(), kind=groundKind(PL), nightF=clamp(K.stars,0,1);
@@ -9250,6 +9327,34 @@ function beepOnce(freq, dur, vol){
     o.connect(g); g.connect(ac.destination);
     o.start(t); o.stop(t + dur + .03);
   }catch(e){}
+}
+/* مؤثرات صغيرة مولّدة بـ Web Audio (بلا ملفات): فتح/إغلاق المايك، دخول/خروج الصوت، المنبه، الاستراحة */
+function tone(f,d,v,delay,type){
+  setTimeout(()=>{
+    const ac=audioCtx(); if(!ac) return;
+    try{
+      const o=ac.createOscillator(), g=ac.createGain(), t=ac.currentTime;
+      o.type=type||"sine"; o.frequency.setValueAtTime(f,t);
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(v,t+.012);
+      g.gain.exponentialRampToValueAtTime(.0001,t+d);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+.03);
+    }catch(e){}
+  }, delay||0);
+}
+function sfx(name){
+  switch(name){
+    case "micOn":     tone(520,.09,.22,0); tone(784,.13,.22,80); break;
+    case "micOff":    tone(784,.09,.22,0); tone(440,.14,.22,80); break;
+    case "vjoin":     tone(523,.14,.25,0); tone(659,.14,.25,110); tone(784,.22,.25,220); break;
+    case "vleave":    tone(784,.14,.22,0); tone(659,.14,.22,110); tone(494,.24,.22,220); break;
+    case "peerJoin":  tone(660,.12,.16,0); tone(880,.14,.16,90); break;
+    case "peerLeave": tone(520,.12,.14,0); tone(390,.16,.14,90); break;
+    case "pause":     tone(600,.12,.22,0); tone(450,.2,.22,120); break;
+    case "resume":    tone(450,.12,.22,0); tone(700,.2,.22,120); break;
+    case "done":      /* جرس نهاية الجلسة: ثلاث ضربات متدرّجة */
+      [0,900,1800].forEach(d=>{ tone(880,.7,.32,d,"triangle"); tone(1318,.6,.2,d+10,"sine"); tone(1760,.5,.12,d+20,"sine"); });
+      buzz([300,120,300,120,500]); break;
+  }
 }
 function buzz(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){} }
 function alarmStart(){
@@ -11170,7 +11275,7 @@ const G_GRACE = [ { ms:10000, n:"١٠ ثوانٍ" }, { ms:60000, n:"دقيقة" 
 let G = { code:null, room:null, off:0, poll:null, tick:null, busy:false, hiddenAt:null, done:false, focus:null,
           /* نطلب أكبر عدد ممكن. السيرفر القديم يقصّه لثمانية والجديد يفتحه — فالواجهة
              تشتغل صح على الحالتين بلا تزامن بين النشر والهجرة */
-          mode:"home", page:"main", invite:null, sceneKey:null, err:"", form:{ cat:null, max:9999, grace:60000, species:null, strict:true },
+          mode:"home", page:"main", invite:null, sceneKey:null, dingKey:null, err:"", form:{ cat:null, max:9999, grace:60000, species:null, strict:true },
           lp:null, lo:0,           /* إيقاف مؤقت محلي: lp=وقت الإيقاف، lo=مجموع ms المتوقفة */
           chatMsgs:[], chatPoll:null, myTier:null, chatUnread:0 };  /* المحادثة + تتبّع رتبتي */
 /* اسم التصنيف: من تصنيفاتك المحفوظة، وإلا نعرض النص كما هو (جاي من منشئ الجلسة) */
@@ -11212,6 +11317,13 @@ function gClock(){
   const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
   return (h ? h+":"+fmt2(m) : fmt2(m))+":"+fmt2(x);
 }
+const G_PAUSE_MAX = 20*60*1000;      /* الاستراحة (صلاة/حمام) تنتهي لحالها بعد ٢٠ دقيقة */
+function gDing(){
+  const r=G.room; if(!r) return;
+  const key=r.code+"|"+(r.started_at||"");
+  if(G.dingKey===key) return; G.dingKey=key;
+  sfx("done"); toast(TR("خلصت الجلسة! 🎉"),"🔔");
+}
 function gStopTimers(){ clearInterval(G.poll); clearInterval(G.tick); G.poll=G.tick=null; }
 function gStartTimers(){
   gStopTimers();
@@ -11219,7 +11331,8 @@ function gStartTimers(){
   G.tick = setInterval(()=>{
     if(!G.room) return;
     const t=$("#gTimer"); if(t && !G.lp) t.textContent=gClock();
-    if(!G.done && (gIsDone()||gEnded())){ G.done=true; gRecordMine(); renderGroup(); }
+    if(!G.done && (gIsDone()||gEnded())){ G.done=true; gDing(); gRecordMine(); renderGroup(); }
+    if(G.lp && gNow()-G.lp > G_PAUSE_MAX){ gLocalResume(true); }
     gCheckMyTier();
   }, 1000);
   gStartChatPoll();
@@ -11238,11 +11351,15 @@ function gClear(note){
 /* ─── إيقاف مؤقت محلي للجلسة الجماعية ─────────────────── */
 function gLocalPause(){
   if(G.lp||!G.room||G.room.status!=="running") return;
-  G.lp=gNow(); renderGroup();
+  G.lp=gNow(); sfx("pause"); renderGroup();
+  toast(TR("استراحة قصيرة (صلاة/حمام). تقدر تطلع من الصفحة، ونبتتك ما تذبل. ترجع تلقائياً بعد ٢٠ دقيقة."),"⏸️");
+  gAnnounce("sys", TR("أخذ استراحة قصيرة"), "⏸️");
 }
-function gLocalResume(){
+function gLocalResume(auto){
   if(!G.lp) return;
-  G.lo+=gNow()-G.lp; G.lp=null; renderGroup();
+  G.lo+=gNow()-G.lp; G.lp=null; sfx("resume"); renderGroup();
+  if(auto===true) toast(TR("انتهت الاستراحة، رجعنا للتركيز."),"▶️");
+  gAnnounce("sys", TR("رجع للتركيز"), "▶️");
 }
 /* ─── تحديثات النمو التلقائية بالشات: كل عضو يعلن عن نفسه لما يوصل رتبة جديدة ─── */
 const TIER_ICONS = {"بذرة":"🌰","برعم":"🌱","شتلة":"🌿","نبتة":"🪴","شجيرة":"🌳",
@@ -11352,11 +11469,14 @@ async function gRefresh(){
     const r = await gRpc("group_state", { p_code:G.code });
     if(!r){ gClear(TR("الجلسة انتهت أو ألغاها المنشئ.")); return; }
     G.off  = Date.parse(r.now) - Date.now();
+    const wasRoom = !!G.room;
     G.room = r;
     if(!gMe()){ gClear(TR("طلعت من الجلسة.")); return; }
     if(gEnded() && !gEndedAt) gEndedAt = gNow();
     if(!gEnded()) gEndedAt = 0;
+    const firstLoad = !wasRoom;
     G.done = gIsDone() || gEnded();
+    if(G.done && !firstLoad) gDing();
     gFails = 0; G.err = "";
     gRecordMine();
     if(r.status==="waiting" && !r.locked && r.host===gMyId() && !G.autostarting &&
@@ -11520,7 +11640,7 @@ async function voiceJoin(){
 }
 function voiceFail(){ const was=V.joining; voiceLeave(true); if(was) toast(TR("ما اشتغل الصوت. جرّب مرة ثانية."),"⚠️"); }
 function voiceJoined(){
-  V.joining=false; V.on=true;
+  V.joining=false; V.on=true; sfx("vjoin");
   try{ V.ac = new (window.AudioContext||window.webkitAudioContext)(); vWatch(V.me, V.stream); }catch(e){}
   V.meter = setInterval(vMeter, 140);
   vSend({ t:"hello", from:V.me, name:(CURRENT&&CURRENT.name)||"" });
@@ -11556,8 +11676,8 @@ async function voiceSig(p){
   if(!V.on || !p || p.from===V.me || (p.to && p.to!==V.me)) return;
   try{
     switch(p.t){
-      case "hello": V.roster.set(p.from,p.name||""); vSend({ t:"here", from:V.me, to:p.from, name:(CURRENT&&CURRENT.name)||"" }); vConnect(p.from); voiceUI(); break;
-      case "here":  V.roster.set(p.from,p.name||""); vConnect(p.from); voiceUI(); break;
+      case "hello": if(!V.roster.has(p.from)) sfx("peerJoin"); V.roster.set(p.from,p.name||""); vSend({ t:"here", from:V.me, to:p.from, name:(CURRENT&&CURRENT.name)||"" }); vConnect(p.from); voiceUI(); break;
+      case "here":  if(!V.roster.has(p.from)) sfx("peerJoin"); V.roster.set(p.from,p.name||""); vConnect(p.from); voiceUI(); break;
       case "offer": {
         const P=vPeer(p.from);
         await P.pc.setRemoteDescription({ type:"offer", sdp:p.sdp });
@@ -11569,7 +11689,7 @@ async function voiceSig(p){
         for(const c of P.pend.splice(0)) await P.pc.addIceCandidate(c).catch(()=>{}); } break; }
       case "ice": { const P=V.peers.get(p.from); if(!P||!p.c) break;
         if(P.pc.remoteDescription) await P.pc.addIceCandidate(p.c).catch(()=>{}); else P.pend.push(p.c); break; }
-      case "bye": V.roster.delete(p.from); vDrop(p.from); voiceUI(); break;
+      case "bye": if(V.roster.has(p.from)) sfx("peerLeave"); V.roster.delete(p.from); vDrop(p.from); voiceUI(); break;
     }
   }catch(e){}
 }
@@ -11607,9 +11727,10 @@ function voiceMarks(){
 }
 function voiceMute(){
   if(!V.on||!V.stream) return;
-  V.muted=!V.muted; V.stream.getAudioTracks().forEach(t=>t.enabled=!V.muted); voiceUI();
+  V.muted=!V.muted; V.stream.getAudioTracks().forEach(t=>t.enabled=!V.muted); sfx(V.muted?"micOff":"micOn"); voiceUI();
 }
 function voiceLeave(silent){
+  const wasOn=V.on;
   try{ if(V.on) vSend({ t:"bye", from:V.me }); }catch(e){}
   V.peers.forEach((P,id)=>vDrop(id,true));
   if(V.stream){ V.stream.getTracks().forEach(t=>t.stop()); V.stream=null; }
@@ -11617,6 +11738,7 @@ function voiceLeave(silent){
   if(V.ws){ try{ V.ws.onclose=null; V.ws.close(); }catch(e){} V.ws=null; }
   if(V.ac){ try{ V.ac.close(); }catch(e){} V.ac=null; }
   V.ana.clear(); V.speaking.clear(); V.roster.clear(); V.on=false; V.joining=false; V.muted=false;
+  if(wasOn) sfx("vleave");
   voiceUI();
 }
 window.addEventListener("pagehide", ()=>{ if(V.on) voiceLeave(true); });
@@ -11656,7 +11778,7 @@ document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ G.hiddenAt=Date.now(); return; }
   const away = G.hiddenAt ? Date.now()-G.hiddenAt : 0; G.hiddenAt=null;
   const r=G.room, me=gMe();
-  if(r.status==="running" && me && me.strict!==false && me.state==="alive" && !gIsDone() && away>((me&&me.grace_ms)||r.grace_ms)){
+  if(r.status==="running" && me && me.strict!==false && me.state==="alive" && !gIsDone() && !G.lp && away>((me&&me.grace_ms)||r.grace_ms)){
     toast(TR("غبت أطول من المهلة، فذبلت نبتتك."),"🥀");
     gRpc("group_wither", { p_code:r.code }).catch(()=>{}).then(gRefresh);
   } else gRefresh();
@@ -11856,6 +11978,13 @@ function renderGroupInner(box){
     const joined='<section class="panel"><h3>'+TR("من دخل")+' ('+r.members.length+')</h3><div class="g-mlist">'+rows+'</div></section>';
     html = '<div class="g-split"><div class="g-stage">'+head+gScenePanel()+'<section class="panel g-voice" id="gVoice">'+voiceHTML()+'</section>'+plantsBtn+foot+'</div><div class="g-side">'+joined+'</div></div>';
   }
+  /* لا نعيد بناء الشاشة لو ما تغيّر شي: كانت تنعاد كل ٤ ثواني مع كل استطلاع، فتقفل القائمة المنسدلة
+     وتعيد رسم المشاهد الثقيلة وتعلّق الصفحة. المؤقت يتحدّث لحاله كل ثانية من gTick. */
+  const rkey = html.replace(/(id="gTimer">)[^<]*/g,"$1")+"|"+Math.floor(minsNow*2);
+  const ae = document.activeElement;
+  if(box._gk===rkey && box.childElementCount){ voiceMarks(); return; }
+  if(ae && ae.tagName==="SELECT" && box.contains(ae)) return;      /* قائمة مفتوحة: لا نقفلها */
+  box._gk = rkey;
   box.innerHTML = html;
   const skyBox=$("#gSky");
   if(skyBox){
