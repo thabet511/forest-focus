@@ -2695,7 +2695,7 @@ const PLACES = [
   { id:"lawz",      n:"جبل اللوز",     sub:"تبوك",     ll:[28.65,35.30], terr:"mount",   clim:"north", fog:.15,
     hill:["#A08E80","#827166","#675952"], soil:"#8C7868" },
   { id:"disah",     n:"وادي الديسة",   sub:"تبوك",     ll:[27.62,36.47], terr:"mesa",    clim:"north",
-    hill:["#C98666","#A9684A","#8A4F36"], soil:"#B97856" },
+    hill:["#D39C7E","#C08568","#A96F54"], soil:"#B97856" },
   /* خليج العقبة: جبال جرانيتية جرداء تنزل على الماء مباشرة، والماء أزرق غامق لأن القاع
      ينحدر بسرعة — مو فيروزي ضحل مثل شواطئ الجنوب */
   { id:"neom",      n:"نيوم",          sub:"خليج العقبة", ll:[28.04,35.20], terr:"coast", clim:"north",
@@ -3652,7 +3652,7 @@ const PSIG = {
 
   alula:    { scale:1.06, sharp:1.0, butte:1.0 },
 
-  disah:    { scale:1.80, sharp:1.0, butte:1.35, pillarF:2.3 },  /* وادي الديسة: أعمدة حجر رملي عالية ضيّقة */
+  disah:    { scale:1.30, sharp:1.0, butte:1.25, pillarF:1.70, mist:1.30, grove:1 },  /* وادي الديسة: أعمدة حجر رملي عالية ضيّقة */
   tuwaiq:   { scale:1.00, sharp:1.0 },
   edge:     { scale:1.16, sharp:1.0 },
   auto:     { scale:1.00, sharp:1.0, scrub:"acacia" },
@@ -4009,12 +4009,12 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
          فيطلع الجرف بخطوط رأسية متوازية طويلة = لوح خشب أو كرتون مضلّع. الحجر الحقيقي فيه
          ثلاثة أشياء: طبقات ترسيبية أفقية، وتجاويف تعرية خلوية (قرص العسل) اللي تميّز صخر
          العلا والحِجر، ونحت رأسي أقصر من مسايل المطر */
-      const wv  = fbm2(u*2.0, v*1.5, seed+120, 2)*1.5;
-      const flut= vn2(u*24+wv*1.6, v*3.4, seed+9);                                      /* نحت رأسي أقصر */
-      const bedS = st==="escarp" ? .17 : .075;
-      const bed = fbm2(u*1.2+v*.18, v*12+fbm2(u*1.1,v*1.1,seed+21,2)*2.0, seed+27, 2);  /* طبقات أوضح */
+      const wv  = fbm2(u*2.0, v*1.5, seed+120, 2)*.6;
+      const flut= vn2(u*26+wv*.7, v*5.5, seed+9);                                      /* نحت رأسي أقصر */
+      const bedS = st==="escarp" ? .17 : .050;
+      const bed = fbm2(u*1.2+v*.05, v*13+fbm2(u*1.1,v*1.1,seed+21,2)*.55, seed+27, 2);  /* طبقات شبه أفقية مستقيمة */
       const pock= st==="escarp" ? .5 : fbm2(u*44, v*50, seed+131, 2);                   /* تجاويف قرص العسل */
-      return flut*.052 + bed*bedS + (pock-.5)*.034;
+      return flut*.040 + bed*bedS + (pock-.5)*.030;
     }
     if(st==="hills"){
       /* تلال متدحرجة ناعمة — مو قمم جبال حادة (مود "mount") ولا كثبان بوجه انزلاق ("dune")،
@@ -4192,11 +4192,11 @@ function makeTerrainJob(w,gy,s,PL,K,C,nightF,sx,elev,qOver){
          التباين القديم كان ١٣٪ فقط على الجرف القريب فيطلع الجدار كلوح زجاج مصنفر */
       const rk = .80+1.05*fi;
       const bedS = (st==="escarp" ? .16 : .09)*rk;
-      const bedV = v*9+fbm2(u*1.2,v*1.2,seed+21,2)*1.6;
+      const bedV = v*9+fbm2(u*1.2,v*1.2,seed+21,2)*.45;
       bright += (fbm2(u*1.4+v*.2, bedV, seed+27, 2)-.5)*bedS;
       /* حدّ الطبقة الرسوبية: خط ظل رفيع أفقي يتبع تموّج الطبقة — أبرز ما يميّز صخر العلا */
       const bedT = bedV-Math.floor(bedV);
-      dark += smooth(clamp((.12-Math.abs(bedT-.5)*.9)/.12,0,1))*.15*rk;
+      dark += smooth(clamp((.12-Math.abs(bedT-.5)*.9)/.12,0,1))*.09*rk;
       /* كل طبقة ترسيبية لها درجتها: صخر العلا طبقاته تتراوح بين كريمي وبرتقالي وبنّي محمر،
          واللون الواحد على الجرف كامل هو اللي يخلّيه يبان لوحاً مصبوغاً */
       bright += (h01(Math.floor(bedV)*53, seed+181)-.5)*.13*rk;
@@ -7849,7 +7849,7 @@ function drawSceneCore(ctx,o){
   const hy = gy - h*(o.horizonLift||0);
   if(o.glow && o.ground!==false && !o.noEnv) drawEnvironment(ctx,w,h,hy,s,mins,o.withered,o.hour,o.tms,o.mdate);
   if(o.ground!==false && !o.noGround) drawGround(ctx,cx,gy,w,s,rnd);
-  const heroLike = !!(o.glow || (o.noGround && o.noClear));
+  const heroLike = false;   /* تلّة الزراعة موقوفة: طلعت كبقعة سوداء تحت النبتة */
   const moundP = (heroLike && o.ground!==false && s>=96) ? 1-clamp(g/.34,0,1) : 0;
   SEED_MOUND = moundP>0;
   const mseed = ((o.seedStr||"x").length*131 + (o.seedStr||"x").charCodeAt(0)*17)|0;
