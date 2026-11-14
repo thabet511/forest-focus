@@ -5359,7 +5359,7 @@ function drawGround(ctx,cx,gy,w,s,rnd){
 /* ─── تلّة الزراعة: تراب مقلوب رطب فوق البذرة ───────────────────
    لحظة الغرس لازم تبين: حفرة صغيرة، تراب مرفوع حولها أغمق لأنه رطب، فتات وكتل مضاءة من جهة
    الشمس، والبذرة نصفها مدفون. مع نمو النبتة تنخفض التلّة وتستقر (prom تنزل من ١ إلى ٠). */
-function moundGeom(s,prom){ const rx=s*(.050+.026*prom), hh=rx*.62*(.35+.65*prom); return { rx, hh, ry:rx*.28 }; }
+function moundGeom(s,prom){ const rx=s*(.034+.018*prom), hh=rx*.55*(.35+.65*prom); return { rx, hh, ry:rx*.28 }; }
 function drawMound(ctx,cx,gy,s,prom,front,seedKey){
   if(prom<=.03) return;
   const PL=curPlace(), night=!!PAL.night;
@@ -5367,14 +5367,14 @@ function drawMound(ctx,cx,gy,s,prom,front,seedKey){
   const base = PL.soil || PAL.soil;
   const { rx, hh, ry } = moundGeom(s,prom);
   const lit = Math.cos(LIGHT_ANG||-1.2) >= 0 ? 1 : -1;
-  const wet  = night ? "#16120d" : shade(base,-.46), body = night ? "#2a241b" : shade(base,-.22),
-        high = night ? "#4a4f55" : shade(base,.22);
+  const wet  = night ? "#241f18" : shade(base,-.24), body = night ? "#3a342b" : shade(base,-.07),
+        high = night ? "#5b6168" : shade(base,.16);
   ctx.save();
   if(!front){
     /* ١) هالة التراب الرطب: دائرة أغمق تذوب بحوافها بالأرض */
     const g1=ctx.createRadialGradient(cx,gy+ry*.2,rx*.15,cx,gy+ry*.2,rx*1.75);
-    g1.addColorStop(0,"rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.50*prom).toFixed(3)+")");
-    g1.addColorStop(.6,"rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.26*prom).toFixed(3)+")");
+    g1.addColorStop(0,"rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.20*prom).toFixed(3)+")");
+    g1.addColorStop(.6,"rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.10*prom).toFixed(3)+")");
     g1.addColorStop(1,"rgba("+hex2rgb(wet).map(Math.round).join(",")+",0)");
     ctx.fillStyle=g1; ctx.save(); ctx.translate(cx,gy+ry*.2); ctx.scale(1,.30); ctx.beginPath(); ctx.arc(0,0,rx*1.75,0,TAU); ctx.fill(); ctx.restore();
     /* ٢) جسم التلّة: قبّة غير منتظمة بتدرّج من جهة الشمس */
@@ -5391,9 +5391,9 @@ function drawMound(ctx,cx,gy,s,prom,front,seedKey){
     ctx.closePath();
     const gb=ctx.createLinearGradient(cx-lit*rx,gy-hh,cx+lit*rx,gy+ry);
     gb.addColorStop(0,high); gb.addColorStop(.38,body); gb.addColorStop(1,wet);
-    ctx.globalAlpha=Math.min(1,prom*1.25); ctx.fillStyle=gb; ctx.fill(); ctx.globalAlpha=1;
+    ctx.globalAlpha=Math.min(1,prom*1.25)*.92; ctx.fillStyle=gb; ctx.fill(); ctx.globalAlpha=1;
     /* ٣) حفرة الغرس: بيضاوي أغمق بقمة التلّة */
-    ctx.fillStyle="rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.62*prom).toFixed(3)+")";
+    ctx.fillStyle="rgba("+hex2rgb(wet).map(Math.round).join(",")+","+(.34*prom).toFixed(3)+")";
     ctx.beginPath(); ctx.ellipse(cx,gy-hh*.86,rx*.30,ry*.50,0,0,TAU); ctx.fill();
   }
   /* ٤) فتات وكتل: كل كتلة وجهها مضاء وتحتها ظل — الخلفية على جسم التلّة، والأمامية فوق قاعدة النبتة */
@@ -5406,11 +5406,11 @@ function drawMound(ctx,cx,gy,s,prom,front,seedKey){
     const py=gy+(front?(.18+.30*h01(i,seedKey+13))*ry:-lift*h01(i*3,seedKey+17)+ry*.15);
     const cw=s*(.0016+h01(i*11,seedKey+19)*.0034), ch=cw*(.55+.25*h01(i*13,seedKey+23));
     ctx.globalAlpha=front?.80*prom:.95*prom;
-    ctx.fillStyle=night?"rgba(10,8,6,.5)":"rgba(40,26,14,.40)";
+    ctx.fillStyle=night?"rgba(10,8,6,.30)":"rgba(60,42,24,.20)";
     ctx.beginPath(); ctx.ellipse(px+lit*-cw*.2,py+ch*.55,cw*1.1,ch*.8,0,0,TAU); ctx.fill();
     ctx.fillStyle=h01(i,seedKey+29)>.5?body:shade(base,-.10);
     ctx.beginPath(); ctx.ellipse(px,py,cw,ch,0,0,TAU); ctx.fill();
-    ctx.fillStyle=night?"rgba(150,166,180,.28)":"rgba(255,244,220,.34)";
+    ctx.fillStyle=night?"rgba(150,166,180,.28)":"rgba(255,244,220,.18)";
     ctx.beginPath(); ctx.ellipse(px-lit*cw*.28,py-ch*.3,cw*.52,ch*.42,0,0,TAU); ctx.fill();
   }
   ctx.globalAlpha=1; ctx.restore();
@@ -7849,17 +7849,18 @@ function drawSceneCore(ctx,o){
   const hy = gy - h*(o.horizonLift||0);
   if(o.glow && o.ground!==false && !o.noEnv) drawEnvironment(ctx,w,h,hy,s,mins,o.withered,o.hour,o.tms,o.mdate);
   if(o.ground!==false && !o.noGround) drawGround(ctx,cx,gy,w,s,rnd);
-  const moundP = (o.glow && o.ground!==false && !o.noGround && s>=96) ? 1-clamp(g/.34,0,1) : 0;
+  const heroLike = !!(o.glow || (o.noGround && o.noClear));
+  const moundP = (heroLike && o.ground!==false && s>=96) ? 1-clamp(g/.34,0,1) : 0;
   SEED_MOUND = moundP>0;
   const mseed = ((o.seedStr||"x").length*131 + (o.seedStr||"x").charCodeAt(0)*17)|0;
-  if(moundP>0) drawMound(ctx,cx,gy,s,moundP,false,mseed);
+  if(moundP>0 && !o.noGround) drawMound(ctx,cx,gy,s,moundP,false,mseed);
   /* ظل النبتة فوق التربة (بعد drawGround لا قبله) — قبل كذا كان يترسم قبل بقعة التربة فتغطّيه
      بقعة التربة العلوية بالكامل ويختفي بصرياً، فيبين النبات "طايف" بلا أي ارتباط فعلي بالأرض
      مهما كانت زاوية الشمس. اتجاهه وطوله يتبعان LIGHT_ANG الفعلي: ظل طويل منزاح وقت الشمس
        المنخفضة (شروق/غروب)، وقصير شبه تحت النبتة وقت الظهر. */
   const wantShade = g>.05 && !o.noShadow;   /* noShadow: المزرعة ترسم ظل النبتة على أرضها بنفسها */
 
-  if(g<.05){ drawSeed(ctx,cx,gy,s,g,sp); if(moundP>0) drawMound(ctx,cx,gy,s,moundP,true,mseed); return; }
+  if(g<.05){ if(!o.noSeed){ drawSeed(ctx,cx,gy,s,g,sp); if(moundP>0) drawMound(ctx,cx,gy,s,moundP,true,mseed); } return; }
 
   const opt = { rnd, sway, withered:o.withered, bloom };
   /* الإضاءة الخلفية: بالمشهد الرئيسي الشمس دايماً بالسما ورا النبتة (الكاميرا تطالع
@@ -9601,7 +9602,7 @@ function drawHeroCore(){
     return;
   }
   const over = { glow:false, noEnv:true, noGround:true, noClear:true };
-  drawScene(ctx,Object.assign({},base,{ minutes:.4, sway:swayNow }));              /* البيئة والتربة */
+  drawScene(ctx,Object.assign({},base,{ minutes:.4, sway:swayNow, noSeed:true }));  /* البيئة والتربة (البذرة تنرسم بآخر طبقة) */
   ctx.globalAlpha=ghostAlpha;
   drawScene(ctx,Object.assign({},base,over,{ minutes:PHASE1*.92, sway:swayNow*.55 })); /* شبح ما بتصير عليه */
   ctx.globalAlpha=1;
